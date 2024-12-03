@@ -1,0 +1,9 @@
+.member-tracking {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+  border: solid 1px;
+  height: 500px;
+  flex-grow: 1;
+}
