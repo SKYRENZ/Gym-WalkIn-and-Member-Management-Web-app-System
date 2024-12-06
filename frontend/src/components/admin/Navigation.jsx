@@ -1,8 +1,8 @@
-import './Navigation.css';
-import customerRecords from './assets/Customer-Records.png';
-import qrMembershipPrint from './assets/Qr.png';
-import voucher from './assets/Voucher.png';
-import accounts from './assets/Account.png';
+import '../../css/admin/Navigation.css';
+import customerRecords from '../../assets/Customer-Records.png';
+import qrMembershipPrint from '../../assets/Qr.png';
+import voucher from '../../assets/Voucher.png';
+import accounts from '../../assets/Account.png';
 
 function Navigation () {
     return (

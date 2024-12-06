@@ -1,6 +1,6 @@
-import './Workspace.css';
+import '../../css/admin/Workspace.css';
 
-function workspace() {
+function Workspace() {
   return (
     <div className="workspace">
       <h1>Workspace</h1>
@@ -8,4 +8,4 @@ function workspace() {
   );
 }
 
-export default workspace;
+export default Workspace;
