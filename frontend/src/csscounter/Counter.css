@@ -18,3 +18,11 @@
     align-items: center;
     margin-bottom: 0.5rem;
 }
+
+/* Counter.css */
+.counter-page {
+    width: 1600px;
+    height: 900px;
+    margin: 0 auto; /* Center the dashboard */
+    overflow: auto; /* Add scroll if content overflows */
+}

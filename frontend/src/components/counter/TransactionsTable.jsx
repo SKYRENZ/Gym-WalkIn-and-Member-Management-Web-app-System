@@ -1,7 +1,4 @@
-import React from 'react';
 import "../../csscounter/TransactionsTable.css";
-
-
 
 const TransactionsTable = () => {
     const transactions = [

@@ -1,3 +1,4 @@
+/* Existing styles */
 .container {
   display: flex;
   padding: 20px;
@@ -5,20 +6,27 @@
   flex-direction: row;
   justify-content: space-evenly;
   gap: 20px;
-  height: 200vh; /* Set the container height to full viewport height */
+  height: auto; /* Change to auto for responsiveness */
 }
 
-.leftPane {
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto; /* Make the left pane scrollable */
-  height: 100%; /* Ensure it doesn't exceed the container height */
-}
+/* Responsive styles */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column; /* Stack items vertically on smaller screens */
+    padding: 10px; /* Adjust padding */
+  }
 
-.rightPane {
-  flex: 1; /* Take up remaining space */
-  position: fixed; /* Keep it fixed */
-  right: 20px; /* Adjust as needed */
-  top: 85px; /* Adjust as needed */
-  bottom: 20px; /* Adjust as needed */
+  .leftPane, .rightPane {
+    width: 100%; /* Full width for both panes */
+    height: auto; /* Allow height to adjust */
+  }
+
+  .popup {
+    width: 90%; /* Make popup width responsive */
+    padding: 15px; /* Adjust padding */
+  }
+
+  .popup-button {
+    width: 100%; /* Full width for buttons */
+  }
 }
