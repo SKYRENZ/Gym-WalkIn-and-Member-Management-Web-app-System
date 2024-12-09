@@ -1,13 +1,15 @@
 import React from 'react';
-import TransactionsTable from '../components/counter/TransactionsTable';  // Import TransactionsTable
+import TransactionsTable from '../components/counter/TransactionsTable';
 import Overview from '../components/counter/Overview';
+import CreateStaffForm from '../components/staff/CreateStaffForm';  // Import the CreateStaffForm component
 
-const Counter = () => {  // Ensure this is only declared once
+const Counter = () => {
   return (
     <div className="counter-page">
       <h1>Counter Dashboard</h1>
-      <TransactionsTable />  {/* Use the TransactionsTable component */}
-      <Overview />{/* Add other components or content as needed */}
+      <TransactionsTable />
+      <Overview />
+      <CreateStaffForm />  {/* Add the CreateStaffForm component */}
     </div>
   );
 };
