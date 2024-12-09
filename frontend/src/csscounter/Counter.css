@@ -1,0 +1,20 @@
+.overview-cards {
+    display: flex;
+    gap: 1rem;
+}
+
+.card {
+    flex: 1;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f8f8f8;
+    text-align: center;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
