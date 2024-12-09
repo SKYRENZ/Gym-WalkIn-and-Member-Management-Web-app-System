@@ -1,5 +1,5 @@
 import React from 'react';
-import "../../../csscounter/TransactionsTable.css";
+import "../../csscounter/TransactionsTable.css";
 
 
 

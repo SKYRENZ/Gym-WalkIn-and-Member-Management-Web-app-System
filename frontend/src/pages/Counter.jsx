@@ -7,7 +7,7 @@ const Counter = () => {  // Ensure this is only declared once
     <div className="counter-page">
       <h1>Counter Dashboard</h1>
       <TransactionsTable />  {/* Use the TransactionsTable component */}
-      {/* Add other components or content as needed */}
+      <Overview />{/* Add other components or content as needed */}
     </div>
   );
 };

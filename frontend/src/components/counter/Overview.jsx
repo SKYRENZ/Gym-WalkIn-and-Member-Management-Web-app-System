@@ -1,5 +1,5 @@
 import React from 'react';
-import "../../../csscounter/Counter.css";
+import "../../csscounter/Counter.css";
 
 
 const OverviewCards = () => {
