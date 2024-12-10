@@ -7,7 +7,7 @@ const PORT = 3000; // You can choose any available port
 // Middleware to parse JSON requests
 app.use(express.json());
 
-// Endpoint to add a customer, membership, and payment
+// Endpoint to add a walkin, membership, renewals and payment
 app.post('/addWalkInTransaction', async (req, res) => {
     const { name, phone, paymentMethod, referenceNumber } = req.body;
 
@@ -22,7 +22,7 @@ app.post('/addWalkInTransaction', async (req, res) => {
     }
 
     const customerQuery = `
-        INSERT INTO Customer (name, contact_info, membership_type, payment_information)
+        INSERT INTO Customer (name, email, membership_type, contact_info)
         VALUES ($1, $2, 'Walk In', $3) RETURNING customer_id;
     `;
 
@@ -56,21 +56,6 @@ app.post('/addWalkInTransaction', async (req, res) => {
             mayaRefNum = referenceNumber; // Assign reference number to Paymaya
         }
 
-        // Log the reference numbers for debugging
-        console.log('Gcash Reference Number:', gcashRefNum);
-        console.log('Paymaya Reference Number:', mayaRefNum);
-
-        // Log the payment details before inserting
-        console.log('Inserting Payment with details:', {
-            amount,
-            paymentMethod,
-            paymentStatus,
-            paymentDate,
-            customerId,
-            gcashRefNum,
-            mayaRefNum
-        });
-
         // Insert payment
         const paymentResult = await client.query(paymentQuery, [amount, paymentMethod, paymentStatus, paymentDate, customerId, gcashRefNum, mayaRefNum]);
 
@@ -92,7 +77,7 @@ app.post('/addWalkInTransaction', async (req, res) => {
 });
 
 app.post('/addMembershipTransaction', async (req, res) => {
-    const { name, email, phone, paymentMethod, referenceNumber } = req.body; // Removed startDate and endDate from destructuring
+    const { name, email, phone, paymentMethod, referenceNumber } = req.body;
 
     // Validate input
     if (!name || !email || !phone || !paymentMethod) {
@@ -105,18 +90,18 @@ app.post('/addMembershipTransaction', async (req, res) => {
     }
 
     const customerQuery = `
-        INSERT INTO Customer (name, contact_info, membership_type, payment_information)
+        INSERT INTO Customer (name, email, membership_type, contact_info)
         VALUES ($1, $2, 'Membership', $3) RETURNING customer_id;
     `;
 
     const membershipQuery = `
-        INSERT INTO Membership (customer_id, start_date, end_date, status)
+        INSERT INTO Membership (customer_id, start_date, end_date, membership_type)
         VALUES ($1, $2, $3, $4) RETURNING membership_id;
     `;
 
     const paymentQuery = `
-        INSERT INTO Payment (amount, method, status, payment_date, customer_id, membership_id, gcash_refNum, maya_refNum)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING payment_id;
+        INSERT INTO Payment (amount, method, status, payment_date, customer_id, gcash_refNum, maya_refNum)
+        VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING payment_id;
     `;
 
     try {
@@ -129,20 +114,18 @@ app.post('/addMembershipTransaction', async (req, res) => {
         const customerResult = await client.query(customerQuery, [name, email, phone]);
         const customerId = customerResult.rows[0].customer_id;
 
-        // Set start date to current date
-        const startDate = new Date(); // Current date
-
-        // Set end date to one month from the start date
-        const endDate = new Date(startDate);
-        endDate.setMonth(startDate.getMonth() + 1); // One month later
+        // Define membership details
+        const startDate = new Date();
+        const endDate = new Date();
+        endDate.setFullYear(startDate.getFullYear() + 1); // Set end date to one year from now
+        const membershipType = 'Standard'; // Example membership type
 
         // Insert membership
-        const membershipStatus = 'Active'; // Example status
-        const membershipResult = await client.query(membershipQuery, [customerId, startDate, endDate, membershipStatus]);
+        const membershipResult = await client.query(membershipQuery, [customerId, startDate, endDate, membershipType]);
         const membershipId = membershipResult.rows[0].membership_id;
 
         // Fixed amount for membership transactions
-        const amount = 700.00; // Updated amount for membership
+        const amount = 120.00; // Amount for membership
         const paymentDate = new Date(); // Use current date for payment date
         const paymentStatus = 'Completed'; // Example status
 
@@ -156,8 +139,8 @@ app.post('/addMembershipTransaction', async (req, res) => {
             mayaRefNum = referenceNumber; // Assign reference number to Paymaya
         }
 
-        // Insert payment with membership_id
-        const paymentResult = await client.query(paymentQuery, [amount, paymentMethod, paymentStatus, paymentDate, customerId, membershipId, gcashRefNum, mayaRefNum]);
+        // Insert payment
+        const paymentResult = await client.query(paymentQuery, [amount, paymentMethod, paymentStatus, paymentDate, customerId, gcashRefNum, mayaRefNum]);
 
         // Commit the transaction
         await client.query('COMMIT');
@@ -270,6 +253,42 @@ app.post('/renewMembership', async (req, res) => {
         console.error('Error renewing membership:', err);
         await client.query('ROLLBACK'); // Rollback the transaction in case of error
         res.status(500).json({ error: 'Error renewing membership' });
+    }
+});
+
+// Endpoint to fetch customer membership information
+app.get('/getCustomerMembership/:name', async (req, res) => {
+    const { name } = req.params;
+
+    const customerQuery = `
+        SELECT c.name, c.email, c.contact_info AS phone, m.end_date,
+               COUNT(p.payment_id) AS renewal_count
+        FROM Customer c
+        JOIN Membership m ON c.customer_id = m.customer_id
+        LEFT JOIN Payment p ON p.customer_id = c.customer_id AND p.membership_id = m.membership_id
+        WHERE c.name = $1
+        GROUP BY c.name, c.email, c.contact_info, m.end_date;
+    `;
+
+    let client; // Declare client variable here
+
+    try {
+        client = await pool.connect(); // Get a client from the pool
+        const result = await client.query(customerQuery, [name]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Customer not found' });
+        }
+
+        res.status(200).json(result.rows[0]);
+    } catch (err) {
+        console.error('Error fetching customer membership:', err.message); // Log the error message
+        res.status(500).json({ error: 'Error fetching customer membership' });
+    } finally {
+        // Ensure the client is released back to the pool
+        if (client) {
+            client.release();
+        }
     }
 });
 
