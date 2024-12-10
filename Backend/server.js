@@ -1,11 +1,34 @@
 const express = require('express');
+const { updateMembershipStatus } = require('./membershipService'); // Import the function
 const pool = require('./db'); // Import your database connection
-
+const cron = require('node-cron');
 const app = express();
 const PORT = 3000; // You can choose any available port
 
 // Middleware to parse JSON requests
 app.use(express.json());
+
+// Schedule the updateMembershipStatus function to run daily at midnight
+cron.schedule('0 0 * * *', async () => {
+    await updateMembershipStatus();
+    console.log('Membership statuses updated.');
+});
+
+// Example route to fetch memberships
+app.get('/memberships', async (req, res) => {
+    try {
+        await updateMembershipStatus(); // Update statuses before fetching
+
+        const membershipsQuery = `
+            SELECT * FROM Membership;
+        `;
+        const result = await pool.query(membershipsQuery);
+        res.status(200).json(result.rows);
+    } catch (error) {
+        console.error('Error fetching memberships:', error);
+        res.status(500).json({ error: 'An error occurred while fetching memberships' });
+    }
+});
 
 // Endpoint to add a walkin, membership, renewals and payment
 app.post('/addWalkInTransaction', async (req, res) => {
@@ -91,11 +114,11 @@ app.post('/addMembershipTransaction', async (req, res) => {
 
     const customerQuery = `
         INSERT INTO Customer (name, email, membership_type, contact_info)
-        VALUES ($1, $2, 'Membership', $3) RETURNING customer_id;
+        VALUES ($1, $2, 'Membership', $3) RETURNING customer_id, membership_type;
     `;
 
     const membershipQuery = `
-        INSERT INTO Membership (customer_id, start_date, end_date, membership_type)
+        INSERT INTO Membership (customer_id, start_date, end_date, status)
         VALUES ($1, $2, $3, $4) RETURNING membership_id;
     `;
 
@@ -104,8 +127,10 @@ app.post('/addMembershipTransaction', async (req, res) => {
         VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING payment_id;
     `;
 
+    let client; // Declare client variable here
+
     try {
-        const client = await pool.connect();
+        client = await pool.connect();
 
         // Start a transaction
         await client.query('BEGIN');
@@ -113,18 +138,26 @@ app.post('/addMembershipTransaction', async (req, res) => {
         // Insert customer
         const customerResult = await client.query(customerQuery, [name, email, phone]);
         const customerId = customerResult.rows[0].customer_id;
+        const membershipType = customerResult.rows[0].membership_type;
+
+        // Check if the membership type is valid for membership
+        if (membershipType !== 'Membership') {
+            return res.status(400).json({ error: 'Customer is not eligible for membership' });
+        }
 
         // Define membership details
         const startDate = new Date();
         const endDate = new Date();
-        endDate.setFullYear(startDate.getFullYear() + 1); // Set end date to one year from now
-        const membershipType = 'Standard'; // Example membership type
+        endDate.setMonth(startDate.getMonth() + 1); // Set end date to one month from now
+
+        // Set the status for the membership to "Active"
+        const membershipStatus = 'Active';
 
         // Insert membership
-        const membershipResult = await client.query(membershipQuery, [customerId, startDate, endDate, membershipType]);
+        const membershipResult = await client.query(membershipQuery, [customerId, startDate, endDate, membershipStatus]);
         const membershipId = membershipResult.rows[0].membership_id;
 
-       // Fixed amount for membership transactions
+        // Fixed amount for membership transactions
         const amount = 120.00; // Amount for membership
         const paymentDate = new Date().toISOString().split('T')[0]; // Use current date for payment date without time
         const paymentStatus = 'Completed'; // Example status
@@ -140,23 +173,26 @@ app.post('/addMembershipTransaction', async (req, res) => {
         }
 
         // Insert payment
-        const paymentResult = await client.query(paymentQuery, [amount, paymentMethod, paymentStatus, paymentDate, customerId, gcashRefNum, mayaRefNum]);
+        await client.query(paymentQuery, [amount, paymentMethod, paymentStatus, paymentDate, customerId, gcashRefNum, mayaRefNum]);
 
         // Commit the transaction
         await client.query('COMMIT');
 
-        // Release the client
-        client.release();
+        // Send success response
+        res.status(201).json({ message: 'Membership transaction added successfully' });
 
-        res.status(201).json({
-            customerId: customerId,
-            membershipId: membershipId,
-            paymentId: paymentResult.rows[0].payment_id
-        });
-    } catch (err) {
-        console.error('Error adding membership transaction:', err);
-        await client.query('ROLLBACK'); // Rollback the transaction in case of error
-        res.status(500).json({ error: 'Error adding membership transaction' });
+    } catch (error) {
+        // Rollback the transaction in case of error
+        if (client) {
+            await client.query('ROLLBACK');
+        }
+        console.error('Error adding membership transaction:', error);
+        res.status(500).json({ error: 'An error occurred while adding the membership transaction' });
+    } finally {
+        // Release the client back to the pool
+        if (client) {
+            client.release();
+        }
     }
 });
 
@@ -293,8 +329,46 @@ app.get('/getWalkInCustomerRecords', async (req, res) => {
         }
     }
 });
+//membership customer records
+
+app.get('/getMemberCustomerRecords', async (req, res) => {
+    const memberRecordsQuery = `
+        SELECT 
+            c.name, 
+            COUNT(p.payment_id) AS total_entries,
+            MAX(DATE(p.payment_date)) AS recent_payment_date  -- Use DATE to get only the date part
+        FROM 
+            Customer c
+        LEFT JOIN 
+            Payment p ON p.customer_id = c.customer_id
+        WHERE 
+            c.membership_type != 'Walk In'  -- Filter for members only
+        GROUP BY 
+            c.name
+        ORDER BY 
+            c.name;  -- Optional: Order by name
+    `;
+
+    let client; // Declare client variable here
+
+    try {
+        client = await pool.connect(); // Get a client from the pool
+        const result = await client.query(memberRecordsQuery);
+
+        res.status(200).json(result.rows);
+    } catch (err) {
+        console.error('Error fetching member customer records:', err.message); // Log the error message
+        res.status(500).json({ error: 'Error fetching member customer records' });
+    } finally {
+        // Ensure the client is released back to the pool
+        if (client) {
+            client.release();
+        }
+    }
+});
+
 // Endpoint to fetch customer membership information
-app.get('/getCustomerTotalRecords/:name', async (req, res) => {
+app.get('/getCustomerMember_TotalRecords/:name', async (req, res) => {
     const { name } = req.params;
 
     const totalRecordsQuery = `
@@ -336,33 +410,22 @@ app.get('/getCustomerTotalRecords/:name', async (req, res) => {
     }
 });
 
-app.get('/getCustomerTotalRecords/:name', async (req, res) => {
+app.get('/getCustomerMember_info/:name', async (req, res) => {
     const { name } = req.params;
 
-    const totalRecordsQuery = `
-        SELECT 
-            c.name, 
-            c.email, 
-            c.contact_info AS phone, 
-            COALESCE(SUM(p.amount), 0) AS total_payment,
-            COUNT(DISTINCT p.payment_id) AS total_payments,
-            0 AS total_entries,  -- Set total_entries to 0 for now
-            ARRAY_AGG(ROW(p.amount, p.method, p.payment_date)) AS payment_records
-        FROM 
-            Customer c
-        LEFT JOIN 
-            Payment p ON p.customer_id = c.customer_id
-        WHERE 
-            c.name = $1
-        GROUP BY 
-            c.name, c.email, c.contact_info;
+    const customerQuery = `
+        SELECT c.name, c.email, c.contact_info AS phone, m.end_date
+        FROM Customer c
+        JOIN Membership m ON c.customer_id = m.customer_id
+        WHERE c.name = $1
+        GROUP BY c.name, c.email, c.contact_info, m.end_date;
     `;
 
     let client; // Declare client variable here
 
     try {
         client = await pool.connect(); // Get a client from the pool
-        const result = await client.query(totalRecordsQuery, [name]);
+        const result = await client.query(customerQuery, [name]);
 
         if (result.rows.length === 0) {
             return res.status(404).json({ error: 'Customer not found' });
@@ -370,8 +433,8 @@ app.get('/getCustomerTotalRecords/:name', async (req, res) => {
 
         res.status(200).json(result.rows[0]);
     } catch (err) {
-        console.error('Error fetching customer total records:', err.message); // Log the error message
-        res.status(500).json({ error: 'Error fetching customer total records' });
+        console.error('Error fetching customer membership:', err.message); // Log the error message
+        res.status(500).json({ error: 'Error fetching customer membership' });
     } finally {
         // Ensure the client is released back to the pool
         if (client) {
