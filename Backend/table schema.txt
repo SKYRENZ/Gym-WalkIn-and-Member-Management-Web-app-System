@@ -1,0 +1,49 @@
+Customer Table:
+CREATE TABLE Customer (
+    customer_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    contact_info VARCHAR(255),
+    membership_type VARCHAR(50),
+    payment_information TEXT
+);
+
+Membership Table:
+CREATE TABLE Membership (
+    membership_id SERIAL PRIMARY KEY,
+    customer_id INT REFERENCES Customer(customer_id),
+    start_date DATE NOT NULL,
+    end_date DATE,
+    status VARCHAR(50) NOT NULL
+);
+
+Payment Table:
+CREATE TABLE Payment (
+    payment_id SERIAL PRIMARY KEY,
+    amount DECIMAL(10, 2) NOT NULL,
+    method VARCHAR(50) NOT NULL,
+    status VARCHAR(50) NOT NULL,
+    payment_date DATE NOT NULL,
+    customer_id INT REFERENCES Customer(customer_id),
+    membership_id INT REFERENCES Membership(membership_id),
+    gcash_refNum VARCHAR(100),
+    maya_refNum VARCHAR(100),
+    voucher_code VARCHAR(100)
+);
+
+Staff Table:
+CREATE TABLE Staff (
+    staff_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    role VARCHAR(50) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    contact_info VARCHAR(255)
+);
+
+Income Table
+CREATE TABLE Income (
+    income_id SERIAL PRIMARY KEY,
+    source VARCHAR(100) NOT NULL,
+    amount DECIMAL(10, 2) NOT NULL,
+    date DATE NOT NULL,
+    payment_id INT REFERENCES Payment(payment_id)
+);
