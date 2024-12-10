@@ -43,7 +43,7 @@ app.post('/addWalkInTransaction', async (req, res) => {
 
         // Fixed amount for walk-in transactions
         const amount = 60.00; // Amount for walk-in
-        const paymentDate = new Date(); // Use current date for payment date
+        const paymentDate = new Date().toISOString().split('T')[0]; // Use current date for payment date without time
         const paymentStatus = 'Completed'; // Example status
 
         // Determine reference number based on payment method
@@ -124,9 +124,9 @@ app.post('/addMembershipTransaction', async (req, res) => {
         const membershipResult = await client.query(membershipQuery, [customerId, startDate, endDate, membershipType]);
         const membershipId = membershipResult.rows[0].membership_id;
 
-        // Fixed amount for membership transactions
+       // Fixed amount for membership transactions
         const amount = 120.00; // Amount for membership
-        const paymentDate = new Date(); // Use current date for payment date
+        const paymentDate = new Date().toISOString().split('T')[0]; // Use current date for payment date without time
         const paymentStatus = 'Completed'; // Example status
 
         // Determine reference number based on payment method
@@ -215,8 +215,9 @@ app.post('/renewMembership', async (req, res) => {
         await client.query(updateMembershipQuery, [currentEndDate, membershipId]);
 
         // Fixed amount for renewal
+        // Fixed amount for renewal
         const amount = 700.00; // Set the fixed renewal amount
-        const paymentDate = new Date(); // Use current date for payment date
+        const paymentDate = new Date().toISOString().split('T')[0]; // Use current date for payment date without time
         const paymentStatus = 'Completed'; // Example status
 
         // Determine reference number based on payment method
@@ -256,6 +257,42 @@ app.post('/renewMembership', async (req, res) => {
     }
 });
 
+//walk in customer records
+app.get('/getWalkInCustomerRecords', async (req, res) => {
+    const walkInRecordsQuery = `
+        SELECT 
+            c.name, 
+            COUNT(p.payment_id) AS total_entries,
+            MAX(p.payment_date) AS recent_payment_date
+        FROM 
+            Customer c
+        LEFT JOIN 
+            Payment p ON p.customer_id = c.customer_id
+        WHERE 
+            c.membership_type = 'Walk In'
+        GROUP BY 
+            c.name
+        ORDER BY 
+            c.name;  -- Optional: Order by name
+    `;
+
+    let client; // Declare client variable here
+
+    try {
+        client = await pool.connect(); // Get a client from the pool
+        const result = await client.query(walkInRecordsQuery);
+
+        res.status(200).json(result.rows);
+    } catch (err) {
+        console.error('Error fetching walk-in customer records:', err.message); // Log the error message
+        res.status(500).json({ error: 'Error fetching walk-in customer records' });
+    } finally {
+        // Ensure the client is released back to the pool
+        if (client) {
+            client.release();
+        }
+    }
+});
 // Endpoint to fetch customer membership information
 app.get('/getCustomerTotalRecords/:name', async (req, res) => {
     const { name } = req.params;
@@ -342,6 +379,7 @@ app.get('/getCustomerTotalRecords/:name', async (req, res) => {
         }
     }
 });
+
 
 // Start the server
 app.listen(PORT, () => {
