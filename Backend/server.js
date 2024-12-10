@@ -257,24 +257,31 @@ app.post('/renewMembership', async (req, res) => {
 });
 
 // Endpoint to fetch customer membership information
-app.get('/getCustomerMembership/:name', async (req, res) => {
+app.get('/getCustomerTotalRecords/:name', async (req, res) => {
     const { name } = req.params;
 
-    const customerQuery = `
-        SELECT c.name, c.email, c.contact_info AS phone, m.end_date,
-               COUNT(p.payment_id) AS renewal_count
-        FROM Customer c
-        JOIN Membership m ON c.customer_id = m.customer_id
-        LEFT JOIN Payment p ON p.customer_id = c.customer_id AND p.membership_id = m.membership_id
-        WHERE c.name = $1
-        GROUP BY c.name, c.email, c.contact_info, m.end_date;
+    const totalRecordsQuery = `
+        SELECT 
+            c.name, 
+            COALESCE(SUM(p.amount), 0) AS total_payment,
+            COUNT(DISTINCT p.payment_id) AS total_payments,
+            0 AS total_entries,  -- Set total_entries to 0 for now
+            ARRAY_AGG(ROW(p.amount, p.method, p.payment_date)) AS payment_records
+        FROM 
+            Customer c
+        LEFT JOIN 
+            Payment p ON p.customer_id = c.customer_id
+        WHERE 
+            c.name = $1
+        GROUP BY 
+            c.name;
     `;
 
     let client; // Declare client variable here
 
     try {
         client = await pool.connect(); // Get a client from the pool
-        const result = await client.query(customerQuery, [name]);
+        const result = await client.query(totalRecordsQuery, [name]);
 
         if (result.rows.length === 0) {
             return res.status(404).json({ error: 'Customer not found' });
@@ -282,8 +289,52 @@ app.get('/getCustomerMembership/:name', async (req, res) => {
 
         res.status(200).json(result.rows[0]);
     } catch (err) {
-        console.error('Error fetching customer membership:', err.message); // Log the error message
-        res.status(500).json({ error: 'Error fetching customer membership' });
+        console.error('Error fetching customer total records:', err.message); // Log the error message
+        res.status(500).json({ error: 'Error fetching customer total records' });
+    } finally {
+        // Ensure the client is released back to the pool
+        if (client) {
+            client.release();
+        }
+    }
+});
+
+app.get('/getCustomerTotalRecords/:name', async (req, res) => {
+    const { name } = req.params;
+
+    const totalRecordsQuery = `
+        SELECT 
+            c.name, 
+            c.email, 
+            c.contact_info AS phone, 
+            COALESCE(SUM(p.amount), 0) AS total_payment,
+            COUNT(DISTINCT p.payment_id) AS total_payments,
+            0 AS total_entries,  -- Set total_entries to 0 for now
+            ARRAY_AGG(ROW(p.amount, p.method, p.payment_date)) AS payment_records
+        FROM 
+            Customer c
+        LEFT JOIN 
+            Payment p ON p.customer_id = c.customer_id
+        WHERE 
+            c.name = $1
+        GROUP BY 
+            c.name, c.email, c.contact_info;
+    `;
+
+    let client; // Declare client variable here
+
+    try {
+        client = await pool.connect(); // Get a client from the pool
+        const result = await client.query(totalRecordsQuery, [name]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Customer not found' });
+        }
+
+        res.status(200).json(result.rows[0]);
+    } catch (err) {
+        console.error('Error fetching customer total records:', err.message); // Log the error message
+        res.status(500).json({ error: 'Error fetching customer total records' });
     } finally {
         // Ensure the client is released back to the pool
         if (client) {
