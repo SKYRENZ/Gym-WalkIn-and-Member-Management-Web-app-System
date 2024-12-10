@@ -1,9 +1,17 @@
 .workspace {
     display: flex;
-    align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
+    flex-direction: column;
     margin-top: 20px;
     border: solid 1px;
     height: 800px;
     width: 750px;
+}
+
+.workspace h1 {
+    display: flex;
+    padding-top: 20px;
+    padding-left: 30px;
+    font-size: 40px;
+    font-family: 'poppins', serif;
 }

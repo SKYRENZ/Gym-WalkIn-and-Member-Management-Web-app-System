@@ -13,12 +13,11 @@ function Admin() {
       <div className="container">
         <div className="leftPane">
           <Navigation />
-          <MemberTracking />
           <MemberCounting />
           <IncomeSummary />
         </div>
         <div className="rightPane">
-          <Workspace />
+          <MemberTracking />
         </div>
       </div>
     </>
