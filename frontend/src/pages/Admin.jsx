@@ -6,8 +6,6 @@ import IncomeSummary from '../components/admin/IncomeSummary.jsx';
 import Workspace from '../components/admin/Workspace.jsx';
 import '../css/admin/Admin.css';
 
-
-
 function Admin() {
   return (
     <>
