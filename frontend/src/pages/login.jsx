@@ -37,7 +37,8 @@ const LoginPage = () => {
     }
 };
 
-  return (
+return (
+  <div className="login-page">
     <div className="login-container">
       <div className="login-box">
         <div className="logo">
@@ -77,7 +78,8 @@ const LoginPage = () => {
         </form>
       </div>
     </div>
-  );
+  </div>
+);
 };
 
 export default LoginPage;

@@ -9,7 +9,7 @@ import '../css/admin/Admin.css';
 
 function Admin() {
   return (
-    <>
+    <div className="admin-page">
       <Header />
       <div className="container">
         <div className="leftPane">
@@ -21,7 +21,7 @@ function Admin() {
           <MemberTracking />
         </div>
       </div>
-    </>
+    </div>
   );
 }
 

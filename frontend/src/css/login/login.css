@@ -1,215 +1,144 @@
-/* Body setup with content aligned to the top */
-body {
-    margin: 0;
-    padding: 0;
-    font-family: "Arial", sans-serif;
-    width: 100vw; /* Set width to 100% of the viewport width */
-    height: 100vh; /* Set height to 100% of the viewport height */
-    position: relative;
-    overflow: hidden; /* Prevent any overflow */
-    display: flex;
-    justify-content: center; /* Centers the content horizontally */
-    align-items: flex-start; /* Aligns content to the top */
-    padding-top: 40px; /* Adds space at the top of the page */
-    flex-shrink: 0; /* Prevents the body from shrinking */
-    overflow-x: hidden; /* Prevent horizontal scroll */
-  }
-  
-  /* Blurred background image */
-  body::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: url("../assets/gym-background.jpg") no-repeat center center/cover; /* Background image */
-    filter: blur(2px); /* Reduced blur effect */
-    z-index: 0; /* Places the image at the back */
-  }
-  
-  /* Dark gradient overlay */
-  body::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-      to bottom,
-      #0A0C10 0%,   /* Very dark gray at the top */
-      #12151B 15%,  /* Slightly lighter dark tone */
-      #191E27 40%,  /* Dark tone in the middle */
-      rgba(25, 30, 39, 0.85) 70%, /* Slight transparency toward the bottom */
-      #2F3D43 100%  /* Original bottom color */
-    );
-    opacity: 0.98; /* Slightly reduced opacity for better visibility */
-    z-index: 1; /* Places the gradient above the blurred image */
-  }
-  
-  /* Content container */
-  .login-container {
-    text-align: center;
-    color: #fff;
-    z-index: 2; /* Ensures content is above the background and gradient */
-    position: relative;
-    width: 100%;
-    max-width: 500px; /* Increased max-width to make the content wider */
-    padding: 20px; /* Adds some padding to the container */
-  }
-  
-  /* Logo size increased */
-  .logo-image {
-    width: 180px; /* Increased logo size */
-    margin-bottom: 10px; /* Space below the logo */
-  }
-  
-  .gym-title {
-    font-size: 48px; /* Increased font size */
-    font-weight: bold;
-    color: #935D13; /* Gold-like color for the title */
-    margin-bottom: 20px; /* Increased space between title and welcome text */
-  }
-  
-  .welcome-text {
-    font-size: 40px; /* Increased font size */
-    font-weight: bold; /* Ensures it's bold */
-    margin-bottom: 20px; /* Increased space between welcome text and input */
-  }
-  
-  /* Password input line style */
-  .password-input {
-    width: 100%; /* Full width of the container */
-    max-width: 450px; /* Increased width of the input to make it longer */
-    border: none;
-    border-bottom: 3px solid #fff; /* Larger underline */
-    background: transparent;
-    padding: 15px;
-    font-size: 20px; /* Increased font size for the input */
-    color: #fff;
-    outline: none;
-    margin-bottom: 20px; /* Space between input and button */
-    display: block; /* Ensures the input takes up the full width */
-    margin-left: auto; /* Center the input horizontally */
-    margin-right: auto; /* Center the input horizontally */
-  }
-  
-  .password-input::placeholder {
-    color: rgba(255, 255, 255, 0.6);
-  }
-  
-  /* Login button */
-  .login-button {
-    width: auto;
-    padding: 15px 30px; /* Increased padding */
-    font-size: 18px; /* Increased font size */
-    color: #fff;
-    background-color: #0A7075; /* Button color */
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, opacity 0.3s ease;
-    opacity: 0.5; /* Reduced opacity */
-  }
-  
-  .login-button:hover {
-    background-color: #074E52; /* Darker shade on hover */
-    opacity: 1; /* Set to fully opaque on hover */
-  }
-  
-  /* Password wrapper and toggle button */
-  .password-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-  }
-  
-  .password-toggle {
-    position: absolute;
-    right: 10px;
-    border: none;
-    background: transparent;
-    color: #fff;
-    cursor: pointer;
-    font-size: 20px; /* Increased icon size */
-  }
-  
-  /* Styling for when the user hovers over the password toggle */
-  .password-toggle:hover {
-    opacity: 0.7;
-  }
-  
-  /* Optional: Adds some margin between the input and button */
-  .input-container {
-    margin-bottom: 30px; /* Increased space between input and button */
-  }
-  :root {
-    font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-    line-height: 1.5;
-    font-weight: 400;
-  
-    color-scheme: light dark;
-    color: rgba(255, 255, 255, 0.87);
-    background-color: #242424;
-  
-    font-synthesis: none;
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-  
-  a {
-    font-weight: 500;
-    color: #646cff;
-    text-decoration: inherit;
-  }
-  a:hover {
-    color: #535bf2;
-  }
-  
-  body {
-    margin: 0;
-    display: flex;
-    place-items: center;
-    min-width: 320px;
-    min-height: 100vh;
-  }
-  
-  h1 {
-    font-size: 3.2em;
-    line-height: 1.1;
-  }
-  
-  button {
-    border-radius: 8px;
-    border: 1px solid transparent;
-    padding: 0.6em 1.2em;
-    font-size: 1em;
-    font-weight: 500;
-    font-family: inherit;
-    background-color: #1a1a1a;
-    cursor: pointer;
-    transition: border-color 0.25s;
-  }
-  button:hover {
-    border-color: #646cff;
-  }
-  button:focus,
-  button:focus-visible {
-    outline: 4px auto -webkit-focus-ring-color;
-  }
-  
-  @media (prefers-color-scheme: light) {
-    :root {
-      color: #213547;
-      background-color: #ffffff;
-    }
-    a:hover {
-      color: #747bff;
-    }
-    button {
-      background-color: #f9f9f9;
-    }
-  }
-  
+/* Scope styles to the login page */
+.login-page {
+  margin: 0;
+  padding: 0;
+  font-family: "Arial", sans-serif;
+  width: 100vw; /* Set width to 100% of the viewport width */
+  height: 100vh; /* Set height to 100% of the viewport height */
+  position: relative;
+  overflow: hidden; /* Prevent any overflow */
+  display: flex;
+  justify-content: center; /* Centers the content horizontally */
+  align-items: center; /* Centers content vertically */
+  flex-shrink: 0; /* Prevents the body from shrinking */
+}
+
+/* Blurred background image */
+.login-page::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: url("../../assets/gym-background.jpg") no-repeat center center/cover; /* Background image */
+  filter: blur(2px); /* Reduced blur effect */
+  z-index: 0; /* Places the image at the back */
+}
+
+/* Dark gradient overlay */
+.login-page::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    #0A0C10 0%,   /* Very dark gray at the top */
+    #12151B 15%,  /* Slightly lighter dark tone */
+    #191E27 40%,  /* Dark tone in the middle */
+    rgba(25, 30, 39, 0.85) 70%, /* Slight transparency toward the bottom */
+    #2F3D43 100%  /* Original bottom color */
+  );
+  opacity: 0.98; /* Slightly reduced opacity for better visibility */
+  z-index: 1; /* Places the gradient above the blurred image */
+}
+
+/* Content container */
+.login-page .login-container {
+  text-align: center;
+  color: #fff;
+  z-index: 2; /* Ensures content is above the background and gradient */
+  position: relative;
+  width: 100%;
+  max-width: 500px; /* Increased max-width to make the content wider */
+  padding: 20px; /* Adds some padding to the container */
+}
+
+/* Logo size increased */
+.login-page .logo-image {
+  width: 180px; /* Increased logo size */
+  margin-bottom: 10px; /* Space below the logo */
+}
+
+.login-page .gym-title {
+  font-size: 48px; /* Increased font size */
+  font-weight: bold;
+  color: #935D13; /* Gold-like color for the title */
+  margin-bottom: 20px; /* Increased space between title and welcome text */
+}
+
+.login-page .welcome-text {
+  font-size: 40px; /* Increased font size */
+  font-weight: bold; /* Ensures it's bold */
+  margin-bottom: 20px; /* Increased space between welcome text and input */
+}
+
+/* Password input line style */
+.login-page .password-input {
+  width: 100%; /* Full width of the container */
+  max-width: 450px; /* Increased width of the input to make it longer */
+  border: none;
+  border-bottom: 3px solid #fff; /* Larger underline */
+  background: transparent;
+  padding: 15px;
+  font-size: 20px; /* Increased font size for the input */
+  color: #fff;
+  outline: none;
+  margin-bottom: 20px; /* Space between input and button */
+  display: block; /* Ensures the input takes up the full width */
+  margin-left: auto; /* Center the input horizontally */
+  margin-right: auto; /* Center the input horizontally */
+}
+
+.login-page .password-input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Login button */
+.login-page .login-button {
+  width: auto;
+  padding: 15px 30px; /* Increased padding */
+  font-size: 18px; /* Increased font size */
+  color: #fff;
+  background-color: #0A7075; /* Button color */
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, opacity 0.3s ease;
+  opacity: 0.5; /* Reduced opacity */
+}
+
+.login-page .login-button:hover {
+  background-color: #074E52; /* Darker shade on hover */
+  opacity: 1; /* Set to fully opaque on hover */
+}
+
+/* Password wrapper and toggle button */
+.login-page .password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.login-page .password-toggle {
+  position: absolute;
+  right: 10px;
+  border: none;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  font-size: 20px; /* Increased icon size */
+}
+
+/* Styling for when the user hovers over the password toggle */
+.login-page .password-toggle:hover {
+  opacity: 0.7;
+}
+
+/* Optional: Adds some margin between the input and button */
+.login-page .input-container {
+  margin-bottom: 30px; /* Increased space between input and button */
+}

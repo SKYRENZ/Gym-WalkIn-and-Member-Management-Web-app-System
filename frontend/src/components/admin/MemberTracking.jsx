@@ -5,7 +5,7 @@ function MemberTracking() {
   return (
     <div className="member-tracking">
       <div className="member-tracking-header">
-        <h1>Member Tracking</h1>
+        <h1>Customer Tracking</h1>
         <DatePicker />
       </div>
         <table className = "member-tracking-table">
@@ -20,11 +20,11 @@ function MemberTracking() {
           </thead>
           <tbody>
             <tr>
-              <td>Laurenz Listangco</td>
-              <td>10:00:00</td>
-              <td>Walk In</td>
-              <td>Payamaya</td>
-              <td>Paid</td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
+              <td></td>
             </tr>
           </tbody>
         </table>

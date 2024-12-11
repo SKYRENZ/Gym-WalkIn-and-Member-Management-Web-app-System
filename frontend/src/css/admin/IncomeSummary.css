@@ -1,28 +1,23 @@
 .income-summary {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-top: 20px;
-    height: 500px;
-    flex-grow: 1;
-    box-sizing: border-box;
-    background-color: #ffffff;
-    box-shadow: 5px 5px 4px rgba(0, 0, 0, 0.1);
-    border-radius: 10px;
-  }
-  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+  border: solid 1px;
+  height: 500px;
+  flex-grow: 1;
+  box-sizing: border-box;
+}
 
-  /* Media Queries for Responsiveness */
-  @media (max-width: 768px) {
-    .income-summary {
-      height: 400px;
-    }
+/* Media Queries for Responsiveness */
+@media (max-width: 768px) {
+  .income-summary {
+    height: 400px;
   }
-  
-  @media (max-width: 480px) {
-    .income-summary {
-      height: 300px;
-    }
+}
+
+@media (max-width: 480px) {
+  .income-summary {
+    height: 300px;
   }
-
-
+}

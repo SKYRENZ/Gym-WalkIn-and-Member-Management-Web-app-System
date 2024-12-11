@@ -10,7 +10,7 @@
   box-shadow: 5px 5px 4px rgba(0, 0, 0, 0.1);
   margin-top: 20px;
   border-radius: 10px;
-  padding: 0px 40px;
+  padding: 10px 40px;
   margin-left: 20px;
   width: 100%;
   box-sizing: border-box;
@@ -42,7 +42,6 @@
   padding: 8px;
   text-align: left;
   justify-content: flex-start;
-
 }
 
 .member-tracking-table th {
@@ -54,6 +53,7 @@
 .member-tracking-table td {
   font-weight: 400;
 }
+
 /* Media Queries for Responsiveness */
 @media (max-width: 768px) {
   .member-tracking {
