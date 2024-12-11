@@ -36,32 +36,49 @@ app.get('/memberships', async (req, res) => {
 });
 //customer records
 app.get('/customerTracking', async (req, res) => {
-    const currentDate = new Date();
-    const startOfDay = new Date(currentDate.setHours(0, 0, 0, 0));
-    const endOfDay = new Date(currentDate.setHours(23, 59, 59, 999));
+    // Get the date from the query parameter, default to the current date if not provided
+    const dateParam = req.query.date || new Date().toISOString().split('T')[0]; // Default to today's date
+    const testDate = new Date(dateParam);
+    
+    // Check if the date is valid
+    if (isNaN(testDate.getTime())) {
+        return res.status(400).json({ error: 'Invalid date format. Please use YYYY-MM-DD.' });
+    }
+
+    const startOfDay = new Date(testDate.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(testDate.setHours(23, 59, 59, 999));
 
     const trackingQuery = `
         SELECT 
             c.name, 
             ci.check_in_time AS timestamp, 
-            CASE 
-                WHEN c.membership_type = 'Walk In' THEN 'Walk In' 
-                ELSE 'Member' 
-            END AS role,
-            CASE 
-                WHEN c.membership_type != 'Walk In' THEN NULL 
-                ELSE p.amount 
-            END AS payment
+            'Member' AS role,
+            NULL AS payment
+        FROM 
+            Customer c
+        JOIN 
+            Membership m ON c.customer_id = m.customer_id
+        JOIN 
+            CheckIn ci ON m.membership_id = ci.membership_id
+        WHERE 
+            ci.check_in_time >= $1 AND ci.check_in_time <= $2
+
+        UNION ALL
+
+        SELECT 
+            c.name, 
+            p.payment_date AS timestamp, 
+            'Walk In' AS role,
+            p.amount AS payment
         FROM 
             Customer c
         LEFT JOIN 
-            CheckIn ci ON c.customer_id = ci.customer_id
-        LEFT JOIN 
-            Payment p ON c.customer_id = p.customer_id AND p.payment_date BETWEEN $1 AND $2
+            Payment p ON c.customer_id = p.customer_id
         WHERE 
-            ci.check_in_time BETWEEN $1 AND $2
+            c.membership_type = 'Walk In' 
+            AND p.payment_date >= $1 AND p.payment_date <= $2
         ORDER BY 
-            ci.check_in_time;
+            timestamp;
     `;
 
     let client; // Declare client variable here
