@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import TransactionsTable from '../components/counter/TransactionsTable';  // Import TransactionsTable
 import Overview from '../components/counter/Overview';
-import TransactionTypePopup from '../components/counter/TransactionTypePopup'; // Import the popup component
+
 
 const Counter = () => {
   const [isPopupVisible, setPopupVisible] = useState(false);
