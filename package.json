@@ -4,6 +4,7 @@
     "node-cron": "^3.0.3",
     "pg": "^8.13.1",
     "prop-types": "^15.8.1",
+    "qrcode": "^1.5.4",
     "react-icons": "^5.4.0"
   }
 }
