@@ -21,12 +21,4 @@
     height: auto; /* Allow height to adjust */
   }
 
-  .popup {
-    width: 90%; /* Make popup width responsive */
-    padding: 15px; /* Adjust padding */
-  }
-
-  .popup-button {
-    width: 100%; /* Full width for buttons */
-  }
 }
