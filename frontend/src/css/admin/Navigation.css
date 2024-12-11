@@ -27,10 +27,10 @@
     padding: 10px;
     background-color: #f0f0f0;
     border: none; /* Remove border */
-    border-radius: 0px; /* Rounded corners */
+    border-radius: 5px; /* Rounded corners */
     cursor: pointer;
     flex: 1;
-    min-width: 250px;
+    min-width: 240px;
     display: flex;
     align-items: center; /* Vertically center image and text */
     justify-content: flex-start; /* Align items to the left */
