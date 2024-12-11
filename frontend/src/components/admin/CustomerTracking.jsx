@@ -1,8 +1,8 @@
 import  { useEffect, useState } from 'react';
-import '../../css/admin/MemberTracking.css';
+import '../../css/admin/CustomerTracking.css';
 import DatePicker from './DatePicker';
 
-function MemberTracking() {
+function CustomerTracking() {
   const [customerData, setCustomerData] = useState([]);
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]); // Default to today's date
 
