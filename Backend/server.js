@@ -34,6 +34,214 @@ app.get('/memberships', async (req, res) => {
         res.status(500).json({ error: 'An error occurred while fetching memberships' });
     }
 });
+//customer records
+app.get('/customerTracking', async (req, res) => {
+    const currentDate = new Date();
+    const startOfDay = new Date(currentDate.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(currentDate.setHours(23, 59, 59, 999));
+
+    const trackingQuery = `
+        SELECT 
+            c.name, 
+            ci.check_in_time AS timestamp, 
+            CASE 
+                WHEN c.membership_type = 'Walk In' THEN 'Walk In' 
+                ELSE 'Member' 
+            END AS role,
+            CASE 
+                WHEN c.membership_type != 'Walk In' THEN NULL 
+                ELSE p.amount 
+            END AS payment
+        FROM 
+            Customer c
+        LEFT JOIN 
+            CheckIn ci ON c.customer_id = ci.customer_id
+        LEFT JOIN 
+            Payment p ON c.customer_id = p.customer_id AND p.payment_date BETWEEN $1 AND $2
+        WHERE 
+            ci.check_in_time BETWEEN $1 AND $2
+        ORDER BY 
+            ci.check_in_time;
+    `;
+
+    let client; // Declare client variable here
+
+    try {
+        client = await pool.connect(); // Get a client from the pool
+        const result = await client.query(trackingQuery, [startOfDay, endOfDay]);
+
+        res.status(200).json(result.rows);
+    } catch (err) {
+        console.error('Error fetching customer tracking records:', err.message); // Log the error message
+        res.status(500).json({ error: 'Error fetching customer tracking records' });
+    } finally {
+        // Ensure the client is released back to the pool
+        if (client) {
+            client.release();
+        }
+    }
+});
+// customer records
+app.get('/getWalkInCustomerRecords', async (req, res) => {
+    const walkInRecordsQuery = `
+        SELECT 
+            c.name, 
+            COUNT(p.payment_id) AS total_entries,
+            MAX(p.payment_date) AS recent_payment_date
+        FROM 
+            Customer c
+        LEFT JOIN 
+            Payment p ON p.customer_id = c.customer_id
+        WHERE 
+            c.membership_type = 'Walk In'
+        GROUP BY 
+            c.name
+        ORDER BY 
+            c.name;  -- Optional: Order by name
+    `;
+
+    let client; // Declare client variable here
+
+    try {
+        client = await pool.connect(); // Get a client from the pool
+        const result = await client.query(walkInRecordsQuery);
+
+        res.status(200).json(result.rows);
+    } catch (err) {
+        console.error('Error fetching walk-in customer records:', err.message); // Log the error message
+        res.status(500).json({ error: 'Error fetching walk-in customer records' });
+    } finally {
+        // Ensure the client is released back to the pool
+        if (client) {
+            client.release();
+        }
+    }
+});
+app.get('/getMemberCustomerRecords', async (req, res) => {
+    const memberRecordsQuery = `
+        SELECT 
+            c.name, 
+            COUNT(p.payment_id) AS total_entries,
+            MAX(DATE(p.payment_date)) AS recent_payment_date  -- Use DATE to get only the date part
+        FROM 
+            Customer c
+        LEFT JOIN 
+            Payment p ON p.customer_id = c.customer_id
+        WHERE 
+            c.membership_type != 'Walk In'  -- Filter for members only
+        GROUP BY 
+            c.name
+        ORDER BY 
+            c.name;  -- Optional: Order by name
+    `;
+
+    let client; // Declare client variable here
+
+    try {
+        client = await pool.connect(); // Get a client from the pool
+        const result = await client.query(memberRecordsQuery);
+
+        res.status(200).json(result.rows);
+    } catch (err) {
+        console.error('Error fetching member customer records:', err.message); // Log the error message
+        res.status(500).json({ error: 'Error fetching member customer records' });
+    } finally {
+        // Ensure the client is released back to the pool
+        if (client) {
+            client.release();
+        }
+    }
+});
+
+// Endpoint to fetch customer membership information
+app.get('/getCustomerMember_TotalRecords/:name', async (req, res) => {
+    const { name } = req.params;
+
+    const totalRecordsQuery = `
+        SELECT 
+            c.name, 
+            COALESCE(SUM(p.amount), 0) AS total_payment,  -- Total payment amount
+            COUNT(DISTINCT p.payment_id) AS total_payments,  -- Count of distinct payments
+            COUNT(ci.check_in_time) AS total_checkins  -- Count of check-ins
+        FROM 
+            Customer c
+        LEFT JOIN 
+            Payment p ON c.customer_id = p.customer_id
+        LEFT JOIN 
+            Membership m ON c.customer_id = m.customer_id
+        LEFT JOIN 
+            CheckIn ci ON m.membership_id = ci.membership_id  -- Join with CheckIn table
+        WHERE 
+            c.name = $1
+        GROUP BY 
+            c.name;
+    `;
+
+    let client; // Declare client variable here
+
+    try {
+        client = await pool.connect(); // Get a client from the pool
+        const result = await client.query(totalRecordsQuery, [name]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Customer not found' });
+        }
+
+        res.status(200).json(result.rows[0]);
+    } catch (err) {
+        console.error('Error fetching total records:', err.message); // Log the error message
+        res.status(500).json({ error: 'Error fetching total records' });
+    } finally {
+        // Ensure the client is released back to the pool
+        if (client) {
+            client.release();
+        }
+    }
+});
+
+app.get('/getCustomerMember_info/:name', async (req, res) => {
+    const { name } = req.params;
+
+    const customerQuery = `
+        SELECT c.name, c.email, c.contact_info AS phone, m.end_date
+        FROM Customer c
+        JOIN Membership m ON c.customer_id = m.customer_id
+        WHERE c.name = $1
+        GROUP BY c.name, c.email, c.contact_info, m.end_date;
+    `;
+
+    let client; // Declare client variable here
+
+    try {
+        client = await pool.connect(); // Get a client from the pool
+        const result = await client.query(customerQuery, [name]);
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ error: 'Customer not found' });
+        }
+
+        res.status(200).json(result.rows[0]);
+    } catch (err) {
+        console.error('Error fetching customer membership:', err.message); // Log the error message
+        res.status(500).json({ error: 'Error fetching customer membership' });
+    } finally {
+        // Ensure the client is released back to the pool
+        if (client) {
+            client.release();
+        }
+    }
+});
+
+app.get('/qrcodes/:membershipId', (req, res) => {
+    const { membershipId } = req.params;
+    const qrCodePath = path.join(__dirname, 'qrcodes', `${membershipId}.png`);
+
+    res.sendFile(qrCodePath, (err) => {
+        if (err) {
+            res.status(404).send('QR code not found');
+        }
+    });
+});
 
 // Endpoint to add a walkin, membership, renewals and payment
 app.post('/addWalkInTransaction', async (req, res) => {
@@ -278,168 +486,6 @@ app.post('/renewMembership', async (req, res) => {
         await client.query('ROLLBACK'); // Rollback the transaction in case of error
         res.status(500).json({ error: 'Error renewing membership' });
     }
-});
-
-//walk in customer records
-app.get('/getWalkInCustomerRecords', async (req, res) => {
-    const walkInRecordsQuery = `
-        SELECT 
-            c.name, 
-            COUNT(p.payment_id) AS total_entries,
-            MAX(p.payment_date) AS recent_payment_date
-        FROM 
-            Customer c
-        LEFT JOIN 
-            Payment p ON p.customer_id = c.customer_id
-        WHERE 
-            c.membership_type = 'Walk In'
-        GROUP BY 
-            c.name
-        ORDER BY 
-            c.name;  -- Optional: Order by name
-    `;
-
-    let client; // Declare client variable here
-
-    try {
-        client = await pool.connect(); // Get a client from the pool
-        const result = await client.query(walkInRecordsQuery);
-
-        res.status(200).json(result.rows);
-    } catch (err) {
-        console.error('Error fetching walk-in customer records:', err.message); // Log the error message
-        res.status(500).json({ error: 'Error fetching walk-in customer records' });
-    } finally {
-        // Ensure the client is released back to the pool
-        if (client) {
-            client.release();
-        }
-    }
-});
-//membership customer records
-
-app.get('/getMemberCustomerRecords', async (req, res) => {
-    const memberRecordsQuery = `
-        SELECT 
-            c.name, 
-            COUNT(p.payment_id) AS total_entries,
-            MAX(DATE(p.payment_date)) AS recent_payment_date  -- Use DATE to get only the date part
-        FROM 
-            Customer c
-        LEFT JOIN 
-            Payment p ON p.customer_id = c.customer_id
-        WHERE 
-            c.membership_type != 'Walk In'  -- Filter for members only
-        GROUP BY 
-            c.name
-        ORDER BY 
-            c.name;  -- Optional: Order by name
-    `;
-
-    let client; // Declare client variable here
-
-    try {
-        client = await pool.connect(); // Get a client from the pool
-        const result = await client.query(memberRecordsQuery);
-
-        res.status(200).json(result.rows);
-    } catch (err) {
-        console.error('Error fetching member customer records:', err.message); // Log the error message
-        res.status(500).json({ error: 'Error fetching member customer records' });
-    } finally {
-        // Ensure the client is released back to the pool
-        if (client) {
-            client.release();
-        }
-    }
-});
-
-// Endpoint to fetch customer membership information
-app.get('/getCustomerMember_TotalRecords/:name', async (req, res) => {
-    const { name } = req.params;
-
-    const totalRecordsQuery = `
-        SELECT 
-            c.name, 
-            COALESCE(SUM(p.amount), 0) AS total_payment,
-            COUNT(DISTINCT p.payment_id) AS total_payments,
-            0 AS total_entries,  -- Set total_entries to 0 for now
-            ARRAY_AGG(ROW(p.amount, p.method, p.payment_date)) AS payment_records
-        FROM 
-            Customer c
-        LEFT JOIN 
-            Payment p ON p.customer_id = c.customer_id
-        WHERE 
-            c.name = $1
-        GROUP BY 
-            c.name;
-    `;
-
-    let client; // Declare client variable here
-
-    try {
-        client = await pool.connect(); // Get a client from the pool
-        const result = await client.query(totalRecordsQuery, [name]);
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Customer not found' });
-        }
-
-        res.status(200).json(result.rows[0]);
-    } catch (err) {
-        console.error('Error fetching customer total records:', err.message); // Log the error message
-        res.status(500).json({ error: 'Error fetching customer total records' });
-    } finally {
-        // Ensure the client is released back to the pool
-        if (client) {
-            client.release();
-        }
-    }
-});
-
-app.get('/getCustomerMember_info/:name', async (req, res) => {
-    const { name } = req.params;
-
-    const customerQuery = `
-        SELECT c.name, c.email, c.contact_info AS phone, m.end_date
-        FROM Customer c
-        JOIN Membership m ON c.customer_id = m.customer_id
-        WHERE c.name = $1
-        GROUP BY c.name, c.email, c.contact_info, m.end_date;
-    `;
-
-    let client; // Declare client variable here
-
-    try {
-        client = await pool.connect(); // Get a client from the pool
-        const result = await client.query(customerQuery, [name]);
-
-        if (result.rows.length === 0) {
-            return res.status(404).json({ error: 'Customer not found' });
-        }
-
-        res.status(200).json(result.rows[0]);
-    } catch (err) {
-        console.error('Error fetching customer membership:', err.message); // Log the error message
-        res.status(500).json({ error: 'Error fetching customer membership' });
-    } finally {
-        // Ensure the client is released back to the pool
-        if (client) {
-            client.release();
-        }
-    }
-});
-
-
-app.get('/qrcodes/:membershipId', (req, res) => {
-    const { membershipId } = req.params;
-    const qrCodePath = path.join(__dirname, 'qrcodes', `${membershipId}.png`);
-
-    res.sendFile(qrCodePath, (err) => {
-        if (err) {
-            res.status(404).send('QR code not found');
-        }
-    });
 });
 
 app.post('/generateQRCodesForExistingMembers', async (req, res) => {
