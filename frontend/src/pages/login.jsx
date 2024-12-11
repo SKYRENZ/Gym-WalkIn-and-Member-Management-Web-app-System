@@ -5,10 +5,37 @@ import { FaEye, FaEyeSlash } from "react-icons/fa"; // Import icons for showing/
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [password, setPassword] = useState(''); // State for password
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    console.log('Attempting to log in with password:', password); // Log the password
+
+    // Construct the API URL
+    const apiUrl = `${import.meta.env.VITE_API_URL}/staffLogin`;
+    console.log('Fetching:', apiUrl); // Log the full URL
+
+    const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password }),
+    });
+
+    console.log('Response status:', response.status); // Log the response status
+
+    if (response.ok) {
+        window.location.href = '/admin';
+    } else {
+        const errorData = await response.json();
+        console.error('Login error:', errorData.error); // Log the error
+        alert(errorData.error);
+    }
+};
 
   return (
     <div className="login-container">
@@ -21,7 +48,7 @@ const LoginPage = () => {
         <p className="login-description">
           Log in to access tools for managing transactions, accounts, and system data.
         </p>
-        <form>
+        <form onSubmit={handleLogin}>
           <div className="input-container">
             <label htmlFor="password"></label>
             <div className="password-wrapper">
@@ -30,6 +57,9 @@ const LoginPage = () => {
                 id="password"
                 placeholder="Password"
                 className="password-input"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)} // Update password state
+                required
               />
               <button
                 type="button"

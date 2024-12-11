@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 const { 
     updateMembershipStatus, 
     checkInMember, 
@@ -9,9 +10,13 @@ const pool = require('./db'); // Import your database connection
 const cron = require('node-cron');
 const app = express();
 const PORT = 3000; // You can choose any available port
-
 // Middleware to parse JSON requests
 app.use(express.json());
+
+app.use(cors({
+    origin: 'http://localhost:5173', // Replace with your frontend URL
+    methods: ['GET', 'POST'], // Specify allowed methods
+}));
 
 // Schedule the updateMembershipStatus function to run daily at midnight
 cron.schedule('0 0 * * *', async () => {
@@ -539,6 +544,76 @@ app.post('/checkIn', async (req, res) => {
     }
 });
 
+//LOGIN UI
+// Endpoint to add a staff member
+app.post('/addStaff', async (req, res) => {
+    const { name, role, password, contact_info } = req.body;
+
+    // Validate input
+    if (!name || !role || !password) {
+        return res.status(400).json({ error: 'Name, role, and password are required' });
+    }
+
+    const staffQuery = `
+        INSERT INTO Staff (name, role, password, contact_info)
+        VALUES ($1, $2, $3, $4) RETURNING staff_id;
+    `;
+
+    try {
+        const client = await pool.connect();
+        const result = await client.query(staffQuery, [name, role, password, contact_info]);
+        res.status(201).json({ message: 'Staff member added successfully', staffId: result.rows[0].staff_id });
+    } catch (error) {
+        console.error('Error adding staff member:', error);
+        res.status(500).json({ error: 'Error adding staff member' });
+    } finally {
+        if (client) {
+            client.release();
+        }
+    }
+});
+
+// Endpoint for staff login
+app.post('/staffLogin', async (req, res) => {
+    const { password } = req.body;
+
+    // Validate input
+    if (!password) {
+        return res.status(400).json({ error: 'Password is required' });
+    }
+
+    const loginQuery = `
+        SELECT * FROM Staff WHERE password = $1;  -- Adjust this query as needed
+    `;
+
+    let client; // Declare client variable here
+
+    try {
+        client = await pool.connect();
+        const result = await client.query(loginQuery, [password]);
+
+        if (result.rows.length === 0) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+        }
+
+        const staffMember = result.rows[0];
+
+        // Check if the role is staff
+        if (staffMember.role === 'staff') {
+            res.status(200).json({ message: 'Login successful', staff: staffMember });
+        } else {
+            res.status(403).json({ error: 'You do not have access to the admin page.' });
+        }
+    } catch (error) {
+        console.error('Error during staff login:', error);
+        res.status(500).json({ error: 'Error during staff login' });
+    } finally {
+        // Ensure the client is released back to the pool
+        if (client) {
+            client.release();
+        }
+    }
+});
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
