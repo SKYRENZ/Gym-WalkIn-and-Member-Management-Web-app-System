@@ -2,18 +2,4 @@
     padding: 10px 80px;
     background-color: #3A506B;
     color: white;
-    box-sizing: border-box;
-  }
-  
-  /* Media Queries for Responsiveness */
-  @media (max-width: 768px) {
-    .datepicker button {
-      padding: 8px 60px;
-    }
-  }
-  
-  @media (max-width: 480px) {
-    .datepicker button {
-      padding: 5px 40px;
-    }
-  }
+}
