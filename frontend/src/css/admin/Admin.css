@@ -40,3 +40,30 @@ html, body {
   gap: 20px;
   height: auto; /* Change to auto for responsiveness */
 }
+
+/* Media Queries for Responsiveness */
+@media (max-width: 768px) {
+  .container {
+    flex-direction: column;
+    padding: 10px;
+  }
+
+  .leftPane, .rightPane {
+    width: 100%;
+    flex: none;
+  }
+
+  .leftPane {
+    margin-bottom: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 5px;
+  }
+
+  .leftPane, .rightPane {
+    padding: 10px;
+  }
+}
