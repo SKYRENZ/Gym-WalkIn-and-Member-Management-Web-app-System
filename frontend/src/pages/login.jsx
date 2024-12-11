@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import "../logincss/login.css"; // Make sure the path is correct
+import { useState } from "react";
+import "../css/login/login.css"; // Make sure the path is correct
 import logo from "../assets/gym-logo.png"; // Correct image import
 import { FaEye, FaEyeSlash } from "react-icons/fa"; // Import icons for showing/hiding password
 
