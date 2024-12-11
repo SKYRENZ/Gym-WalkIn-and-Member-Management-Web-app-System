@@ -1,44 +1,27 @@
 const express = require('express');
-const cors = require('cors');
-const { 
-    updateMembershipStatus, 
-    checkInMember, 
-    generateQRCode, 
-    generateQRCodesForExistingMembers 
-} = require('./membershipService');
+const membershipService = require('./membershipService');
 const pool = require('./db'); // Import your database connection
 const cron = require('node-cron');
+const corsMiddleware = require('./Middleware/corsMiddleware'); // Correct path
 const app = express();
 const PORT = 3000; // You can choose any available port
+const routes = require('./controllers/routes'); // Adjust the path if necessary
 // Middleware to parse JSON requests
 app.use(express.json());
 
-app.use(cors({
-    origin: 'http://localhost:5173', // Replace with your frontend URL
-    methods: ['GET', 'POST'], // Specify allowed methods
-}));
-
+// Use the CORS middleware
+app.use(corsMiddleware);
+app.use('/api', routes);
 // Schedule the updateMembershipStatus function to run daily at midnight
 cron.schedule('0 0 * * *', async () => {
-    await updateMembershipStatus();
-    console.log('Membership statuses updated.');
-});
-
-// Example route to fetch memberships
-app.get('/memberships', async (req, res) => {
     try {
-        await updateMembershipStatus(); // Update statuses before fetching
-
-        const membershipsQuery = `
-            SELECT * FROM Membership;
-        `;
-        const result = await pool.query(membershipsQuery);
-        res.status(200).json(result.rows);
+        await membershipService.updateMembershipStatus();
+        console.log('Membership statuses updated.');
     } catch (error) {
-        console.error('Error fetching memberships:', error);
-        res.status(500).json({ error: 'An error occurred while fetching memberships' });
+        console.error('Error during scheduled membership status update:', error.message);
     }
 });
+
 //customer records
 app.get('/customerTracking', async (req, res) => {
     // Get the date from the query parameter, default to the current date if not provided
@@ -342,10 +325,12 @@ app.post('/addMembershipTransaction', async (req, res) => {
         return res.status(400).json({ error: 'Name, email, and payment method are required' });
     }
 
+    const membershipType = 'Member'; // Set this to the appropriate membership type for members
+
     // Define the customerQuery
     const customerQuery = `
-        INSERT INTO Customer (name, email, contact_info)
-        VALUES ($1, $2, $3) RETURNING customer_id;
+        INSERT INTO Customer (name, email, membership_type, contact_info)
+        VALUES ($1, $2, $3, $4) RETURNING customer_id;
     `;
 
     // Define the membershipQuery
@@ -367,7 +352,7 @@ app.post('/addMembershipTransaction', async (req, res) => {
         await client.query('BEGIN');
 
         // Insert customer
-        const customerResult = await client.query(customerQuery, [name, email, phone]);
+        const customerResult = await client.query(customerQuery, [name, email, membershipType, phone]);
         const customerId = customerResult.rows[0].customer_id;
 
         // Define membership details
@@ -380,17 +365,6 @@ app.post('/addMembershipTransaction', async (req, res) => {
         const membershipResult = await client.query(membershipQuery, [customerId, startDate, endDate, membershipStatus]);
         const membershipId = membershipResult.rows[0].membership_id;
 
-        // Generate QR code for the membership
-        const qrCodePath = await generateQRCode(membershipId);
-
-        // Update the Membership table with the QR code path
-        const updateQRCodeQuery = `
-            UPDATE Membership
-            SET qr_code_path = $1
-            WHERE membership_id = $2;
-        `;
-        await client.query(updateQRCodeQuery, [qrCodePath, membershipId]);
-
         // Insert payment
         const amount = 120.00; // Amount for membership
         const paymentDate = new Date().toISOString().split('T')[0]; // Use current date for payment date without time
@@ -398,8 +372,14 @@ app.post('/addMembershipTransaction', async (req, res) => {
 
         await client.query(paymentQuery, [amount, paymentMethod, paymentStatus, paymentDate, customerId]);
 
+        // After generating the QR code
+const qrCodePath = await membershipService.generateQRCode(membershipId);
+console.log('QR Code generated at:', qrCodePath);
+
+// Update the QR code path in the database
+await membershipService.updateQRCodePath(membershipId, qrCodePath);
         await client.query('COMMIT');
-        res.status(201).json({ message: 'Membership transaction added successfully', membershipId });
+        res.status(201).json({ message: 'Membership transaction added successfully', membershipId, qrCodePath });
     } catch (error) {
         if (client) {
             await client.query('ROLLBACK');
