@@ -1,35 +1,35 @@
 .navigation {
     display: flex;
-    flex-direction: row;
+    flex-wrap: wrap;
     justify-content: space-evenly;
     font-family: 'Poppins', sans-serif;
     width: 100%;
-}
-
-.navigation button:nth-child(1) {
+  }
+  
+  .navigation button:nth-child(1) {
     background-color: #d6e4ff; /* Light blue for Customer Records */
-}
-
-.navigation button:nth-child(2) {
+  }
+  
+  .navigation button:nth-child(2) {
     background-color: #d9f7be; /* Light green for QR Membership Print */
-}
-
-.navigation button:nth-child(3) {
+  }
+  
+  .navigation button:nth-child(3) {
     background-color: #fff7db; /* Light yellow for Voucher */
-}
-
-.navigation button:nth-child(4) {
+  }
+  
+  .navigation button:nth-child(4) {
     background-color: #ffe7e7; /* Light pink for Accounts */
-}
-
-.navigation button {
+  }
+  
+  .navigation button {
     margin: 10px;
     padding: 10px;
     background-color: #f0f0f0;
     border: none; /* Remove border */
     border-radius: 5px; /* Rounded corners */
     cursor: pointer;
-    flex: 1;
+    flex: 1 1 calc(50% - 20px); /* Adjust to take half the width minus margin */
     min-width: 240px;
     display: flex;
     align-items: center; /* Vertically center image and text */
@@ -37,25 +37,49 @@
     gap: 15px; /* Add space between image and text */
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Add shadow */
     transition: transform 0.2s ease, box-shadow 0.2s ease; /* Smooth hover effect */
-}
-
-.navigation button img {
+  }
+  
+  .navigation button img {
     width: 50px;
     height: 50px;
     flex-shrink: 0; /* Prevent the image from shrinking */
     margin-left: 10px; /* Add space between image and text */
-}
-
-.navigation button span {
+  }
+  
+  .navigation button span {
     flex-grow: 1;
     text-align: center;
     font-weight: bold;
     display: flex;
     align-items: center; /* Vertically center the text */
     justify-content: center; /* Horizontally center the text */
-}
-
-.navigation button:hover {
+  }
+  
+  .navigation button:hover {
     transform: translateY(-5px); /* Slight lift effect */
     box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.15); /* Darker shadow on hover */
-}
+  }
+  
+  /* Media Queries for Responsiveness */
+  @media (max-width: 768px) {
+    .navigation button {
+      flex: 1 1 calc(50% - 20px); /* Two columns */
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .navigation button {
+      flex: 1 1 calc(50% - 10px); /* Two columns with smaller gap */
+      padding: 5px;
+      gap: 10px;
+    }
+  
+    .navigation button img {
+      width: 40px;
+      height: 40px;
+    }
+  
+    .navigation button span {
+      font-size: 14px;
+    }
+  }

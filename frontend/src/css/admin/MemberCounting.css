@@ -6,4 +6,18 @@
     border: solid 1px;
     height: 500px;
     flex-grow: 1;
-}
+    box-sizing: border-box;
+  }
+  
+  /* Media Queries for Responsiveness */
+  @media (max-width: 768px) {
+    .member-counting {
+      height: 400px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .member-counting {
+      height: 300px;
+    }
+  }
