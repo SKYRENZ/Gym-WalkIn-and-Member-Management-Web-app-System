@@ -10,10 +10,9 @@
   box-shadow: 5px 5px 4px rgba(0, 0, 0, 0.1);
   margin-top: 20px;
   border-radius: 10px;
-  padding: 0px 40px;
+  padding: 10px 40px;
   margin-left: 20px;
   width: 100%;
-  box-sizing: border-box;
 }
 
 .member-tracking-header {
@@ -42,6 +41,7 @@
   padding: 8px;
   text-align: left;
   justify-content: flex-start;
+
 }
 
 .member-tracking-table th {
@@ -52,39 +52,4 @@
 
 .member-tracking-table td {
   font-weight: 400;
-}
-
-/* Media Queries for Responsiveness */
-@media (max-width: 768px) {
-  .member-tracking {
-    padding: 10px 20px;
-    margin-left: 0;
-  }
-
-  .member-tracking-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .member-tracking h1 {
-    font-size: 24px;
-  }
-
-  .member-tracking-table {
-    font-size: 13px;
-  }
-}
-
-@media (max-width: 480px) {
-  .member-tracking {
-    padding: 5px 10px;
-  }
-
-  .member-tracking h1 {
-    font-size: 20px;
-  }
-
-  .member-tracking-table {
-    font-size: 12px;
-  }
 }

@@ -1,0 +1,20 @@
+{
+  "name": "gym-management-system",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "concurrently \"npm run dev --prefix frontend\" \"node backend/server.js\""
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "gym-management-system": "file:",
+    "node-cron": "^3.0.3",
+    "pg": "^8.13.1",
+    "prop-types": "^15.8.1",
+    "qrcode": "^1.5.4",
+    "react-icons": "^5.4.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}
