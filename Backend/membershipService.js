@@ -12,14 +12,16 @@ async function updateMembershipStatus() {
         WHERE end_date < $1 AND status = 'Active';
     `;
 
+    let client; // Declare client variable here
+
     try {
-        const client = await pool.connect();
+        client = await pool.connect(); // Get a client from the pool
         await client.query(updateStatusQuery, [currentDate]);
     } catch (error) {
         console.error('Error updating membership status:', error);
     } finally {
         if (client) {
-            client.release();
+            client.release(); // Release the client only if it was successfully created
         }
     }
 }
