@@ -42,7 +42,6 @@ function CustomerTracking() {
             <th>Timestamp</th>
             <th>Role</th>
             <th>Payment</th>
-            <th>Status</th>
           </tr>
         </thead>
         <tbody>
@@ -52,7 +51,6 @@ function CustomerTracking() {
               <td>{customer.timestamp}</td>
               <td>{customer.role}</td>
               <td>{customer.payment || 'N/A'}</td>
-              <td>{customer.status || 'Active'}</td> {/* Assuming status is not provided in the response */}
             </tr>
           ))}
         </tbody>
