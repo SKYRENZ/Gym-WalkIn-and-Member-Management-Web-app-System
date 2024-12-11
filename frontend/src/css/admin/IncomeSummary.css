@@ -12,6 +12,7 @@
   }
   
   /* Media Queries for Responsiveness */
+  /* Media Queries for Responsiveness */
   @media (max-width: 768px) {
     .income-summary {
       height: 400px;
