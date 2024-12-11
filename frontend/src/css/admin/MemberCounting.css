@@ -1,23 +1,25 @@
 .member-counting {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-top: 20px;
-    border: solid 1px;
-    height: 500px;
-    flex-grow: 1;
-    box-sizing: border-box;
+  display: flex;
+  flex-direction: column; /* Stack elements vertically */
+  align-items: center; /* Center align items */
+  padding: 20px; /* Add some padding */
+  max-width: 800px; /* Set a max width for larger screens */
+  margin: 0 auto; /* Center the component horizontally */
+}
+
+.member-counting h1 {
+  margin-bottom: 20px; /* Space below the header */
+  text-align: center; /* Center the header text */
+  font-size: 2rem; /* Responsive font size */
+  color: black;
+}
+
+@media (max-width: 600px) {
+  .member-counting h1 {
+      font-size: 1.5rem; /* Smaller font size for smaller screens */
   }
-  
-  /* Media Queries for Responsiveness */
-  @media (max-width: 768px) {
-    .member-counting {
-      height: 400px;
-    }
+
+  .member-counting {
+      padding: 10px; /* Less padding on smaller screens */
   }
-  
-  @media (max-width: 480px) {
-    .member-counting {
-      height: 300px;
-    }
-  }
+}
