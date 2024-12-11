@@ -14,14 +14,6 @@ header {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Add bottom shadow */
   }
   
-  .brand {
-    flex: 1;
-  }
-  
-  .brand h1 {
-    font-size: 30px;
-  }
-  
   .user-info {
     display: flex;
     align-items: center;

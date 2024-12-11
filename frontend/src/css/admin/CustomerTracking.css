@@ -13,7 +13,6 @@
   padding: 10px 40px;
   margin-left: 20px;
   width: 100%;
-  box-sizing: border-box;
 }
 
 .member-tracking-header {
@@ -36,6 +35,7 @@
   border-collapse: collapse;
   margin-top: 20px;
   font-size: 15px;
+  table-layout: fixed; /* Ensures even spacing */
 }
 
 .member-tracking-table th, .member-tracking-table td {
@@ -54,7 +54,23 @@
   font-weight: 400;
 }
 
-/* Media Queries for Responsiveness */
+/* Adjust column widths */
+.member-tracking-table th:nth-child(1), .member-tracking-table td:nth-child(1) {
+  width: 35%; /* Name */
+}
+
+.member-tracking-table th:nth-child(2), .member-tracking-table td:nth-child(2) {
+  width: 25%; /* Timestamp */
+}
+
+.member-tracking-table th:nth-child(3), .member-tracking-table td:nth-child(3) {
+  width: 15%; /* Role */
+}
+
+.member-tracking-table th:nth-child(4), .member-tracking-table td:nth-child(4) {
+  width: 25%; /* Payment */
+}
+
 @media (max-width: 768px) {
   .member-tracking {
     padding: 10px 20px;

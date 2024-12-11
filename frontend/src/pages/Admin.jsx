@@ -1,9 +1,8 @@
-import Header from '../components/admin/Header.jsx';
+import AdminHeader from '../components/admin/AdminHeader.jsx';
 import Navigation from '../components/admin/Navigation.jsx';
-import MemberTracking from '../components/admin/MemberTracking.jsx';
+import CustomerTracking from '../components/admin/CustomerTracking.jsx';
 import MemberCounting from '../components/admin/MemberCounting.jsx';
 import IncomeSummary from '../components/admin/IncomeSummary.jsx';
-import Workspace from '../components/admin/Workspace.jsx';
 import '../css/admin/Admin.css';
 
 
@@ -11,7 +10,7 @@ import '../css/admin/Admin.css';
 function Admin() {
   return (
     <div className="admin-page">
-      <Header />
+      <AdminHeader />
       <div className="container">
         <div className="leftPane">
           <Navigation />
@@ -19,7 +18,7 @@ function Admin() {
           <IncomeSummary />
         </div>
         <div className="rightPane">
-          <MemberTracking />
+          <CustomerTracking />
         </div>
       </div>
     </div>

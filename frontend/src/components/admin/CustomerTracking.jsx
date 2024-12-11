@@ -1,7 +1,7 @@
-import '../../css/admin/MemberTracking.css';
+import '../../css/admin/CustomerTracking.css';
 import DatePicker from './DatePicker';
 
-function MemberTracking() {
+function CustomerTracking() {
   return (
     <div className="member-tracking">
       <div className="member-tracking-header">
@@ -15,12 +15,10 @@ function MemberTracking() {
               <th>Timestamp</th>
               <th>Role</th>
               <th>Payment</th>
-              <th>Status</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td></td>
               <td></td>
               <td></td>
               <td></td>
@@ -32,4 +30,4 @@ function MemberTracking() {
   );
 }
 
-export default MemberTracking;
+export default CustomerTracking;

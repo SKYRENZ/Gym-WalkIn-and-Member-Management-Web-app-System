@@ -1,12 +1,11 @@
-import '../../css/admin/Header.css';
+import '../../css/admin/AdminHeader.css';
 import dropdown from '../../assets/Dropdown.png';
+import BrandName from '../BrandName.jsx';
 
-function Header() {
+function AdminHeader() {
   return (
     <header>
-      <div className="brand">
-        <h1 className="gymbrand">Cavin Fitness</h1>
-      </div>
+      <BrandName />
 
       <div className="user-info">
         <div>
@@ -19,4 +18,4 @@ function Header() {
   );
 }
 
-export default Header;
+export default AdminHeader;
