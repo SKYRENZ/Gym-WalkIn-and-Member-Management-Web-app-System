@@ -24,21 +24,54 @@ cron.schedule('0 0 * * *', async () => {
     console.log('Membership statuses updated.');
 });
 
-// Example route to fetch memberships
-app.get('/memberships', async (req, res) => {
+app.get('/getAvailableYears', async (req, res) => {
     try {
-        await updateMembershipStatus(); // Update statuses before fetching
-
-        const membershipsQuery = `
-            SELECT * FROM Membership;
-        `;
-        const result = await pool.query(membershipsQuery);
-        res.status(200).json(result.rows);
-    } catch (error) {
-        console.error('Error fetching memberships:', error);
-        res.status(500).json({ error: 'An error occurred while fetching memberships' });
+      const yearsQuery = `
+        SELECT DISTINCT EXTRACT(YEAR FROM start_date) AS year 
+        FROM Membership 
+        UNION 
+        SELECT DISTINCT EXTRACT(YEAR FROM payment_date) 
+        FROM Payment
+      `;
+  
+      const result = await pool.query(yearsQuery);
+  
+      const years = result.rows.map(row => row.year);
+  
+      // Ensure current year is included if not already present
+      const currentYear = new Date().getFullYear();
+      if (!years.includes(currentYear)) {
+        years.push(currentYear);
+      }
+  
+      res.status(200).json({ years: years.sort((a, b) => b - a) });
+    } catch (err) {
+      console.error('Error fetching available years:', err.message);
+      res.status(500).json({ error: 'Error fetching available years' });
     }
-});
+  });
+// Example route to fetch memberships
+
+app.get('/memberships', async (req, res) => {
+    const { year } = req.query;
+    
+    try {
+      await updateMembershipStatus(); // Update statuses before fetching
+  
+      const membershipsQuery = year 
+        ? `SELECT * FROM Membership WHERE EXTRACT(YEAR FROM start_date) = $1;`
+        : `SELECT * FROM Membership;`;
+  
+      const result = year 
+        ? await pool.query(membershipsQuery, [year])
+        : await pool.query(membershipsQuery);
+  
+      res.status(200).json(result.rows);
+    } catch (error) {
+      console.error('Error fetching memberships:', error);
+      res.status(500).json({ error: 'An error occurred while fetching memberships' });
+    }
+  });
 //customer records
 app.get('/customerTracking', async (req, res) => {
     // Get the date from the query parameter, default to the current date if not provided
@@ -104,76 +137,149 @@ app.get('/customerTracking', async (req, res) => {
     }
 });
 // customer records
+// Updated route to support more granular income data
 app.get('/getWalkInCustomerRecords', async (req, res) => {
-    const walkInRecordsQuery = `
-        SELECT 
-            c.name, 
+    const { year, period } = req.query;
+  
+    let walkInRecordsQuery;
+    let queryParams = [];
+  
+    // Fixed walk-in price
+    const WALK_IN_PRICE = 60;
+  
+    switch(period) {
+      case 'daily':
+        walkInRecordsQuery = `
+          SELECT 
+            DATE(p.payment_date) AS date, 
             COUNT(p.payment_id) AS total_entries,
-            MAX(p.payment_date) AS recent_payment_date
-        FROM 
+            SUM(${WALK_IN_PRICE}) AS total_income
+          FROM 
             Customer c
-        LEFT JOIN 
+          JOIN 
             Payment p ON p.customer_id = c.customer_id
-        WHERE 
+          WHERE 
             c.membership_type = 'Walk In'
-        GROUP BY 
-            c.name
-        ORDER BY 
-            c.name;  -- Optional: Order by name
-    `;
-
-    let client; // Declare client variable here
-
-    try {
-        client = await pool.connect(); // Get a client from the pool
-        const result = await client.query(walkInRecordsQuery);
-
-        res.status(200).json(result.rows);
-    } catch (err) {
-        console.error('Error fetching walk-in customer records:', err.message); // Log the error message
-        res.status(500).json({ error: 'Error fetching walk-in customer records' });
-    } finally {
-        // Ensure the client is released back to the pool
-        if (client) {
-            client.release();
-        }
-    }
-});
-app.get('/getMemberCustomerRecords', async (req, res) => {
-    const memberRecordsQuery = `
-        SELECT 
-            c.name, 
+            AND EXTRACT(YEAR FROM p.payment_date) = $1
+          GROUP BY 
+            DATE(p.payment_date)
+          ORDER BY 
+            date;
+        `;
+        queryParams = [year];
+        break;
+  
+      case 'monthly':
+      default:
+        walkInRecordsQuery = `
+          SELECT 
+            EXTRACT(MONTH FROM p.payment_date) AS month,
             COUNT(p.payment_id) AS total_entries,
-            MAX(DATE(p.payment_date)) AS recent_payment_date  -- Use DATE to get only the date part
-        FROM 
+            MAX(p.payment_date) AS recent_payment_date,
+            SUM(${WALK_IN_PRICE}) AS total_income
+          FROM 
             Customer c
-        LEFT JOIN 
+          JOIN 
             Payment p ON p.customer_id = c.customer_id
-        WHERE 
-            c.membership_type != 'Walk In'  -- Filter for members only
-        GROUP BY 
-            c.name
-        ORDER BY 
-            c.name;  -- Optional: Order by name
-    `;
-
-    let client; // Declare client variable here
-
-    try {
-        client = await pool.connect(); // Get a client from the pool
-        const result = await client.query(memberRecordsQuery);
-
-        res.status(200).json(result.rows);
-    } catch (err) {
-        console.error('Error fetching member customer records:', err.message); // Log the error message
-        res.status(500).json({ error: 'Error fetching member customer records' });
-    } finally {
-        // Ensure the client is released back to the pool
-        if (client) {
-            client.release();
-        }
+          WHERE 
+            c.membership_type = 'Walk In'
+            AND EXTRACT(YEAR FROM p.payment_date) = $1
+          GROUP BY 
+            EXTRACT(MONTH FROM p.payment_date)
+          ORDER BY 
+            month;
+        `;
+        queryParams = [year];
     }
-});
+  
+    try {
+      const result = await pool.query(walkInRecordsQuery, queryParams);
+      res.status(200).json(result.rows);
+    } catch (err) {
+      console.error('Error fetching walk-in customer records:', err.message);
+      res.status(500).json({ error: 'Error fetching walk-in customer records' });
+    }
+  });
+  app.get('/getMemberCustomerRecords', async (req, res) => {
+    const { year, period } = req.query;
+  
+    let memberRecordsQuery;
+    let queryParams = [];
+  
+    switch(period) {
+      case 'daily':
+        memberRecordsQuery = `
+          SELECT 
+            DATE(p.payment_date) AS date, 
+            COUNT(DISTINCT p.payment_id) AS total_entries,
+            SUM(p.amount) AS total_income
+          FROM 
+            Customer c
+          JOIN 
+            Payment p ON p.customer_id = c.customer_id
+          WHERE 
+            c.membership_type != 'Walk In'
+            AND EXTRACT(YEAR FROM p.payment_date) = $1
+          GROUP BY 
+            DATE(p.payment_date)
+          ORDER BY 
+            date;
+        `;
+        queryParams = [year];
+        break;
+  
+      case 'monthly':
+      default:
+        memberRecordsQuery = `
+          SELECT 
+            EXTRACT(MONTH FROM p.payment_date) AS month,
+            COUNT(DISTINCT p.payment_id) AS total_entries,
+            MAX(p.payment_date) AS recent_payment_date,
+            SUM(p.amount) AS total_income
+          FROM 
+            Customer c
+          JOIN 
+            Payment p ON p.customer_id = c.customer_id
+          WHERE 
+            c.membership_type != 'Walk In'
+            AND EXTRACT(YEAR FROM p.payment_date) = $1
+          GROUP BY 
+            EXTRACT(MONTH FROM p.payment_date)
+          ORDER BY 
+            month;
+        `;
+        queryParams = [year];
+    }
+  
+    try {
+      const result = await pool.query(memberRecordsQuery, queryParams);
+      
+      // Add month names for better readability
+      const monthNames = [
+        'January', 'February', 'March', 'April', 'May', 'June', 
+        'July', 'August', 'September', 'October', 'November', 'December'
+      ];
+  
+      // Transform the data to include month names
+      const processedData = result.rows.map(row => {
+        if (period === 'monthly') {
+          return {
+            ...row,
+            month_name: monthNames[row.month - 1]
+          };
+        }
+        return row;
+      });
+  
+      res.status(200).json(processedData);
+    } catch (err) {
+      console.error('Error fetching member customer records:', err.message);
+      res.status(500).json({ 
+        error: 'Error fetching member customer records',
+        details: err.message 
+      });
+    }
+  });
 
 // Endpoint to fetch customer membership information
 app.get('/getCustomerMember_TotalRecords/:name', async (req, res) => {
