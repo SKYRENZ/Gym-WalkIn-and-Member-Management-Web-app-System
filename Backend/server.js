@@ -10,6 +10,9 @@ const pool = require('./db'); // Import your database connection
 const cron = require('node-cron');
 const app = express();
 const PORT = 3000; // You can choose any available port
+const { PRICES } = require('./config');
+
+
 // Middleware to parse JSON requests
 app.use(express.json());
 
@@ -200,7 +203,8 @@ app.get('/getWalkInCustomerRecords', async (req, res) => {
       res.status(500).json({ error: 'Error fetching walk-in customer records' });
     }
   });
-  app.get('/getMemberCustomerRecords', async (req, res) => {
+
+app.get('/getMemberCustomerRecords', async (req, res) => {
     const { year, period } = req.query;
   
     let memberRecordsQuery;
@@ -374,6 +378,7 @@ app.get('/qrcodes/:membershipId', (req, res) => {
 // Endpoint to add a walkin, membership, renewals and payment
 app.post('/addWalkInTransaction', async (req, res) => {
     const { name, phone, paymentMethod, referenceNumber } = req.body;
+    const amount = PRICES.WALK_IN; // Use global walk-in price
 
     // Validate input
     if (!name || !paymentMethod) {
@@ -405,8 +410,6 @@ app.post('/addWalkInTransaction', async (req, res) => {
         const customerResult = await client.query(customerQuery, [name, phone, null]);
         const customerId = customerResult.rows[0].customer_id;
 
-        // Fixed amount for walk-in transactions
-        const amount = 60.00; // Amount for walk-in
         const paymentDate = new Date().toISOString().split('T')[0]; // Use current date for payment date without time
         const paymentStatus = 'Completed'; // Example status
 
@@ -415,13 +418,21 @@ app.post('/addWalkInTransaction', async (req, res) => {
         let mayaRefNum = null;
 
         if (paymentMethod === 'Gcash') {
-            gcashRefNum = referenceNumber; // Assign reference number to Gcash
+            gcashRefNum = referenceNumber;
         } else if (paymentMethod === 'Paymaya') {
-            mayaRefNum = referenceNumber; // Assign reference number to Paymaya
+            mayaRefNum = referenceNumber;
         }
 
         // Insert payment
-        const paymentResult = await client.query(paymentQuery, [amount, paymentMethod, paymentStatus, paymentDate, customerId, gcashRefNum, mayaRefNum]);
+        const paymentResult = await client.query(paymentQuery, [
+            amount, 
+            paymentMethod, 
+            paymentStatus, 
+            paymentDate, 
+            customerId, 
+            gcashRefNum, 
+            mayaRefNum
+        ]);
 
         // Commit the transaction
         await client.query('COMMIT');
@@ -435,13 +446,14 @@ app.post('/addWalkInTransaction', async (req, res) => {
         });
     } catch (err) {
         console.error('Error adding walk-in transaction:', err);
-        await client.query('ROLLBACK'); // Rollback the transaction in case of error
+        await client.query('ROLLBACK');
         res.status(500).json({ error: 'Error adding walk-in transaction' });
     }
 });
 
 app.post('/addMembershipTransaction', async (req, res) => {
     const { name, email, phone, paymentMethod } = req.body;
+    const amount = PRICES.NEW_MEMBERSHIP; // Use the global price
 
     // Validate input
     if (!name || !email || !paymentMethod) {
@@ -498,7 +510,6 @@ app.post('/addMembershipTransaction', async (req, res) => {
         await client.query(updateQRCodeQuery, [qrCodePath, membershipId]);
 
         // Insert payment
-        const amount = 120.00; // Amount for membership
         const paymentDate = new Date().toISOString().split('T')[0]; // Use current date for payment date without time
         const paymentStatus = 'Completed'; // Example status
 
@@ -521,6 +532,7 @@ app.post('/addMembershipTransaction', async (req, res) => {
 
 app.post('/renewMembership', async (req, res) => {
     const { name, paymentMethod, referenceNumber } = req.body;
+    const amount = PRICES.MEMBERSHIP; // Use global membership renewal price
 
     // Validate input
     if (!name || !paymentMethod) {
@@ -573,20 +585,14 @@ app.post('/renewMembership', async (req, res) => {
         // Update the membership end date
         await client.query(updateMembershipQuery, [currentEndDate, membershipId]);
 
-        // Fixed amount for renewal
-        // Fixed amount for renewal
-        const amount = 700.00; // Set the fixed renewal amount
-        const paymentDate = new Date().toISOString().split('T')[0]; // Use current date for payment date without time
-        const paymentStatus = 'Completed'; // Example status
-
         // Determine reference number based on payment method
         let gcashRefNum = null;
         let mayaRefNum = null;
 
         if (paymentMethod === 'Gcash') {
-            gcashRefNum = referenceNumber; // Assign reference number to Gcash
+            gcashRefNum = referenceNumber;
         } else if (paymentMethod === 'Paymaya') {
-            mayaRefNum = referenceNumber; // Assign reference number to Paymaya
+            mayaRefNum = referenceNumber;
         }
 
         const paymentQuery = `
@@ -594,8 +600,20 @@ app.post('/renewMembership', async (req, res) => {
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING payment_id;
         `;
 
+        const paymentDate = new Date().toISOString().split('T')[0];
+        const paymentStatus = 'Completed';
+
         // Insert payment record
-        const paymentResult = await client.query(paymentQuery, [amount, paymentMethod, paymentStatus, paymentDate, customerId, membershipId, gcashRefNum, mayaRefNum]);
+        const paymentResult = await client.query(paymentQuery, [
+            amount, 
+            paymentMethod, 
+            paymentStatus, 
+            paymentDate, 
+            customerId, 
+            membershipId, 
+            gcashRefNum, 
+            mayaRefNum
+        ]);
 
         // Commit the transaction
         await client.query('COMMIT');
@@ -611,7 +629,7 @@ app.post('/renewMembership', async (req, res) => {
         });
     } catch (err) {
         console.error('Error renewing membership:', err);
-        await client.query('ROLLBACK'); // Rollback the transaction in case of error
+        await client.query('ROLLBACK');
         res.status(500).json({ error: 'Error renewing membership' });
     }
 });
@@ -678,7 +696,6 @@ app.post('/addStaff', async (req, res) => {
         }
     }
 });
-
 // Endpoint for staff login
 app.post('/staffLogin', async (req, res) => {
     const { password } = req.body;
