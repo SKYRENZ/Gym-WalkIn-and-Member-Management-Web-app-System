@@ -1,8 +1,17 @@
+import React, { useState } from 'react';
 import '../../css/admin/AdminHeader.css';
-import dropdown from '../../assets/Dropdown.png';
 import BrandName from '../BrandName.jsx';
+import DropdownMenu from '../DropdownMenu.jsx';
 
 function AdminHeader() {
+
+  const [isDropdownVisible, setDropdownVisible] = useState(false);
+  
+    const toggleDropdown = () => {
+      console.log('Dropdown toggled'); // Debugging log
+      setDropdownVisible(!isDropdownVisible);
+    };
+  
   return (
     <header>
       <BrandName />
@@ -12,7 +21,7 @@ function AdminHeader() {
           <p className="user">Ervhyne</p>
           <p className="role">Admin</p>
         </div>
-        <img src={dropdown} alt="Dropdown" />
+          <DropdownMenu isDropdownVisible={isDropdownVisible} toggleDropdown={toggleDropdown} />
       </div>
     </header>
   );
