@@ -75,39 +75,62 @@ function IncomeSummary() {
   }, [selectedPeriod]); 
 
   // Helper method to prepare daily data
-const prepareDailyData = (walkInData, membershipData) => {
-  const walkInIncome = walkInData.reduce((acc, entry) => {
-    acc[entry.date] = entry.total_income || 0;
-    return acc;
-  }, {});
-
-  const membershipIncome = membershipData.reduce((acc, entry) => {
-    acc[entry.date] = entry.total_income || 0;
-    return acc;
-  }, {});
-
-  const labels = [...new Set([...Object.keys(walkInIncome), ...Object.keys(membershipIncome)])].sort();
-
-  return {
-    labels,
-    datasets: [
-      {
-        label: 'Walk-in Income',
-        data: labels.map(date => walkInIncome[date] || 0),
-        backgroundColor: 'rgba(255, 99, 132, 0.6)',
-        borderColor: 'rgba(255, 99, 132, 1)',
-        borderWidth: 1
-      },
-      {
-        label: 'Membership Income',
-        data: labels.map(date => membershipIncome[date] || 0),
-        backgroundColor: 'rgba(75, 192, 192, 0.6)',
-        borderColor: 'rgba(75, 192, 192, 1)',
-        borderWidth: 1
-      }
-    ]
+  const prepareDailyData = (walkInData, membershipData) => {
+    const walkInIncome = walkInData.reduce((acc, entry) => {
+      // Extract date and format it
+      const date = new Date(entry.date);
+      const formattedDate = date.toLocaleDateString('default', {
+        month: 'short',
+        day: 'numeric'
+      });
+      acc[formattedDate] = entry.total_income || 0;
+      return acc;
+    }, {});
+  
+    const membershipIncome = membershipData.reduce((acc, entry) => {
+      // Extract date and format it
+      const date = new Date(entry.date);
+      const formattedDate = date.toLocaleDateString('default', {
+        month: 'short',
+        day: 'numeric'
+      });
+      acc[formattedDate] = entry.total_income || 0;
+      return acc;
+    }, {});
+  
+    const labels = [...new Set([...Object.keys(walkInIncome), ...Object.keys(membershipIncome)])].sort((a, b) => {
+      // Custom sorting to handle date strings
+      const parseDate = (dateStr) => {
+        const [month, day] = dateStr.split(' ');
+        const monthMap = {
+          Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
+          Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11
+        };
+        return new Date(new Date().getFullYear(), monthMap[month], parseInt(day));
+      };
+      return parseDate(a) - parseDate(b);
+    });
+  
+    return {
+      labels,
+      datasets: [
+        {
+          label: 'Walk-in Income',
+          data: labels.map(date => walkInIncome[date] || 0),
+          backgroundColor: 'rgba(255, 99, 132, 0.6)',
+          borderColor: 'rgba(255, 99, 132, 1)',
+          borderWidth: 1
+        },
+        {
+          label: 'Membership Income',
+          data: labels.map(date => membershipIncome[date] || 0),
+          backgroundColor: 'rgba(75, 192, 192, 0.6)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 1
+        }
+      ]
+    };
   };
-};
 
 // Helper method to prepare weekly data
 
@@ -125,9 +148,14 @@ const prepareMonthlyData = (walkInData, membershipData) => {
       {
         label: 'Walk-in Income',
         data: months.map((_, index) => {
-          const monthData = walkInData.find(entry => 
-            new Date(entry.recent_payment_date).getMonth() === index
-          );
+          const monthData = walkInData.find(entry => {
+            // If recent_payment_date exists, extract month
+            if (entry.recent_payment_date) {
+              const date = new Date(entry.recent_payment_date);
+              return date.getMonth() === index;
+            }
+            return false;
+          });
           return monthData ? monthData.total_income : 0;
         }),
         backgroundColor: 'rgba(255, 99, 132, 0.6)',
@@ -203,22 +231,54 @@ return (
       </div>
     </div>
       <div className="income-chart-container">
-        <Bar
-          data={incomeData}
-          options={{
-            responsive: true,
-            maintainAspectRatio: false,
-            // ... (previous chart options)
-          }}
-        />
+      <Bar
+  data={incomeData}
+  options={{
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: {
+        ticks: {
+          callback: function(value) {
+            // Directly return the month name from the labels
+            return this.getLabelForValue(value);
+          }
+        }
+      },
+      y: {
+        title: {
+          display: false
+        }
+      }
+    },
+   plugins: {
+      tooltip: {
+        callbacks: {
+          title: function(context) {
+            // Ensure only month name is shown
+            return context[0].label;
+          },
+          label: function(context) {
+            return `₱${Number(context.parsed.y).toLocaleString()}`;
+          }
+        }
+      },
+      legend: {
+        display: true,
+        position: 'top'
+      }
+    }
+  }}
+/>
+      
       </div>
       <div className="income-summary-stats">
-        <div className="total-income">
-          <h3>Total Income</h3>
-          <p>Walk-in: ₱{incomeData.datasets[0].data.reduce((a, b) => a + b, 0).toLocaleString()}</p>
-          <p>Membership: ₱{incomeData.datasets[1].data.reduce((a, b) => a + b, 0).toLocaleString()}</p>
-        </div>
-      </div>
+  <div className="total-income">
+    <h3>Total Income</h3>
+    <p>Walk-in: ₱{Number(incomeData.datasets[0].data.reduce((a, b) => a + b, 0)).toLocaleString()}</p>
+    <p>Membership: ₱{Number(incomeData.datasets[1].data.reduce((a, b) => a + b, 0)).toLocaleString()}</p>
+  </div>
+</div>
     </div>
   );
 }

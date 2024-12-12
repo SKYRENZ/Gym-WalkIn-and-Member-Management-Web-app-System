@@ -1,12 +1,11 @@
 const { Pool } = require('pg');
 
-// Ensure all connection parameters are correctly specified
 const pool = new Pool({
-    user: 'postgres',         // Your PostgreSQL username
-    host: 'localhost',        // Database host (usually localhost)
-    database: 'GymDB',         // Your database name
-    password: 'CHOCOLATES',   // Your PostgreSQL password (ensure it's a string)
-    port: 5432,               // Default PostgreSQL port
+    user: 'postgres',
+    host: 'localhost',
+    database: 'GymDB',
+    password: 'CHOCOLATES',
+    port: 5432,
 });
 
 async function updatePaymentAmounts() {
@@ -16,48 +15,77 @@ async function updatePaymentAmounts() {
         // Start a transaction
         await client.query('BEGIN');
 
-        // Log original amounts before update
-        await client.query(`
-            CREATE TABLE IF NOT EXISTS payment_amount_update_log (
-                log_id SERIAL PRIMARY KEY,
-                old_amount DECIMAL(10, 2),
-                new_amount DECIMAL(10, 2),
-                update_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
+        // Detailed investigation of payment amounts
+        const problematicPayments = await client.query(`
+            SELECT 
+                p.payment_id, 
+                p.amount, 
+                p.payment_date, 
+                p.method,
+                p.status,
+                c.name AS customer_name, 
+                c.membership_type
+            FROM Payment p
+            JOIN Customer c ON p.customer_id = c.customer_id
+            WHERE p.amount NOT IN (60.00, 700.00)
         `);
 
-        // Insert log of original amounts
-        await client.query(`
-            INSERT INTO payment_amount_update_log (old_amount, new_amount)
-            SELECT DISTINCT amount, 
-                   CASE 
-                       WHEN c.membership_type = 'Walk In' THEN 60.00
-                       ELSE 700.00
-                   END
-            FROM Payment p
-            LEFT JOIN Customer c ON p.customer_id = c.customer_id
-            WHERE amount NOT IN (60.00, 700.00)
-        `);
+        console.log('Problematic Payments Before Update:');
+        console.log(problematicPayments.rows);
 
         // Update walk-in payments
         const walkInUpdate = await client.query(`
             UPDATE Payment p
             SET amount = 60.00
             FROM Customer c
-            WHERE p.customer_id = c.customer_id AND c.membership_type = 'Walk In'
+            WHERE p.customer_id = c.customer_id 
+            AND c.membership_type = 'Walk In'
+            AND p.amount != 60.00
             RETURNING *
         `);
         console.log('Walk-in payments updated:', walkInUpdate.rowCount);
 
-        // Update membership payments
-        const membershipUpdate = await client.query(`
+        // Update member payments
+        const memberUpdate = await client.query(`
             UPDATE Payment p
             SET amount = 700.00
-            FROM Membership m
-            WHERE p.membership_id = m.membership_id AND p.amount NOT IN (60.00, 700.00)
+            FROM Customer c
+            WHERE p.customer_id = c.customer_id 
+            AND c.membership_type = 'Member'
+            AND p.amount NOT IN (60.00, 700.00)
             RETURNING *
         `);
-        console.log('Membership payments updated:', membershipUpdate.rowCount);
+        console.log('Member payments updated:', memberUpdate.rowCount);
+
+        // Final verification of payment amounts
+        const finalAmountDistribution = await client.query(`
+            SELECT 
+                c.membership_type,
+                p.amount, 
+                COUNT(*) as count,
+                MIN(p.payment_date) as earliest_payment,
+                MAX(p.payment_date) as latest_payment,
+                STRING_AGG(DISTINCT p.method, ', ') as payment_methods
+            FROM Payment p
+            JOIN Customer c ON p.customer_id = c.customer_id
+            GROUP BY c.membership_type, p.amount
+            ORDER BY count DESC
+        `);
+
+        console.log('\nFinal Payment Amount Distribution:');
+        console.log(finalAmountDistribution.rows);
+
+        // Optional: Create a CSV log of updated payments
+        if (walkInUpdate.rowCount > 0 || memberUpdate.rowCount > 0) {
+            const updatedPaymentsLog = [...walkInUpdate.rows, ...memberUpdate.rows];
+            console.log('\nDetailed Updated Payments:');
+            console.table(updatedPaymentsLog.map(payment => ({
+                payment_id: payment.payment_id,
+                customer_id: payment.customer_id,
+                old_amount: payment.amount,
+                new_amount: payment.amount === 60.00 ? 60.00 : 700.00
+            })));
+        }
 
         // Commit the transaction
         await client.query('COMMIT');
@@ -67,6 +95,7 @@ async function updatePaymentAmounts() {
         // Rollback the transaction in case of error
         await client.query('ROLLBACK');
         console.error('Error updating payment amounts:', error);
+        console.error('Error details:', error.message);
     } finally {
         client.release();
     }
@@ -75,8 +104,9 @@ async function updatePaymentAmounts() {
 // Run the update
 updatePaymentAmounts().catch(console.error);
 
-// Ensure the process exits
-process.on('unhandledRejection', (reason, promise) => {
-    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-    process.exit(1);
+// Graceful shutdown
+process.on('SIGINT', async () => {
+    console.log('Received SIGINT. Closing database connection.');
+    await pool.end();
+    process.exit(0);
 });
