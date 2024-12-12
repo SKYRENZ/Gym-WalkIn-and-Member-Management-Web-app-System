@@ -1,0 +1,60 @@
+/* Styling for the transactions table container */
+.transactions-table-container {
+    font-family: 'Poppins', sans-serif;
+    padding: 30px;
+    border: 0.5px solid rgb(194, 194, 194);
+    background-color: #ffffff;
+    border-radius: 20px;
+    height: 80vh; /* Full height of the viewport */
+    box-sizing: border-box; /* Include padding and border in the element's total height and width */
+    overflow-y: auto; /* Ensure content is scrollable if it exceeds the height */
+}
+
+/* Table styling */
+.transactions-table {
+    width: 100%;
+    padding: 20px;
+    border-collapse: collapse;
+}
+
+/* Header styling */
+.transactions-table th {
+    padding: 12px;
+    font-size: 16px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 3px solid #ddd;
+}
+
+/* Table row styling */
+.transactions-table td {
+    padding: 12px;
+    font-size: 14px;
+    text-align: left;
+}
+
+/* Hover effect for rows */
+.transactions-table tbody tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Alternate row color for better readability */
+.transactions-table tbody tr:nth-child(even) {
+    background-color: #fafafa;
+}
+
+@media (max-width: 768px) {
+    .transactions-table-container {
+        padding: 15px;
+        height: 60vh; /* Adjust height for smaller screens */
+    }
+
+    .transactions-table th, .transactions-table td {
+        padding: 8px;
+        font-size: 12px;
+    }
+
+    .transactions-table th {
+        font-size: 14px;
+    }
+}

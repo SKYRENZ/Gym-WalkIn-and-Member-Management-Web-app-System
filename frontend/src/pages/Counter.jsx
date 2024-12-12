@@ -1,6 +1,7 @@
 import CounterHeader from '../components/counter/CounterHeader.jsx';
 import SummaryCards from '../components/counter/SummaryCards.jsx';
 import TopBar from '../components/counter/TopBar.jsx';
+import MainTransaction from '../components/counter/MainTransaction.jsx';
 import '../css/counter/Counter.css';
 
 function Counter(){
@@ -11,6 +12,9 @@ function Counter(){
             <div className="top">
                 <TopBar />
                 <SummaryCards />
+            </div>
+            <div className="bottom">
+                <MainTransaction />
             </div>
         </div>
         </>

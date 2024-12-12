@@ -1,0 +1,38 @@
+/* Filter button styling */
+.filter-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    background-color: #ffffff;
+    color: rgb(0, 0, 0);
+    border: 1px solid #ccc;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 300;
+    transition: background-color 0.3s ease;
+    margin-left: 10px;
+    width: auto; /* Default width for normal screens */
+}
+
+/* Filter icon styling */
+.filter-icon {
+    margin-left: 8px; /* Add some space between the text and the icon */
+    width: 16px; /* Adjust the size of the icon */
+    height: 16px; /* Adjust the size of the icon */
+}
+
+/* Filter button hover effect */
+.filter-button:hover {
+    background-color: #d6dbe0;
+    border: 1px solid #ccc;
+}
+
+/* Responsive styling */
+@media (max-width: 768px) {
+    .filter-button {
+        width: 100%; /* Full width on smaller screens */
+        margin-left: 0; /* Remove left margin on smaller screens */
+    }
+}

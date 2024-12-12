@@ -1,0 +1,57 @@
+/* Search bar container styling */
+.search-bar-container {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding-right: 20px;
+    width: auto; /* Default width for normal screens */
+    position: relative; /* Position relative to contain the absolute positioned button */
+}
+
+/* Search input styling */
+.search-input {
+    padding: 10px 40px 10px 20px; /* Add padding to the right to make space for the button */
+    font-size: 14px;
+    border-radius: 25px;
+    border: 1px solid #ccc;
+    width: auto; /* Default width for normal screens */
+    box-sizing: border-box;
+}
+
+/* Search button styling */
+.search-button {
+    position: absolute;
+    right: 10px; /* Position the button inside the input */
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    color: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+/* Search button image styling */
+.search-button img {
+    width: 20x; /* Adjust the size of the icon */
+    height: 20px; /* Adjust the size of the icon */
+}
+
+/* Responsive styling */
+@media (max-width: 768px) {
+    .search-bar-container {
+        width: 100%; /* Full width on smaller screens */
+        padding-right: 0; /* Remove padding on smaller screens */
+    }
+
+    .search-input {
+        width: 100%; /* Full width on smaller screens */
+        padding-right: 40px; /* Ensure padding for the button */
+    }
+
+    .search-button {
+        right: 10px; /* Adjust this value for smaller screens */
+    }
+}
