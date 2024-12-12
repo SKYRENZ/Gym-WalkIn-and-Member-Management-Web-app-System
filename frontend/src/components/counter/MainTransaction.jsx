@@ -7,7 +7,7 @@ function MainTransaction(){
     return(
         <div className="transactionContainer">
             <div className="top-bar">
-                <h1>Transaction</h1>
+                <h1>Transaction Logs</h1>
                 <div className="search-filter-container">
                     <SearchBar />
                     <FilterBtn />

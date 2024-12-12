@@ -6,7 +6,6 @@ function TransactionsTable() {
             <table className="transactions-table">
                 <thead>
                     <tr>
-                        <th>Transaction ID</th>
                         <th>Name</th>
                         <th>Type</th>
                         <th>Mode of Payment</th>
@@ -16,7 +15,6 @@ function TransactionsTable() {
                 </thead>
                 <tbody>
                     <tr>
-                        <td></td>
                         <td></td>
                         <td></td>
                         <td></td>
