@@ -1,0 +1,43 @@
+/* Overall top bar container styling */
+.topbarContainer {
+    font-family: 'poppins', sans-serif;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 70px;
+    gap: 20px; /* Added gap for better spacing between title and buttons */
+}
+
+/* Title styling */
+.topbarContainer h1 {
+    margin: 0;
+    font-size: 40px;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Button container for aligning buttons */
+.buttonContainer {
+    display: flex;
+    gap: 10px; /* Space between the buttons */
+}
+
+/* Media Query for mobile responsiveness */
+@media (max-width: 768px) {
+    .topbarContainer {
+        flex-direction: column;
+        align-items: center;
+        padding: 20px 30px;
+    }
+
+    /* Title styling for mobile */
+    .topbarContainer h1 {
+        font-size: 30px;
+    }
+
+    /* Stack buttons vertically on smaller screens */
+    .buttonContainer {
+        flex-direction: column;
+        gap: 15px;
+    }
+}
