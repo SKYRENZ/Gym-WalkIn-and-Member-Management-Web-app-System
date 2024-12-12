@@ -1,0 +1,22 @@
+/* Styling for the 'New Transaction' button */
+.newTransactionButton {
+    font-family: 'poppins', sans-serif;
+    background-color: #38b000; /* Green color */
+    color: white;
+    padding: 12px 24px; /* Same padding as the Check In button */
+    font-size: 14px;
+    font-weight: 400;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 160px; /* Set a minimum width for consistency */
+    text-align: center;
+}
+
+.newTransactionButton:hover {
+    background-color: #2e8a00; /* Darker green on hover */
+}

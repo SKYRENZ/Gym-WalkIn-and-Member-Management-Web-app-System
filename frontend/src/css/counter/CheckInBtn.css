@@ -1,0 +1,22 @@
+/* Styling for the 'Check In' button */
+.checkInButton {
+    font-family: 'poppins', sans-serif;
+    background-color: #4f5e89; /* Blue color */
+    color: white;
+    padding: 12px 24px; /* Equal padding for both buttons */
+    font-size: 14px;
+    font-weight: 400;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 160px; /* Set a minimum width for consistency */
+    text-align: center;
+}
+
+.checkInButton:hover {
+    background-color: #3b4765; /* Darker blue on hover */
+}
