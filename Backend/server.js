@@ -25,6 +25,8 @@ cron.schedule('0 0 * * *', async () => {
     await updateMembershipStatus();
     console.log('Membership statuses updated.');
 });
+
+
 // Endpoint to get available years
 app.get('/getAvailableYears', async (req, res) => {
     try {
@@ -107,7 +109,7 @@ app.get('/customerTracking', async (req, res) => {
         JOIN 
             CheckIn ci ON m.membership_id = ci.membership_id
         WHERE 
-            ci.check_in_time >= $1 AND ci.check_in_time <= $2
+            DATE(ci.check_in_time AT TIME ZONE 'Asia/Manila') = DATE($1 AT TIME ZONE 'Asia/Manila')
 
         UNION ALL
 
@@ -123,7 +125,7 @@ app.get('/customerTracking', async (req, res) => {
             Payment p ON c.customer_id = p.customer_id
         WHERE 
             c.membership_type = 'Walk In' 
-            AND p.payment_date >= $1 AND p.payment_date <= $2
+            AND DATE(p.payment_date AT TIME ZONE 'Asia/Manila') = DATE($1 AT TIME ZONE 'Asia/Manila')
 
         UNION ALL
 
@@ -138,7 +140,7 @@ app.get('/customerTracking', async (req, res) => {
         JOIN 
             Membership m ON c.customer_id = m.customer_id
         WHERE 
-            m.start_date >= $1 AND m.start_date <= $2
+            DATE(m.start_date AT TIME ZONE 'Asia/Manila') = DATE($1 AT TIME ZONE 'Asia/Manila')
         
         ORDER BY 
             timestamp;
@@ -148,22 +150,37 @@ app.get('/customerTracking', async (req, res) => {
 
     try {
         client = await pool.connect();
-        const result = await client.query(trackingQuery, [startOfDay, endOfDay]);
+        const result = await client.query(trackingQuery, [startOfDay]);
 
-        // Format the timestamp to time only
-        const formattedResult = result.rows.map(row => ({
-            ...row,
-            timestamp: new Date(row.timestamp).toLocaleTimeString('en-US', {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true
-            })
-        }));
+        // Format the timestamp to time only with Manila timezone
+        const formattedResult = result.rows.map(row => {
+            // Ensure the timestamp is converted to Manila timezone
+            const timestamp = row.timestamp ? 
+                new Date(row.timestamp).toLocaleTimeString('en-PH', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true,
+                    timeZone: 'Asia/Manila'
+                }) : 
+                null;
+
+            return {
+                ...row,
+                timestamp: timestamp
+            };
+        });
+
+        // Log the formatted results for debugging
+        console.log('Formatted Customer Tracking Results:', formattedResult);
 
         res.status(200).json(formattedResult);
     } catch (err) {
-        console.error('Error fetching customer tracking records:', err.message);
-        res.status(500).json({ error: 'Error fetching customer tracking records' });
+        console.error('Error fetching customer tracking records:', err);
+        console.error('Detailed Error:', err.message, err.stack);
+        res.status(500).json({ 
+            error: 'Error fetching customer tracking records',
+            details: err.message 
+        });
     } finally {
         if (client) {
             client.release();
@@ -474,6 +491,7 @@ app.post('/addWalkInTransaction', async (req, res) => {
     let client;
 
     try {
+        // Get a client from the pool
         client = await pool.connect();
 
         // Start a transaction
@@ -512,28 +530,41 @@ app.post('/addWalkInTransaction', async (req, res) => {
         // Commit the transaction
         await client.query('COMMIT');
 
-        // Release the client
-        client.release();
-
+        // Respond with success
         res.status(201).json({
             customerId: customerId,
             paymentId: paymentResult.rows[0].payment_id
         });
+
     } catch (err) {
+        // Log the full error for debugging
         console.error('Error adding walk-in transaction:', err);
         console.error('Full error details:', JSON.stringify(err, null, 2));
         
+        // Rollback the transaction in case of error
         if (client) {
-            await client.query('ROLLBACK');
+            try {
+                await client.query('ROLLBACK');
+            } catch (rollbackErr) {
+                console.error('Error during rollback:', rollbackErr);
+            }
         }
+
+        // Send error response
         res.status(500).json({ 
             error: 'Error adding walk-in transaction',
             details: err.message,
             fullError: err
         });
+
     } finally {
+        // Ensure client is released only if it exists
         if (client) {
-            client.release();
+            try {
+                client.release();
+            } catch (releaseErr) {
+                console.error('Error releasing client:', releaseErr);
+            }
         }
     }
 });

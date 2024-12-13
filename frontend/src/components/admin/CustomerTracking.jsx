@@ -14,13 +14,12 @@ function CustomerTracking() {
 
   const renderHeader = () => (
     <div className="member-tracking-header">
-      <div>
-        <h1>Customer Tracking</h1>
-        <p className="current-date">{formattedDate}</p>
-      </div>
+      <h1>Customer Tracking</h1>
+      <span className="current-date">{formattedDate}</span>
       <DatePicker setDate={setDate} />
     </div>
   );
+
 
   // Render loading state
   if (isLoading) {

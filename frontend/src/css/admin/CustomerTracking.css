@@ -15,13 +15,20 @@
   width: calc(100% - 40px); /* Adjust width to account for padding */
 }
 
+.current-date {
+  margin: 0 10px;
+  font-size: 14px;
+  white-space: nowrap;
+}
 .member-tracking-header {
   display: flex;
-  flex-direction: row;
   justify-content: space-between;
   align-items: center;
   width: 100%;
   margin-bottom: 10px;
+  white-space: nowrap; /* Prevent wrapping */
+  overflow: hidden; /* Hide overflow */
+  text-overflow: ellipsis; /* Add ellipsis if text is too long */
 }
 
 .member-tracking h1 {
