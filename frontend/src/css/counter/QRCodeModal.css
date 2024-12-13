@@ -1,24 +1,24 @@
 .modalOverlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.8);
 }
 
 .modalContent {
-    background: white;
+    background: rgb(255, 255, 255);
     padding: 20px;
-    border-radius: 8px;
-    position: relative;
-    width: 80%;
-    max-width: 500px;
+    border-radius: 10px;
     text-align: center;
+    position: relative;
+    max-width: 90%;
+    max-height: 90%;
+    overflow: auto;
 }
 
 .closeButton {
@@ -27,4 +27,22 @@
     right: 10px;
     font-size: 24px;
     cursor: pointer;
+    color: black;
+}
+
+.qr-scanner-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px;
+}
+
+.qr-scanner-container video {
+    object-fit: cover;
+    width: 100%;
+    height: auto; /* Maintain aspect ratio */
 }

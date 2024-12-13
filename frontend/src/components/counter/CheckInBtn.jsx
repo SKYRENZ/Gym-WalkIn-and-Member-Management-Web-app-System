@@ -1,8 +1,8 @@
 import '../../css/counter/CheckInBtn.css';
 
-function CheckInBtn() {
+function CheckInBtn({ onCheckInClick }) {
     return (
-        <button className="checkInButton">
+        <button className="checkInButton" onClick={onCheckInClick}>
             Check In
         </button>
     );

@@ -22,15 +22,14 @@ function Counter() {
             <CounterHeader />
             <div className="counterContainer">
                 <div className="top">
-                    <TopBar />
+                    <TopBar onCheckInClick={handleCheckInClick} />
                     <SummaryCards />
                 </div>
                 <div className="bottom">
                     <MainTransaction />
                 </div>
             </div>
-            <button onClick={handleCheckInClick}>Check In</button>
-            {isModalOpen && <QRCodeModal onClose={handleCloseModal} />}
+            <QRCodeModal isOpen={isModalOpen} onClose={handleCloseModal} />
         </>
     );
 }
