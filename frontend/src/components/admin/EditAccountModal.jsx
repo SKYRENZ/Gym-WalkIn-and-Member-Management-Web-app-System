@@ -6,10 +6,6 @@ import BackIcon from '../../assets/Back.png';
 Modal.setAppElement('#root'); // Set the root element for accessibility
 
 function EditAccount({ isOpen, onClose }) {
-    const handleAddAccount = () => {
-        // Handle add account logic here
-        console.log('Add Account');
-    };
 
     return (
         <Modal
@@ -43,7 +39,7 @@ function EditAccount({ isOpen, onClose }) {
                 </select>
             </div>
                 
-            <button className="saveBtn" onClick={handleAddAccount}>Save</button>
+            <button className="saveBtn">Save</button>
         </Modal>
     );
 }
