@@ -3,6 +3,8 @@ import Modal from 'react-modal';
 import '../../css/admin/ReferrerInfoModal.css';
 import BackIcon from '../../assets/Back.png';
 
+Modal.setAppElement('#root');
+
 function ReferrerInfoModal({ isOpen, onClose }) {
     const handleBackButtonClick = () => {
         onClose();

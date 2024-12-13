@@ -1,4 +1,5 @@
-.referrerInfoModalOverlay {
+/* Modal Overlay */
+.editAccountModalOverlay {
     background-color: rgba(0, 0, 0, 0.75);
     display: flex;
     justify-content: center;
@@ -12,7 +13,7 @@
 }
 
 /* Modal Content */
-.referrerInfoModalContent {
+.editAccountModalContent {
     background: white;
     padding: 20px 30px;
     border-radius: 8px;
@@ -26,7 +27,7 @@
     flex-direction: column; /* Stack elements vertically */
 }
 
-.referrerInfoForm {
+.editAccountForm {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
@@ -38,12 +39,12 @@
     overflow-y: auto; /* Add scroll if content overflows */
 }
 
-.referrerInfoForm label {
+.editAccountForm label {
     font-weight: 600;
 }
 
-.referrerInfoForm input,
-.referrerInfoForm select {
+.editAccountForm input,
+.editAccountForm select {
     padding: 10px;
     font-size: 1rem;
     border: 1px solid #ccc;
@@ -52,45 +53,66 @@
     color: #333;
 }
 
+.saveBtn {
+    padding: 10px 50px;
+    font-size: 1rem;
+    border-radius: 5px;
+    background-color: #333;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    align-self: center; /* Align the button to the bottom */
+    margin-top: 40px; /* Push the button to the bottom */
+    margin-bottom: 50px; /* Push the button to the bottom */
+}
+
+.saveBtn:hover {
+    background-color: #0056b3;
+}
+
+.saveBtn:focus {
+    outline: none;
+}
+
 /* Media Queries for Responsiveness */
 @media (max-width: 768px) {
-    .referrerInfoModalContent {
+    .editAccountModalContent {
         width: 90%;
         height: 500px; /* Adjust height for smaller screens */
         padding: 20px;
     }
 
-    .VoucherHeader h2 {
+    .AccountHeader h2 {
         font-size: 28px; /* Adjust font size for smaller screens */
     }
 
-    .voucherBackButton img {
+    .accountBackButton img {
         width: 30px;
         height: 30px;
     }
 
-    .referrerInfoForm button {
+    .addAccountForm button {
         max-width: none; /* Remove max width for smaller screens */
     }
 }
 
 @media (max-width: 480px) {
-    .referrerInfoModalContent {
+    .editAccountModalContent {
         width: 100%;
         height: 500px; /* Adjust height for smaller screens */
         padding: 15px;
     }
 
-    .VoucherHeader h2 {
+    .AccountHeader h2 {
         font-size: 24px; /* Adjust font size for smaller screens */
     }
 
-    .voucherBackButton img {
+    .accountBackButton img {
         width: 25px;
         height: 25px;
     }
 
-    .referrerInfoForm button {
+    .editAccountForm button {
         padding: 8px;
         font-size: 0.9rem;
     }

@@ -21,7 +21,11 @@ function VoucherModal({ isOpen, onClose }) {
     };
 
     const handleVoucherClick = (voucher) => {
-        setSelectedVoucher(voucher);
+        if (selectedVoucher === voucher) {
+            setSelectedVoucher(null); // Deselect voucher if it is already selected
+        } else {
+            setSelectedVoucher(voucher);
+        }
     };
 
     const handleClose = () => {
