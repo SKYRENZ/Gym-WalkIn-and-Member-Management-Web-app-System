@@ -1,286 +1,226 @@
-import { useState, useEffect, useCallback } from 'react';
+
+import PropTypes from 'prop-types';
+import { useState, useMemo } from 'react';
 import { Bar } from 'react-chartjs-2';
 import { Chart, registerables } from 'chart.js';
+import useFetchData from '../../hooks/useFetchData';
 import '../../css/admin/IncomeSummary.css';
 
+// Register Chart.js components
 Chart.register(...registerables);
+
+// Spinner Component
+const Spinner = () => (
+  <div className="loading-container">
+    <div className="spinner"></div>
+    <p>Loading income data...</p>
+  </div>
+);
+
+// Error Message Component with PropTypes
+const ErrorMessage = ({ message }) => (
+  <div className="error-container">
+    <h2>Error Occurred</h2>
+    <p>{message}</p>
+    <button onClick={() => window.location.reload()}>
+      Retry Loading
+    </button>
+  </div>
+);
+
+// Add PropTypes validation for ErrorMessage
+ErrorMessage.propTypes = {
+  message: PropTypes.string.isRequired
+};
+
+// No Data Component
+const NoDataMessage = () => (
+  <div className="no-data-container">
+    <h3>No Income Data Available</h3>
+    <p>Please select a different year or check your data sources.</p>
+  </div>
+);
 
 function IncomeSummary() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedPeriod, setSelectedPeriod] = useState('monthly');
-  const [availableYears, setAvailableYears] = useState([]);
-  const [incomeData, setIncomeData] = useState({
-    labels: [],
-    datasets: [
-      {
-        label: 'Walk-in Income',
-        data: [],
-        backgroundColor: 'rgba(255, 99, 132, 0.6)',
-        borderColor: 'rgba(255, 99, 132, 1)',
-        borderWidth: 1
-      },
-      {
-        label: 'Membership Income',
-        data: [],
-        backgroundColor: 'rgba(75, 192, 192, 0.6)',
-        borderColor: 'rgba(75, 192, 192, 1)',
-        borderWidth: 1
-      }
-    ]
-  });
 
-  // Separate methods for fetching years and income data
-  const fetchAvailableYears = useCallback(async () => {
-    try {
-      const response = await fetch('http://localhost:3000/getAvailableYears');
-      const data = await response.json();
-      
-      const sortedYears = data.years.sort((a, b) => b - a);
-      
-      setAvailableYears(sortedYears);
-      
-      if (!sortedYears.includes(selectedYear)) {
-        setSelectedYear(sortedYears[0] || new Date().getFullYear());
-      }
-    } catch (error) {
-      console.error('Error fetching available years:', error);
-      setAvailableYears([new Date().getFullYear()]);
-    }
-  }, []);
+  // Fetch available years with enhanced error handling
+  const { 
+    data: availableYears = { years: [] }, 
+    isLoading: yearsLoading, 
+    error: yearsError 
+  } = useFetchData('http://localhost:3000/getAvailableYears');
 
-  const fetchIncomeData = useCallback(async () => {
-    try {
-      const walkInResponse = await fetch(`http://localhost:3000/getWalkInCustomerRecords?year=${selectedYear}&period=${selectedPeriod}`);
-      const walkInData = await walkInResponse.json();
-
-      const membershipResponse = await fetch(`http://localhost:3000/getMemberCustomerRecords?year=${selectedYear}&period=${selectedPeriod}`);
-      const membershipData = await membershipResponse.json();
-
-      const chartData = prepareChartData(walkInData, membershipData);
-      setIncomeData(chartData);
-    } catch (error) {
-      console.error('Error fetching income data:', error);
-      resetIncomeData();
-    }
-  }, [selectedYear, selectedPeriod]); 
-
-  // Prepare chart data based on selected period
-  const prepareChartData = useCallback((walkInData, membershipData) => {
-    const periodMap = {
-      daily: prepareDailyData,
-      monthly: prepareMonthlyData
-    };
+  const { 
+    data: walkInData = [], 
+    isLoading: walkInLoading,
+    error: walkInError,
+    metadata: walkInMetadata = {} // Add this line to destructure metadata
+  } = useFetchData(
+    `http://localhost:3000/getWalkInCustomerRecords?year=${selectedYear}&period=${selectedPeriod}`,
+    [selectedYear, selectedPeriod]
+  );
   
-    return periodMap[selectedPeriod](walkInData, membershipData);
-  }, [selectedPeriod]); 
+  // Similarly for membership data
+  const { 
+    data: membershipData = [], 
+    isLoading: membershipLoading,
+    error: membershipError,
+    metadata: membershipMetadata = {} // Add this line
+  } = useFetchData(
+    `http://localhost:3000/getMemberCustomerRecords?year=${selectedYear}&period=${selectedPeriod}`,
+    [selectedYear, selectedPeriod]
+  );
+  // Comprehensive loading state
+  const isAnyLoading = yearsLoading || walkInLoading || membershipLoading;
+  
+  // Comprehensive error state
+  const anyError = yearsError || walkInError || membershipError;
 
-  // Helper method to prepare daily data
-  const prepareDailyData = (walkInData, membershipData) => {
-    const walkInIncome = walkInData.reduce((acc, entry) => {
-      // Extract date and format it
-      const date = new Date(entry.date);
-      const formattedDate = date.toLocaleDateString('default', {
-        month: 'short',
-        day: 'numeric'
-      });
-      acc[formattedDate] = entry.total_income || 0;
-      return acc;
-    }, {});
+  // Prepare chart data using useMemo for performance optimization
+  const incomeChartData = useMemo(() => {
+    // Default empty chart data
+    const labels = selectedPeriod === 'monthly'
+      ? ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+      : ['Q1', 'Q2', 'Q3', 'Q4'];
   
-    const membershipIncome = membershipData.reduce((acc, entry) => {
-      // Extract date and format it
-      const date = new Date(entry.date);
-      const formattedDate = date.toLocaleDateString('default', {
-        month: 'short',
-        day: 'numeric'
-      });
-      acc[formattedDate] = entry.total_income || 0;
-      return acc;
-    }, {});
-  
-    const labels = [...new Set([...Object.keys(walkInIncome), ...Object.keys(membershipIncome)])].sort((a, b) => {
-      // Custom sorting to handle date strings
-      const parseDate = (dateStr) => {
-        const [month, day] = dateStr.split(' ');
-        const monthMap = {
-          Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
-          Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11
-        };
-        return new Date(new Date().getFullYear(), monthMap[month], parseInt(day));
-      };
-      return parseDate(a) - parseDate(b);
-    });
-  
-    return {
-      labels,
+    const chartData = {
+      labels: labels,
       datasets: [
         {
           label: 'Walk-in Income',
-          data: labels.map(date => walkInIncome[date] || 0),
+          data: new Array(labels.length).fill(0),
           backgroundColor: 'rgba(255, 99, 132, 0.6)',
           borderColor: 'rgba(255, 99, 132, 1)',
           borderWidth: 1
         },
         {
           label: 'Membership Income',
-          data: labels.map(date => membershipIncome[date] || 0),
+          data: new Array(labels.length).fill(0),
           backgroundColor: 'rgba(75, 192, 192, 0.6)',
           borderColor: 'rgba(75, 192, 192, 1)',
           borderWidth: 1
         }
       ]
     };
-  };
 
-// Helper method to prepare weekly data
+   // Safely process data
+   const walkInDataArray = walkInData?.data || walkInData || [];
 
-// Helper method to prepare monthly data
-// Modify the prepareMonthlyData method
-const prepareMonthlyData = (walkInData, membershipData) => {
-  const months = [
-    'January', 'February', 'March', 'April', 'May', 'June', 
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ];
+   if (Array.isArray(walkInDataArray) && walkInDataArray.length > 0) {
+     walkInDataArray.forEach(entry => {
+       const index = selectedPeriod === 'monthly' 
+         ? (entry.month - 1) 
+         : (Math.ceil(entry.month / 3) - 1);
+       
+       if (index >= 0 && index < labels.length) {
+         chartData.datasets[0].data[index] = entry.total_income || 0;
+       }
+     });
+   }
+ 
+   return chartData;
+ }, [walkInData, selectedPeriod]);
+  // Render loading state
+  if (isAnyLoading) {
+    return <Spinner />;
+  }
 
-  return {
-    labels: months,
-    datasets: [
-      {
-        label: 'Walk-in Income',
-        data: months.map((_, index) => {
-          const monthData = walkInData.find(entry => {
-            // If recent_payment_date exists, extract month
-            if (entry.recent_payment_date) {
-              const date = new Date(entry.recent_payment_date);
-              return date.getMonth() === index;
-            }
-            return false;
-          });
-          return monthData ? monthData.total_income : 0;
-        }),
-        backgroundColor: 'rgba(255, 99, 132, 0.6)',
-        borderColor: 'rgba(255, 99, 132, 1)',
-        borderWidth: 1
-      },
-      {
-        label: 'Membership Income',
-        data: months.map((_, index) => {
-          const monthData = membershipData.find(entry => 
-            // Use month_name if available, otherwise use index
-            (entry.month_name && months[index] === entry.month_name) || 
-            (entry.month && entry.month === index + 1)
-          );
-          return monthData ? monthData.total_income : 0;
-        }),
-        backgroundColor: 'rgba(75, 192, 192, 0.6)',
-        borderColor: 'rgba(75, 192, 192, 1)',
-        borderWidth: 1
-      }
-    ]
-  };
-};
+  // Render error state
+  if (anyError) {
+    return <ErrorMessage message={anyError || 'An error occurred'} />;
+  }
 
-// Reset income data method
-useEffect(() => {
-  fetchAvailableYears();
-}, [fetchAvailableYears]); // Add fetchAvailableYears to dependency array
+  // Check if no data is available
+  const hasNoData = 
+    availableYears.years.length === 0 || 
+    (walkInData.length === 0 && membershipData.length === 0);
 
-// Second useEffect for fetching income data
-useEffect(() => {
-  fetchIncomeData();
-}, [fetchIncomeData]); // Add fetchIncomeData to dependency array
+  // Render no data state
+  if (hasNoData) {
+    return <NoDataMessage />;
+  }
 
-// Reset income data method
-const resetIncomeData = useCallback(() => {
-  setIncomeData(prevState => ({
-    ...prevState,
-    labels: [],
-    datasets: [
-      { ...prevState.datasets[0], data: [] },
-      { ...prevState.datasets[1], data: [] }
-    ]
-  }));
-}, []);
-
-return (
-  <div className="income-summary">
-    <div className="income-summary-header">
-      <h1>Income Summary</h1>
-      <div className="income-controls">
-        <div className="year-selector">
-          <label>Year:</label>
-          <select 
-            value={selectedYear} 
-            onChange={(e) => setSelectedYear(Number(e.target.value))}
-          >
-            {availableYears.map(year => (
-              <option key={year} value={year}>{year}</option>
-            ))}
-          </select>
-        </div>
-        <div className="period-selector">
-          <label>View By:</label>
-          <select 
-            value={selectedPeriod} 
-            onChange={(e) => setSelectedPeriod(e.target.value)}
-          >
-            <option value="daily">Daily</option>
-            <option value="monthly">Monthly</option>
-          </select>
+  // Render main component
+  return (
+    <div className="income-summary">
+      <div className="income-summary-header">
+        <h1>Income Summary</h1>
+        <div className="income-controls">
+          <div className="year-selector">
+            <label>Year:</label>
+            <select 
+              value={selectedYear} 
+              onChange={(e) => setSelectedYear(Number(e.target.value))}
+            >
+              {availableYears.years.map(year => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+          </div>
+          <div className="period-selector">
+            <label>View By:</label>
+            <select 
+              value={selectedPeriod} 
+              onChange={(e) => setSelectedPeriod(e.target.value)}
+            >
+              <option value="monthly">Monthly</option>
+              <option value="quarterly">Quarterly</option>
+            </select>
+          </div>
         </div>
       </div>
-    </div>
+
       <div className="income-chart-container">
-      <Bar
-  data={incomeData}
-  options={{
-    responsive: true,
-    maintainAspectRatio: false,
-    scales: {
-      x: {
-        ticks: {
-          callback: function(value) {
-            // Directly return the month name from the labels
-            return this.getLabelForValue(value);
-          }
-        }
-      },
-      y: {
-        title: {
-          display: false
-        }
-      }
-    },
-   plugins: {
-      tooltip: {
-        callbacks: {
-          title: function(context) {
-            // Ensure only month name is shown
-            return context[0].label;
-          },
-          label: function(context) {
-            return `₱${Number(context.parsed.y).toLocaleString()}`;
-          }
-        }
-      },
-      legend: {
-        display: true,
-        position: 'top'
-      }
-    }
-  }}
-/>
-      
+        <Bar
+          data={incomeChartData}
+          options={{
+            responsive: true,
+            maintainAspectRatio: false,
+          }}
+        />
       </div>
+
       <div className="income-summary-stats">
-  <div className="total-income">
-    <h3>Total Income</h3>
-    <p>Walk-in: ₱{Number(incomeData.datasets[0].data.reduce((a, b) => a + b, 0)).toLocaleString()}</p>
-    <p>Membership: ₱{Number(incomeData.datasets[1].data.reduce((a, b) => a + b, 0)).toLocaleString()}</p>
-  </div>
-</div>
+        <div className="total-income">
+          <h3>Total Income Summary</h3>
+          <div className="income-breakdown">
+            <div className="walk-in-income">
+              <h4>Walk-in Income</h4>
+              <p>Total: ₱{walkInMetadata?.total_income?.toLocaleString() || '0'}</p>
+              <p>Entries: {walkInMetadata?.total_entries || 0}</p>
+            </div>
+            <div className="membership-income">
+              <h4>Membership Income</h4>
+              <p>Total: ₱{membershipMetadata?.total_income?.toLocaleString() || '0'}</p>
+              <p>Entries: {membershipMetadata?.total_entries || 0}</p>
+            </div>
+            <div className="combined-income">
+              <h4>Combined Total</h4>
+              <p>
+                ₱{(
+                  (walkInMetadata?.total_income || 0) + 
+                  (membershipMetadata?.total_income || 0)
+                ).toLocaleString()}
+              </p>
+              <p>
+                Total Entries: {
+                  (membershipMetadata?.total_entries || 0)
+                }
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
+
+// Add PropTypes validation for IncomeSummary
+IncomeSummary.propTypes = {
+  // If you expect any props, define them here
+  // For now, it's an empty object since the component doesn't receive props
+};
 
 export default IncomeSummary;

@@ -1,34 +1,22 @@
 .income-summary {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin-top: 20px;
-  border: solid 1px #e0e0e0;
-  border-radius: 10px;
+  font-family: 'Poppins', sans-serif;
+  max-width: 1200px;
+  margin: 0 auto;
   padding: 20px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  color: black; /* Add this to set default text color */
 }
 
 .income-summary-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 100%;
   margin-bottom: 20px;
-}
-
-.income-summary-header h1 {
-  font-size: 24px;
-  margin: 0;
-  color: black;
 }
 
 .income-controls {
   display: flex;
   gap: 20px;
 }
+
 .year-selector,
 .period-selector {
   display: flex;
@@ -36,124 +24,83 @@
   gap: 10px;
 }
 
-.year-selector select,
-.period-selector select {
-  padding: 8px 12px; /* Increased padding */
-  border: 1px solid #ccc;
+.income-controls select {
+  padding: 8px;
   border-radius: 4px;
-  color: black;
-  background-color: white;
-  font-size: 16px; /* Increased font size */
-  min-width: 100px; /* Ensure minimum width */
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background-image: url('data:image/svg+xml;utf8,<svg fill="black" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/><path d="M0 0h24v24H0z" fill="none"/></svg>');
-  background-repeat: no-repeat;
-  background-position-x: 95%;
-  background-position-y: 50%;
-  padding-right: 30px; /* Space for dropdown arrow */
-}
-
-.year-selector label,
-.period-selector label {
-  white-space: nowrap; /* Prevent label from wrapping */
-  margin-right: 10px; /* Add some space between label and select */
-}
-
-/* Ensure options are visible */
-.year-selector select option,
-.period-selector select option {
-  color: black;
-  background-color: white;
-  padding: 5px;
+  border: 1px solid #ccc;
 }
 
 .income-chart-container {
-  width: 100%;
   height: 400px;
-  color: black; /* Ensure chart labels are black */
+  margin-bottom: 20px;
 }
 
 .income-summary-stats {
-  width: 100%;
-  margin-top: 20px;
-  display: flex;
-  justify-content: flex-end;
-  color: black; /* Ensure stats text is black */
+  background-color: #f4f4f4;
+  padding: 20px;
+  border-radius: 8px;
 }
 
 .total-income {
-  text-align: right;
-  padding: 10px;
-  background-color: #f5f5f5;
-  border-radius: 5px;
-  color: black; /* Ensure total income text is black */
+  text-align: center;
 }
 
-.total-income h3 {
-  margin: 0 0 10px 0;
-  font-size: 18px;
-  color: black;
+.income-breakdown {
+  display: flex;
+  justify-content: space-around;
+  gap: 20px;
 }
 
-.total-income p {
+.walk-in-income,
+.membership-income,
+.combined-income {
+  background-color: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  flex: 1;
+}
+
+.walk-in-income h4,
+.membership-income h4,
+.combined-income h4 {
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.walk-in-income p,
+.membership-income p,
+.combined-income p {
   margin: 5px 0;
-  font-size: 16px;
-  color: black;
+  color: #666;
 }
 
-/* Additional global style for chart.js text */
-.chartjs-render-monitor {
-  color: black !important;
+.combined-income {
+  background-color: #e6f3ff;
 }
 
-/* Media Queries for Responsiveness */
+.loading-container,
+.error-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+  text-align: center;
+  color: #666;
+}
+
 @media (max-width: 768px) {
   .income-summary-header {
     flex-direction: column;
-    align-items: flex-start;
     gap: 10px;
   }
 
   .income-controls {
-    width: 100%;
     flex-direction: column;
-  }
-
-  .year-selector,
-  .period-selector {
     width: 100%;
-    justify-content: space-between;
   }
 
-  .income-chart-container {
-    height: 300px;
-  }
-}
-
-@media (max-width: 480px) {
-  .income-summary {
-    padding: 10px;
-  }
-
-  .income-summary-header h1 {
-    font-size: 20px;
-  }
-
-  .income-chart-container {
-    height: 250px;
-  }
-
-  .total-income {
-    padding: 5px;
-  }
-
-  .total-income h3 {
-    font-size: 16px;
-  }
-
-  .total-income p {
-    font-size: 14px;
+  .income-breakdown {
+    flex-direction: column;
   }
 }

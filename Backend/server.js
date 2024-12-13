@@ -9,24 +9,23 @@ const {
 const pool = require('./db'); // Import your database connection
 const cron = require('node-cron');
 const app = express();
-const PORT = 3000; // You can choose any available port
+const PORT = process.env.PORT || 3000;
 const { PRICES } = require('./config');
+const corsConfig = require('./Middleware/corsConfig'); 
 
 
-// Middleware to parse JSON requests
+// Apply CORS middleware
+app.use(cors(corsConfig.corsOptions)); 
+
+// Other middleware
 app.use(express.json());
-
-app.use(cors({
-    origin: 'http://localhost:5173', // Replace with your frontend URL
-    methods: ['GET', 'POST'], // Specify allowed methods
-}));
 
 // Schedule the updateMembershipStatus function to run daily at midnight
 cron.schedule('0 0 * * *', async () => {
     await updateMembershipStatus();
     console.log('Membership statuses updated.');
 });
-
+// Endpoint to get available years
 app.get('/getAvailableYears', async (req, res) => {
     try {
       const yearsQuery = `
@@ -47,10 +46,17 @@ app.get('/getAvailableYears', async (req, res) => {
         years.push(currentYear);
       }
   
-      res.status(200).json({ years: years.sort((a, b) => b - a) });
+      res.status(200).json({ 
+        "success": true,
+        "years": [2023, 2022, 2021]
+      });
     } catch (err) {
-      console.error('Error fetching available years:', err.message);
-      res.status(500).json({ error: 'Error fetching available years' });
+      console.error('Error fetching available years:', err);
+      res.status(500).json({ 
+        success: false,
+        error: 'Error fetching available years',
+        details: err.message 
+      });
     }
   });
 // Example route to fetch memberships
@@ -77,11 +83,9 @@ app.get('/memberships', async (req, res) => {
   });
 //customer records
 app.get('/customerTracking', async (req, res) => {
-    // Get the date from the query parameter, default to the current date if not provided
-    const dateParam = req.query.date || new Date().toISOString().split('T')[0]; // Default to today's date
+    const dateParam = req.query.date || new Date().toISOString().split('T')[0];
     const testDate = new Date(dateParam);
     
-    // Check if the date is valid
     if (isNaN(testDate.getTime())) {
         return res.status(400).json({ error: 'Invalid date format. Please use YYYY-MM-DD.' });
     }
@@ -90,6 +94,7 @@ app.get('/customerTracking', async (req, res) => {
     const endOfDay = new Date(testDate.setHours(23, 59, 59, 999));
 
     const trackingQuery = `
+        -- Member Check-ins
         SELECT 
             c.name, 
             ci.check_in_time AS timestamp, 
@@ -106,6 +111,7 @@ app.get('/customerTracking', async (req, res) => {
 
         UNION ALL
 
+        -- Walk-in Payments
         SELECT 
             c.name, 
             p.payment_date AS timestamp, 
@@ -118,72 +124,85 @@ app.get('/customerTracking', async (req, res) => {
         WHERE 
             c.membership_type = 'Walk In' 
             AND p.payment_date >= $1 AND p.payment_date <= $2
+
+        UNION ALL
+
+        -- Member Registrations
+        SELECT 
+            c.name, 
+            m.start_date AS timestamp, 
+            'Member' AS role,
+            NULL AS payment
+        FROM 
+            Customer c
+        JOIN 
+            Membership m ON c.customer_id = m.customer_id
+        WHERE 
+            m.start_date >= $1 AND m.start_date <= $2
+        
         ORDER BY 
             timestamp;
     `;
 
-    let client; // Declare client variable here
+    let client;
 
     try {
-        client = await pool.connect(); // Get a client from the pool
+        client = await pool.connect();
         const result = await client.query(trackingQuery, [startOfDay, endOfDay]);
 
-        res.status(200).json(result.rows);
+        // Format the timestamp to time only
+        const formattedResult = result.rows.map(row => ({
+            ...row,
+            timestamp: new Date(row.timestamp).toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            })
+        }));
+
+        res.status(200).json(formattedResult);
     } catch (err) {
-        console.error('Error fetching customer tracking records:', err.message); // Log the error message
+        console.error('Error fetching customer tracking records:', err.message);
         res.status(500).json({ error: 'Error fetching customer tracking records' });
     } finally {
-        // Ensure the client is released back to the pool
         if (client) {
             client.release();
         }
     }
 });
 // customer records
-// Updated route to support more granular income data
+// Similar implementation for walk-in records
 app.get('/getWalkInCustomerRecords', async (req, res) => {
-    const { year, period } = req.query;
+    const { year, period = 'monthly' } = req.query;
   
-    let walkInRecordsQuery;
-    let queryParams = [];
+    // Validate year
+    const currentYear = new Date().getFullYear();
+    const parsedYear = parseInt(year, 10);
   
-    // Fixed walk-in price
-    const WALK_IN_PRICE = 60;
+    if (isNaN(parsedYear) || parsedYear < 2000 || parsedYear > currentYear + 1) {
+      return res.status(400).json({ 
+        error: 'Invalid year', 
+        message: `Please provide a valid year between 2000 and ${currentYear + 1}` 
+      });
+    }
   
+
+  try {
+    let query;
+    let queryParams;
+
     switch(period) {
-      case 'daily':
-        walkInRecordsQuery = `
-          SELECT 
-            DATE(p.payment_date) AS date, 
-            COUNT(p.payment_id) AS total_entries,
-            SUM(${WALK_IN_PRICE}) AS total_income
-          FROM 
-            Customer c
-          JOIN 
-            Payment p ON p.customer_id = c.customer_id
-          WHERE 
-            c.membership_type = 'Walk In'
-            AND EXTRACT(YEAR FROM p.payment_date) = $1
-          GROUP BY 
-            DATE(p.payment_date)
-          ORDER BY 
-            date;
-        `;
-        queryParams = [year];
-        break;
-  
       case 'monthly':
-      default:
-        walkInRecordsQuery = `
+        query = `
           SELECT 
             EXTRACT(MONTH FROM p.payment_date) AS month,
             COUNT(p.payment_id) AS total_entries,
             MAX(p.payment_date) AS recent_payment_date,
-            SUM(${WALK_IN_PRICE}) AS total_income
+            SUM(p.amount) AS total_income
           FROM 
-            Customer c
+            Payment p
           JOIN 
-            Payment p ON p.customer_id = c.customer_id
+            Customer c ON p.customer_id = c.customer_id
           WHERE 
             c.membership_type = 'Walk In'
             AND EXTRACT(YEAR FROM p.payment_date) = $1
@@ -193,98 +212,147 @@ app.get('/getWalkInCustomerRecords', async (req, res) => {
             month;
         `;
         queryParams = [year];
+        break;
+
+      case 'quarterly':
+        query = `
+          SELECT 
+            CEIL(EXTRACT(MONTH FROM p.payment_date) / 3.0) AS quarter,
+            COUNT(p.payment_id) AS total_entries,
+            MAX(p.payment_date) AS recent_payment_date,
+            SUM(p.amount) AS total_income
+          FROM 
+            Payment p
+          JOIN 
+            Customer c ON p.customer_id = c.customer_id
+          WHERE 
+            c.membership_type = 'Walk In'
+            AND EXTRACT(YEAR FROM p.payment_date) = $1
+          GROUP BY 
+            CEIL(EXTRACT(MONTH FROM p.payment_date) / 3.0)
+          ORDER BY 
+            quarter;
+        `;
+        queryParams = [year];
+        break;
+
+      default:
+        return res.status(400).json({ 
+          error: 'Invalid period. Use "monthly" or "quarterly".' 
+        });
     }
-  
-    try {
-      const result = await pool.query(walkInRecordsQuery, queryParams);
-      res.status(200).json(result.rows);
-    } catch (err) {
-      console.error('Error fetching walk-in customer records:', err.message);
-      res.status(500).json({ error: 'Error fetching walk-in customer records' });
+
+    const result = await pool.query(query, queryParams);
+
+    res.status(200).json({
+      success: true,
+      data: result.rows,
+      metadata: {
+        year: year,
+        period: period,
+        total_income: result.rows.reduce((sum, row) => sum + parseFloat(row.total_income), 0),
+        total_entries: result.rows.reduce((sum, row) => sum + parseInt(row.total_entries), 0)
+      
+    
     }
-  });
+    });
+
+  } catch (err) {
+    console.error('Error fetching walk-in customer records:', err);
+    res.status(500).json({ 
+      success: false,
+      error: 'Error fetching walk-in customer records',
+      details: err.message 
+    });
+  }
+});
+
 
 app.get('/getMemberCustomerRecords', async (req, res) => {
     const { year, period } = req.query;
   
-    let memberRecordsQuery;
-    let queryParams = [];
-  
-    switch(period) {
-      case 'daily':
-        memberRecordsQuery = `
-          SELECT 
-            DATE(p.payment_date) AS date, 
-            COUNT(DISTINCT p.payment_id) AS total_entries,
-            SUM(p.amount) AS total_income
-          FROM 
-            Customer c
-          JOIN 
-            Payment p ON p.customer_id = c.customer_id
-          WHERE 
-            c.membership_type != 'Walk In'
-            AND EXTRACT(YEAR FROM p.payment_date) = $1
-          GROUP BY 
-            DATE(p.payment_date)
-          ORDER BY 
-            date;
-        `;
-        queryParams = [year];
-        break;
-  
-      case 'monthly':
-      default:
-        memberRecordsQuery = `
-          SELECT 
-            EXTRACT(MONTH FROM p.payment_date) AS month,
-            COUNT(DISTINCT p.payment_id) AS total_entries,
-            MAX(p.payment_date) AS recent_payment_date,
-            SUM(p.amount) AS total_income
-          FROM 
-            Customer c
-          JOIN 
-            Payment p ON p.customer_id = c.customer_id
-          WHERE 
-            c.membership_type != 'Walk In'
-            AND EXTRACT(YEAR FROM p.payment_date) = $1
-          GROUP BY 
-            EXTRACT(MONTH FROM p.payment_date)
-          ORDER BY 
-            month;
-        `;
-        queryParams = [year];
-    }
-  
     try {
-      const result = await pool.query(memberRecordsQuery, queryParams);
-      
-      // Add month names for better readability
-      const monthNames = [
-        'January', 'February', 'March', 'April', 'May', 'June', 
-        'July', 'August', 'September', 'October', 'November', 'December'
-      ];
+      let query;
+      let queryParams;
   
-      // Transform the data to include month names
-      const processedData = result.rows.map(row => {
-        if (period === 'monthly') {
-          return {
-            ...row,
-            month_name: monthNames[row.month - 1]
-          };
+      switch(period) {
+        case 'monthly':
+          query = `
+            SELECT 
+              EXTRACT(MONTH FROM p.payment_date) AS month,
+              COUNT(p.payment_id) AS total_entries,
+              MAX(p.payment_date) AS recent_payment_date,
+              SUM(p.amount) AS total_income
+            FROM 
+              Payment p
+            JOIN 
+              Customer c ON p.customer_id = c.customer_id
+            WHERE 
+              c.membership_type = 'Member'
+              AND EXTRACT(YEAR FROM p.payment_date) = $1
+            GROUP BY 
+              EXTRACT(MONTH FROM p.payment_date)
+            ORDER BY 
+              month;
+          `;
+          queryParams = [year];
+          break;
+  
+        case 'quarterly':
+          query = `
+            SELECT 
+              CEIL(EXTRACT(MONTH FROM p.payment_date) / 3.0) AS quarter,
+              COUNT(p.payment_id) AS total_entries,
+              MAX(p.payment_date) AS recent_payment_date,
+              SUM(p.amount) AS total_income
+            FROM 
+              Payment p
+            JOIN 
+              Customer c ON p.customer_id = c.customer_id
+            WHERE 
+              c.membership_type = 'Member'
+              AND EXTRACT(YEAR FROM p.payment_date) = $1
+            GROUP BY 
+              CEIL(EXTRACT(MONTH FROM p.payment_date) / 3.0)
+            ORDER BY 
+              quarter;
+          `;
+          queryParams = [year];
+          break;
+  
+        default:
+          return res.status(400).json({ 
+            error: 'Invalid period. Use "monthly" or "quarterly".' 
+          });
+      }
+  
+      const result = await pool.query(query, queryParams);
+  
+      // Add more detailed logging
+      console.log('Membership Records Query Result:', result.rows);
+      
+      // Enhance response with additional metadata
+      res.status(200).json({
+        success: true,
+        data: result.rows,
+        metadata: {
+          year: year,
+          period: period,
+          total_income: result.rows.reduce((sum, row) => sum + parseFloat(row.total_income), 0),
+          total_entries: result.rows.reduce((sum, row) => sum + parseInt(row.total_entries), 0)
         }
-        return row;
       });
   
-      res.status(200).json(processedData);
     } catch (err) {
-      console.error('Error fetching member customer records:', err.message);
+      console.error('Error fetching membership customer records:', err);
       res.status(500).json({ 
-        error: 'Error fetching member customer records',
+        success: false,
+        error: 'Error fetching membership customer records',
         details: err.message 
       });
     }
   });
-
+  
 // Endpoint to fetch customer membership information
 app.get('/getCustomerMember_TotalRecords/:name', async (req, res) => {
     const { name } = req.params;
@@ -390,6 +458,9 @@ app.post('/addWalkInTransaction', async (req, res) => {
         return res.status(400).json({ error: 'Reference number is required for Gcash and Paymaya' });
     }
 
+    // Log the entire request body for debugging
+    console.log('Request Body:', req.body);
+
     const customerQuery = `
         INSERT INTO Customer (name, email, membership_type, contact_info)
         VALUES ($1, $2, 'Walk In', $3) RETURNING customer_id;
@@ -397,20 +468,25 @@ app.post('/addWalkInTransaction', async (req, res) => {
 
     const paymentQuery = `
         INSERT INTO Payment (amount, method, status, payment_date, customer_id, gcash_refNum, maya_refNum)
-        VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING payment_id;
+        VALUES ($1, $2, $3, CURRENT_TIMESTAMP, $4, $5, $6) RETURNING payment_id;
     `;
 
+    let client;
+
     try {
-        const client = await pool.connect();
+        client = await pool.connect();
 
         // Start a transaction
         await client.query('BEGIN');
 
         // Insert customer
-        const customerResult = await client.query(customerQuery, [name, phone, null]);
+        const customerResult = await client.query(customerQuery, [
+            name, 
+            null, // email 
+            phone || null // contact_info
+        ]);
         const customerId = customerResult.rows[0].customer_id;
 
-        const paymentDate = new Date().toISOString().split('T')[0]; // Use current date for payment date without time
         const paymentStatus = 'Completed'; // Example status
 
         // Determine reference number based on payment method
@@ -423,12 +499,11 @@ app.post('/addWalkInTransaction', async (req, res) => {
             mayaRefNum = referenceNumber;
         }
 
-        // Insert payment
+        // Insert payment using CURRENT_TIMESTAMP
         const paymentResult = await client.query(paymentQuery, [
             amount, 
             paymentMethod, 
             paymentStatus, 
-            paymentDate, 
             customerId, 
             gcashRefNum, 
             mayaRefNum
@@ -446,8 +521,20 @@ app.post('/addWalkInTransaction', async (req, res) => {
         });
     } catch (err) {
         console.error('Error adding walk-in transaction:', err);
-        await client.query('ROLLBACK');
-        res.status(500).json({ error: 'Error adding walk-in transaction' });
+        console.error('Full error details:', JSON.stringify(err, null, 2));
+        
+        if (client) {
+            await client.query('ROLLBACK');
+        }
+        res.status(500).json({ 
+            error: 'Error adding walk-in transaction',
+            details: err.message,
+            fullError: err
+        });
+    } finally {
+        if (client) {
+            client.release();
+        }
     }
 });
 
@@ -460,19 +547,16 @@ app.post('/addMembershipTransaction', async (req, res) => {
         return res.status(400).json({ error: 'Name, email, and payment method are required' });
     }
 
-    // Define the customerQuery
     const customerQuery = `
-        INSERT INTO Customer (name, email, contact_info)
-        VALUES ($1, $2, $3) RETURNING customer_id;
+        INSERT INTO Customer (name, email, membership_type, contact_info)
+        VALUES ($1, $2, 'Member', $3) RETURNING customer_id;
     `;
 
-    // Define the membershipQuery
     const membershipQuery = `
         INSERT INTO Membership (customer_id, start_date, end_date, status)
         VALUES ($1, $2, $3, $4) RETURNING membership_id;
     `;
 
-    // Define the paymentQuery
     const paymentQuery = `
         INSERT INTO Payment (amount, method, status, payment_date, customer_id)
         VALUES ($1, $2, $3, $4, $5) RETURNING payment_id;
@@ -485,51 +569,53 @@ app.post('/addMembershipTransaction', async (req, res) => {
         await client.query('BEGIN');
 
         // Insert customer
-        const customerResult = await client.query(customerQuery, [name, email, phone]);
+        const customerResult = await client.query(customerQuery, [name, email, phone || null]);
         const customerId = customerResult.rows[0].customer_id;
 
-        // Define membership details
+        // Define start and end dates for the membership
         const startDate = new Date();
         const endDate = new Date();
-        endDate.setMonth(startDate.getMonth() + 1); // Set end date to one month from now
-        const membershipStatus = 'Active';
+        endDate.setFullYear(endDate.getFullYear() + 1); // Set end date to one year from now
 
-        // Insert membership
-        const membershipResult = await client.query(membershipQuery, [customerId, startDate, endDate, membershipStatus]);
-        const membershipId = membershipResult.rows[0].membership_id;
-
-        // Generate QR code for the membership
-        const qrCodePath = await generateQRCode(membershipId);
-
-        // Update the Membership table with the QR code path
-        const updateQRCodeQuery = `
-            UPDATE Membership
-            SET qr_code_path = $1
-            WHERE membership_id = $2;
-        `;
-        await client.query(updateQRCodeQuery, [qrCodePath, membershipId]);
+        // Insert membership and capture membershipId
+        const membershipResult = await client.query(membershipQuery, [customerId, startDate, endDate, 'Active']);
+        const membershipId = membershipResult.rows[0].membership_id; // Ensure this is defined
 
         // Insert payment
-        const paymentDate = new Date().toISOString().split('T')[0]; // Use current date for payment date without time
         const paymentStatus = 'Completed'; // Example status
+        const paymentDate = new Date().toISOString(); // Current timestamp
 
-        await client.query(paymentQuery, [amount, paymentMethod, paymentStatus, paymentDate, customerId]);
+        const paymentResult = await client.query(paymentQuery, [
+            amount, 
+            paymentMethod, 
+            paymentStatus, 
+            paymentDate, 
+            customerId
+        ]);
 
+        // Commit the transaction
         await client.query('COMMIT');
-        res.status(201).json({ message: 'Membership transaction added successfully', membershipId });
+
+        res.status(201).json({
+            customerId: customerId,
+            membershipId: membershipId, // Return the membershipId
+            paymentId: paymentResult.rows[0].payment_id
+        });
     } catch (error) {
+        console.error('Error adding membership transaction:', error);
         if (client) {
             await client.query('ROLLBACK');
         }
-        console.error('Error adding membership transaction:', error);
-        res.status(500).json({ error: 'An error occurred while adding the membership transaction' });
+        res.status(500).json({ 
+            error: 'An error occurred while adding the membership transaction',
+            details: error.message
+        });
     } finally {
         if (client) {
             client.release();
         }
     }
 });
-
 app.post('/renewMembership', async (req, res) => {
     const { name, paymentMethod, referenceNumber } = req.body;
     const amount = PRICES.MEMBERSHIP; // Use global membership renewal price
@@ -737,6 +823,72 @@ app.post('/staffLogin', async (req, res) => {
         }
     }
 });
+// Endpoint to get role counts
+app.get('/getRoleCounts', async (req, res) => {
+    try {
+        // Query to get customer type counts
+        const customerTypeQuery = `
+            SELECT 
+                membership_type, 
+                COUNT(*) as count
+            FROM 
+                Customer
+            GROUP BY 
+                membership_type;
+        `;
+
+        // Query to get today's check-ins
+        const todayCheckInsQuery = `
+            SELECT COUNT(*) as today_check_ins
+            FROM CheckIn
+            WHERE DATE(check_in_time) = CURRENT_DATE;
+        `;
+
+        // Query to get active memberships
+        const activeMembershipsQuery = `
+            SELECT COUNT(*) as active_memberships
+            FROM Membership
+            WHERE status = 'Active';
+        `;
+
+        // Execute all queries
+        const customerTypeResult = await pool.query(customerTypeQuery);
+        const todayCheckInsResult = await pool.query(todayCheckInsQuery);
+        const activeMembershipsResult = await pool.query(activeMembershipsQuery);
+
+        // Prepare response
+        const response = {
+            walk_in_count: 0,
+            member_count: 0,
+            today_check_ins: parseInt(todayCheckInsResult.rows[0].today_check_ins),
+            active_memberships: parseInt(activeMembershipsResult.rows[0].active_memberships)
+        };
+
+        // Process customer type counts
+        customerTypeResult.rows.forEach(row => {
+            if (row.membership_type === 'Walk In') {
+                response.walk_in_count = parseInt(row.count);
+            }
+            if (row.membership_type === 'Member') {
+                response.member_count = parseInt(row.count);
+            }
+        });
+
+        res.status(200).json({
+            success: true,
+            data: response
+        });
+
+    } catch (error) {
+        console.error('Error fetching role counts:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Error fetching role counts',
+            details: error.message 
+        });
+    }
+});
+
 app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

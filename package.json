@@ -2,7 +2,9 @@
   "name": "gym-management-system",
   "version": "1.0.0",
   "scripts": {
-    "dev": "concurrently \"npm run dev --prefix frontend\" \"node backend/server.js\""
+    "dev": "concurrently \"npm run dev --prefix frontend\" \"node backend/server.js\"",
+    "lint": "eslint src/**/*.{js,jsx}",
+    "lint:fix": "eslint src/**/*.{js,jsx} --fix"
   },
   "dependencies": {
     "cors": "^2.8.5",
