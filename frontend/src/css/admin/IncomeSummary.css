@@ -8,7 +8,8 @@
   border-radius: 10px;
   padding: 20px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  color: black; /* Add this to set default text color */
+  color: #333; /* Add this to set default text color */
+  font-family: 'poppins', sans-serif;
 }
 
 .income-summary-header {
@@ -20,15 +21,17 @@
 }
 
 .income-summary-header h1 {
-  font-size: 24px;
+  font-size: 25px;
+  font-weight: 700;
   margin: 0;
-  color: black;
+  color: #333;
 }
 
 .income-controls {
   display: flex;
   gap: 20px;
 }
+
 .year-selector,
 .period-selector {
   display: flex;
@@ -41,7 +44,7 @@
   padding: 8px 12px; /* Increased padding */
   border: 1px solid #ccc;
   border-radius: 4px;
-  color: black;
+  color: #333;
   background-color: white;
   font-size: 16px; /* Increased font size */
   min-width: 100px; /* Ensure minimum width */

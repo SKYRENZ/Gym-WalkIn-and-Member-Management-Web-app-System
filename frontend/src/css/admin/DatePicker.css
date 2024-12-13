@@ -1,19 +1,50 @@
-.datepicker button {
-    padding: 10px 80px;
-    background-color: #3A506B;
-    color: white;
-    box-sizing: border-box;
+/* Styling for the date picker container */
+.datepicker {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 10px 0;
+}
+
+/* Styling for the date picker input */
+.datepicker input[type="date"] {
+  padding: 10px 20px;
+  background-color: #5a84df;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-family: 'Poppins', sans-serif;
+  box-sizing: border-box;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+  cursor: pointer; /* Make the cursor a pointer to indicate it's clickable */
+  text-align: center; /* Center the text */
+  appearance: none; /* Remove default styling */
+  -webkit-appearance: none; /* Remove default styling for Safari */
+}
+
+/* Styling for the date picker input on focus */
+.datepicker input[type="date"]:focus {
+  outline: none; /* Remove the default focus outline */
+  background-color: #333; /* Change background color on focus */
+}
+
+.datepicker input[type="date"]:hover {
+  outline: none; /* Remove the default focus outline */
+  background-color: #333; /* Change background color on focus */
+}
+
+/* Media Queries for Responsiveness */
+@media (max-width: 768px) {
+  .datepicker input[type="date"] {
+    padding: 8px 16px;
+    font-size: 14px;
   }
-  
-  /* Media Queries for Responsiveness */
-  @media (max-width: 768px) {
-    .datepicker button {
-      padding: 8px 60px;
-    }
+}
+
+@media (max-width: 480px) {
+  .datepicker input[type="date"] {
+    padding: 6px 12px;
+    font-size: 12px;
   }
-  
-  @media (max-width: 480px) {
-    .datepicker button {
-      padding: 5px 40px;
-    }
-  }
+}

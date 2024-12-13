@@ -26,6 +26,7 @@
     margin: 10px;
     padding: 10px;
     background-color: #f0f0f0;
+    color: #333;
     border: none; /* Remove border */
     border-radius: 5px; /* Rounded corners */
     cursor: pointer;

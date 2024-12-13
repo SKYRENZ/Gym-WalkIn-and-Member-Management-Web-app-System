@@ -5,6 +5,7 @@
     "dev": "concurrently \"npm run dev --prefix frontend\" \"node backend/server.js\""
   },
   "dependencies": {
+    "@babel/runtime": "^7.26.0",
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "gym-management-system": "file:",
@@ -12,7 +13,9 @@
     "pg": "^8.13.1",
     "prop-types": "^15.8.1",
     "qrcode": "^1.5.4",
-    "react-icons": "^5.4.0"
+    "react-icons": "^5.4.0",
+    "react-modal": "^3.16.1",
+    "react-qr-scanner": "^1.0.0-alpha.11"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"

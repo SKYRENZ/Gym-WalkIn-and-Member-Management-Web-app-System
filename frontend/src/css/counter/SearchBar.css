@@ -16,6 +16,7 @@
     border: 1px solid #ccc;
     width: auto; /* Default width for normal screens */
     box-sizing: border-box;
+    background-color: white;
 }
 
 /* Search button styling */

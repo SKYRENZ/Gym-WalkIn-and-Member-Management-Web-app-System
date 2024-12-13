@@ -1,24 +1,31 @@
 .member-counting {
   display: flex;
-  flex-direction: column; /* Stack elements vertically */
-  align-items: center; /* Center align items */
-  padding: 20px; /* Add some padding */
-  max-width: 800px; /* Set a max width for larger screens */
-  margin: 0 auto; /* Center the component horizontally */
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 20px;
+  border: solid 1px #e0e0e0;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  color: #333;
+  font-family: 'poppins', sans-serif;
 }
 
 .member-counting h1 {
   margin-bottom: 20px; /* Space below the header */
   text-align: center; /* Center the header text */
-  font-size: 2rem; /* Responsive font size */
-  color: black;
+  font-size: 25px; /* Responsive font size */
+  font-weight: 700;
+  color: #333;
 }
-/* Add this to your MemberCounting.css */
+
 .member-counting-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  width: 100%; /* Ensure it takes full width */
 }
 
 .year-selector {
@@ -36,10 +43,19 @@
 
 @media (max-width: 600px) {
   .member-counting h1 {
-      font-size: 1.5rem; /* Smaller font size for smaller screens */
+    font-size: 1.5rem; /* Smaller font size for smaller screens */
   }
 
   .member-counting {
-      padding: 10px; /* Less padding on smaller screens */
+    padding: 10px; /* Less padding on smaller screens */
+  }
+
+  .member-counting-header {
+    flex-direction: column; /* Stack elements vertically */
+    align-items: center; /* Center align items */
+  }
+
+  .year-selector {
+    margin-top: 10px; /* Add space between the h1 and the year selector */
   }
 }
