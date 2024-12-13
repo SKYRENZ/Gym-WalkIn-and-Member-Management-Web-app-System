@@ -1,5 +1,4 @@
-/* Modal Overlay */
-.accountModalOverlay {
+.voucherModalOverlay {
     background-color: rgba(0, 0, 0, 0.75);
     display: flex;
     justify-content: center;
@@ -12,8 +11,7 @@
     z-index: 1000;
 }
 
-/* Modal Content */
-.accountModalContent {
+.voucherModalContent {
     background: white;
     padding: 20px 30px;
     border-radius: 8px;
@@ -28,7 +26,7 @@
     flex-direction: column; /* Stack elements vertically */
 }
 
-.AccountHeader {
+.VoucherHeader {
     display: flex;
     align-items: center;
     justify-content: flex-start;
@@ -37,26 +35,26 @@
     border-bottom: 2px solid #333;
 }
 
-.accountBackButton {
+.voucherBackButton {
     margin-right: 10px; /* Add space between the back button and the header */
     background: none;
     border: none;
     cursor: pointer;
 }
 
-.accountBackButton img {
+.voucherBackButton img {
     width: 40px;
     height: 40px;
 }
 
-.AccountHeader h2 {
+.VoucherHeader h2 {
     margin: 0;
     font-size: 35px;
     font-weight: 700;
     color: #333;
 }
 
-.accountList {
+.voucherList {
     display: flex;
     flex-direction: column;
     overflow-y: auto; /* Enable vertical scrolling */
@@ -66,11 +64,11 @@
     height: 500px;
 }
 
-.accountList::-webkit-scrollbar {
+.voucherList::-webkit-scrollbar {
     display: none; /* Hide scrollbar in WebKit browsers */
 }
 
-.accountItem {
+.voucherItem {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -82,106 +80,82 @@
     border-radius: 5px; /* Add border radius */
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Add subtle shadow */
     position: relative; /* Position relative for absolute positioning of the button */
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.accountItem .editButton {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    padding: 8px 15px; /* Make the button bigger */
-    font-size: 1rem; /* Increase font size */
-    border: none;
+.voucherItem:hover {
+    background-color: #dcdcdc; /* Change background on hover */
+}
+
+.voucherItem.selected {
+    background-color: #007bff; /* Change background for selected item */
+    color: white; /* Change text color for selected item */
+}
+
+.moreInfoBtn {
+    padding: 10px 50px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
     border-radius: 5px;
-    cursor: pointer;
     background-color: #007bff;
     color: white;
-    transition: background-color 0.3s ease;
-}
-
-.accountItem .editButton:hover {
-    background-color: #0056b3;
-}
-
-.accountItem:last-child {
-    margin-bottom: 0; /* Remove margin from the last item */
-}
-
-.accountModalButtons {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    gap: 10px; /* Add space between the buttons */
-    margin-top: 20px; /* Push buttons to the bottom */
-}
-
-.accountModalButtons button {
-    padding: 10px;
-    font-size: 1rem;
-    border: none;
-    border-radius: 5px;
     cursor: pointer;
-    background-color: #efefef;
-    color: #333;
     transition: background-color 0.3s ease;
-    flex: 1; /* Make buttons the same size */
-    max-width: 150px; /* Optional: Set a max width for the buttons */
+    align-self: center; /* Align the button to the center */
+    margin-top: auto; /* Push the button to the bottom */
 }
 
-.accountModalButtons button:hover {
+.moreInfoBtn:disabled {
+    background-color: #cccccc; /* Change background for disabled button */
+    cursor: not-allowed; /* Change cursor for disabled button */
+}
+
+.moreInfoBtn:hover:not(:disabled) {
     background-color: #0056b3;
 }
 
 /* Media Queries for Responsiveness */
 @media (max-width: 768px) {
-    .accountModalContent {
+    .voucherModalContent {
         width: 90%;
         height: 500px; /* Adjust height for smaller screens */
         padding: 20px;
     }
 
-    .AccountHeader h2 {
+    .VoucherHeader h2 {
         font-size: 28px; /* Adjust font size for smaller screens */
     }
 
-    .accountBackButton img {
+    .voucherBackButton img {
         width: 30px;
         height: 30px;
     }
 
-    .accountModalButtons {
-        flex-direction: column; /* Stack buttons vertically on smaller screens */
-        gap: 10px;
-    }
-
-    .accountModalButtons button {
-        max-width: none; /* Remove max width for smaller screens */
-    }
-
-    .accountItem .editButton {
-        position: static; /* Remove absolute positioning */
-        margin-top: 10px; /* Add margin to separate from content */
-        align-self: flex-end; /* Align to the right */
+    .moreInfoBtn {
+        padding: 8px 30px; /* Adjust padding for smaller screens */
+        font-size: 0.9rem; /* Adjust font size for smaller screens */
     }
 }
 
 @media (max-width: 480px) {
-    .accountModalContent {
+    .voucherModalContent {
         width: 100%;
         height: 500px; /* Adjust height for smaller screens */
         padding: 15px;
     }
 
-    .AccountHeader h2 {
+    .VoucherHeader h2 {
         font-size: 24px; /* Adjust font size for smaller screens */
     }
 
-    .accountBackButton img {
+    .voucherBackButton img {
         width: 25px;
         height: 25px;
     }
 
-    .accountModalButtons button {
-        padding: 8px;
-        font-size: 0.9rem;
+    .moreInfoBtn {
+        padding: 8px 20px; /* Adjust padding for smaller screens */
+        font-size: 0.8rem; /* Adjust font size for smaller screens */
     }
 }
