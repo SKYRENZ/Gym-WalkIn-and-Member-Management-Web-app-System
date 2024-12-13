@@ -50,15 +50,8 @@ function VoucherModal({ isOpen, onClose }) {
                         className={`voucherItem ${selectedVoucher === 'voucher1' ? 'selected' : ''}`}
                         onClick={() => handleVoucherClick('voucher1')}
                     >
-                        <p><strong>Voucher Id:</strong> 1</p>
-                        <p><strong>Uses Left:</strong> 5</p>
-                    </button>
-                    <button
-                        className={`voucherItem ${selectedVoucher === 'voucher2' ? 'selected' : ''}`}
-                        onClick={() => handleVoucherClick('voucher2')}
-                    >
-                        <p><strong>Voucher Id:</strong> 2</p>
-                        <p><strong>Uses Left:</strong> 3</p>
+                        <p><strong>Voucher Id:</strong></p>
+                        <p><strong>Uses Left:</strong></p>
                     </button>
                     {/* Add more voucher items as needed */}
                 </div>

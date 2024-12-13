@@ -42,6 +42,10 @@
     cursor: pointer;
 }
 
+.voucherBackButton:focus {
+    outline: none;
+}
+
 .voucherBackButton img {
     width: 40px;
     height: 40px;
@@ -86,19 +90,23 @@
 
 .voucherItem:hover {
     background-color: #dcdcdc; /* Change background on hover */
+    border: none;
+}
+
+.voucherItem:focus {
+    outline: none;
 }
 
 .voucherItem.selected {
-    background-color: #007bff; /* Change background for selected item */
+    background-color: #333; /* Change background for selected item */
     color: white; /* Change text color for selected item */
 }
 
 .moreInfoBtn {
     padding: 10px 50px;
     font-size: 1rem;
-    border: 1px solid #ccc;
     border-radius: 5px;
-    background-color: #007bff;
+    background-color: #333;
     color: white;
     cursor: pointer;
     transition: background-color 0.3s ease;
@@ -108,11 +116,17 @@
 
 .moreInfoBtn:disabled {
     background-color: #cccccc; /* Change background for disabled button */
+    border: none;
     cursor: not-allowed; /* Change cursor for disabled button */
+}
+
+.moreInfoBtn:focus {
+    outline: none;
 }
 
 .moreInfoBtn:hover:not(:disabled) {
     background-color: #0056b3;
+    border: none;
 }
 
 /* Media Queries for Responsiveness */

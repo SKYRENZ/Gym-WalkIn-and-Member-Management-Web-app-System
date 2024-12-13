@@ -7,19 +7,19 @@
   }
   
   .navigation button:nth-child(1) {
-    background-color: #d6e4ff; /* Light blue for Customer Records */
+    background-color: #a9c5fc; /* Light blue for Customer Records */
   }
   
   .navigation button:nth-child(2) {
-    background-color: #d9f7be; /* Light green for QR Membership Print */
+    background-color: #c4f59a; /* Light green for QR Membership Print */
   }
   
   .navigation button:nth-child(3) {
-    background-color: #fff7db; /* Light yellow for Voucher */
+    background-color: #fdeeb0; /* Light yellow for Voucher */
   }
   
   .navigation button:nth-child(4) {
-    background-color: #ffe7e7; /* Light pink for Accounts */
+    background-color: #f8c5c5; /* Light pink for Accounts */
   }
   
   .navigation button {
@@ -59,6 +59,10 @@
   .navigation button:hover {
     transform: translateY(-5px); /* Slight lift effect */
     box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.15); /* Darker shadow on hover */
+  }
+
+  .navigation button:focus {
+    outline: none;
   }
   
   /* Media Queries for Responsiveness */

@@ -58,7 +58,7 @@
     font-size: 1rem;
     border: 1px solid #ccc;
     border-radius: 5px;
-    background-color: #007bff;
+    background-color: #333;
     color: white;
     cursor: pointer;
     transition: background-color 0.3s ease;
@@ -67,8 +67,12 @@
     margin-bottom: 50px; /* Push the button to the bottom */
 }
 
-.addAccountForm button:hover {
+.addAccountBtn:hover {
     background-color: #0056b3;
+}
+
+.addAccountBtn:focus {
+    outline: none;
 }
 
 /* Media Queries for Responsiveness */

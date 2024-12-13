@@ -44,6 +44,10 @@
     cursor: pointer;
 }
 
+.accountBackButton:focus {
+    outline: none;
+}
+
 .accountBackButton img {
     width: 40px;
     height: 40px;
@@ -88,18 +92,22 @@
     position: absolute;
     top: 10px;
     right: 10px;
-    padding: 8px 15px; /* Make the button bigger */
+    padding: 8px 40px; /* Make the button bigger */
     font-size: 1rem; /* Increase font size */
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    background-color: #007bff;
+    background-color: #333;
     color: white;
     transition: background-color 0.3s ease;
 }
 
 .accountItem .editButton:hover {
     background-color: #0056b3;
+}
+
+.accountItem .editButton:focus {
+    outline: none;
 }
 
 .accountItem:last-child {
@@ -120,8 +128,8 @@
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    background-color: #efefef;
-    color: #333;
+    background-color: #333;
+    color: white;
     transition: background-color 0.3s ease;
     flex: 1; /* Make buttons the same size */
     max-width: 150px; /* Optional: Set a max width for the buttons */
@@ -129,6 +137,10 @@
 
 .accountModalButtons button:hover {
     background-color: #0056b3;
+}
+
+.accountModalButtons button:focus {
+    outline: none;
 }
 
 /* Media Queries for Responsiveness */

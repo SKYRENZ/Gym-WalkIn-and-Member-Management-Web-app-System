@@ -15,10 +15,13 @@
     justify-content: center;
     min-width: 160px; /* Set a minimum width for consistency */
     text-align: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .checkInButton:hover {
     background-color: #405fad; /* Darker blue on hover */
+    transform: translateY(-5px); /* Slight lift effect */
+    box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.15); /* Darker shadow on hover */
 }
 
 .checkInButton:focus {
