@@ -87,61 +87,65 @@ app.get('/memberships', async (req, res) => {
 app.get('/customerTracking', async (req, res) => {
     const dateParam = req.query.date || new Date().toISOString().split('T')[0];
     const testDate = new Date(dateParam);
-    
+
+    // Validate date input
     if (isNaN(testDate.getTime())) {
-        return res.status(400).json({ error: 'Invalid date format. Please use YYYY-MM-DD.' });
+        return res.status(400).json({ 
+            error: 'Invalid date format. Please use YYYY-MM-DD.',
+            success: false 
+        });
     }
 
     const startOfDay = new Date(testDate.setHours(0, 0, 0, 0));
     const endOfDay = new Date(testDate.setHours(23, 59, 59, 999));
 
     const trackingQuery = `
-        -- Member Check-ins
+        -- Member Check-ins 
         SELECT 
             c.name, 
             ci.check_in_time AS timestamp, 
-            'Member' AS role,
-            NULL AS payment
+            'Member' AS role, 
+            NULL AS payment 
         FROM 
-            Customer c
+            Customer c 
         JOIN 
-            Membership m ON c.customer_id = m.customer_id
+            Membership m ON c.customer_id = m.customer_id 
         JOIN 
-            CheckIn ci ON m.membership_id = ci.membership_id
+            CheckIn ci ON m.membership_id = ci.membership_id 
         WHERE 
-            DATE(ci.check_in_time AT TIME ZONE 'Asia/Manila') = DATE($1 AT TIME ZONE 'Asia/Manila')
+            DATE(ci.check_in_time AT TIME ZONE 'Asia/Manila') = DATE($1 AT TIME ZONE 'Asia/Manila') 
 
-        UNION ALL
+        UNION ALL 
 
-        -- Walk-in Payments
+        -- Walk-in Payments 
         SELECT 
             c.name, 
             p.payment_date AS timestamp, 
-            'Walk In' AS role,
-            p.amount AS payment
+            'Walk In' AS role, 
+            p.amount AS payment 
         FROM 
-            Customer c
+            Customer c 
         LEFT JOIN 
-            Payment p ON c.customer_id = p.customer_id
+            Payment p ON c.customer_id = p.customer_id 
         WHERE 
             c.membership_type = 'Walk In' 
-            AND DATE(p.payment_date AT TIME ZONE 'Asia/Manila') = DATE($1 AT TIME ZONE 'Asia/Manila')
+            AND DATE(p.payment_date AT TIME ZONE 'Asia/Manila') = DATE($1 AT TIME ZONE 'Asia/Manila') 
 
-        UNION ALL
+        UNION ALL 
 
-        -- Member Registrations
+        -- Member Registrations 
         SELECT 
             c.name, 
             m.start_date AS timestamp, 
-            'Member' AS role,
-            NULL AS payment
+            'Member' AS role, 
+            NULL AS payment 
         FROM 
-            Customer c
+            Customer c 
         JOIN 
-            Membership m ON c.customer_id = m.customer_id
+            Membership m ON c.customer_id = m.customer_id 
         WHERE 
-            DATE(m.start_date AT TIME ZONE 'Asia/Manila') = DATE($1 AT TIME ZONE 'Asia/Manila')
-        
+            DATE(m.start_date AT TIME ZONE 'Asia/Manila') = DATE($1 AT TIME ZONE 'Asia/Manila') 
+
         ORDER BY 
             timestamp;
     `;
@@ -152,33 +156,43 @@ app.get('/customerTracking', async (req, res) => {
         client = await pool.connect();
         const result = await client.query(trackingQuery, [startOfDay]);
 
-        // Format the timestamp to time only with Manila timezone
-        const formattedResult = result.rows.map(row => {
-            // Ensure the timestamp is converted to Manila timezone
-            const timestamp = row.timestamp ? 
-                new Date(row.timestamp).toLocaleTimeString('en-PH', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    hour12: true,
-                    timeZone: 'Asia/Manila'
-                }) : 
-                null;
+        // Ensure data is always an array
+        const formattedResult = Array.isArray(result.rows) 
+            ? result.rows.map(row => {
+                const timestamp = row.timestamp ? 
+                    new Date(row.timestamp).toLocaleTimeString('en-PH', { 
+                        hour: '2-digit', 
+                        minute: '2-digit', 
+                        hour12: true, 
+                        timeZone: 'Asia/Manila' 
+                    }) : 
+                    null;
 
-            return {
-                ...row,
-                timestamp: timestamp
-            };
+                return { 
+                    name: row.name,
+                    timestamp: timestamp,
+                    role: row.role,
+                    payment: row.payment ? parseFloat(row.payment).toFixed(2) : null
+                }; 
+            })
+            : [];
+
+        res.status(200).json({
+            success: true,
+            data: formattedResult,
+            metadata: {
+                date: dateParam,
+                total_entries: formattedResult.length,
+                total_members: formattedResult.filter(entry => entry.role === 'Member').length,
+                total_walk_ins: formattedResult.filter(entry => entry.role === 'Walk In').length
+            }
         });
-
-        // Log the formatted results for debugging
-        console.log('Formatted Customer Tracking Results:', formattedResult);
-
-        res.status(200).json(formattedResult);
     } catch (err) {
         console.error('Error fetching customer tracking records:', err);
-        console.error('Detailed Error:', err.message, err.stack);
         res.status(500).json({ 
-            error: 'Error fetching customer tracking records',
+            success: false,
+            data: [], // Always return an array
+            error: 'Error fetching customer tracking records', 
             details: err.message 
         });
     } finally {
@@ -187,6 +201,60 @@ app.get('/customerTracking', async (req, res) => {
         }
     }
 });
+// In server.js or a separate route file
+// Example route modification
+app.get('/getDailyCustomerRecords', async (req, res) => {
+    const { year, type } = req.query;
+  
+    // Validate year
+    const currentYear = new Date().getFullYear();
+    const parsedYear = parseInt(year, 10);
+  
+    if (isNaN(parsedYear) || parsedYear < 2000 || parsedYear > currentYear + 1) {
+      return res.status(400).json({ 
+        error: 'Invalid year', 
+        message: `Please provide a valid year between 2000 and ${currentYear + 1}` 
+      });
+    }
+  
+    try {
+      const dailyQuery = `
+        SELECT 
+          DATE(payment_date) AS date, 
+          COUNT(payment_id) AS total_entries, 
+          SUM(amount) AS total_income 
+        FROM 
+          Payment p 
+        JOIN 
+          Customer c ON p.customer_id = c.customer_id 
+        WHERE 
+          c.membership_type = $1 
+          AND EXTRACT(YEAR FROM payment_date) = $2 
+        GROUP BY 
+          DATE(payment_date) 
+        ORDER BY 
+          date;
+      `;
+  
+      const result = await pool.query(dailyQuery, [type, parsedYear]);
+  
+      res.status(200).json({ 
+        success: true, 
+        data: result.rows.map(row => ({ 
+          date: row.date, 
+          total_entries: parseInt(row.total_entries), 
+          total_income: parseFloat(row.total_income) 
+        })) 
+      });
+    } catch (error) {
+      console.error('Error fetching daily records:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to fetch daily records', 
+        message: error.message 
+      });
+    }
+  });
 // customer records
 // Similar implementation for walk-in records
 app.get('/getWalkInCustomerRecords', async (req, res) => {
@@ -203,90 +271,108 @@ app.get('/getWalkInCustomerRecords', async (req, res) => {
       });
     }
   
-
-  try {
-    let query;
-    let queryParams;
-
-    switch(period) {
-      case 'monthly':
-        query = `
-          SELECT 
-            EXTRACT(MONTH FROM p.payment_date) AS month,
-            COUNT(p.payment_id) AS total_entries,
-            MAX(p.payment_date) AS recent_payment_date,
-            SUM(p.amount) AS total_income
-          FROM 
-            Payment p
-          JOIN 
-            Customer c ON p.customer_id = c.customer_id
-          WHERE 
-            c.membership_type = 'Walk In'
-            AND EXTRACT(YEAR FROM p.payment_date) = $1
-          GROUP BY 
-            EXTRACT(MONTH FROM p.payment_date)
-          ORDER BY 
-            month;
-        `;
-        queryParams = [year];
-        break;
-
-      case 'quarterly':
-        query = `
-          SELECT 
-            CEIL(EXTRACT(MONTH FROM p.payment_date) / 3.0) AS quarter,
-            COUNT(p.payment_id) AS total_entries,
-            MAX(p.payment_date) AS recent_payment_date,
-            SUM(p.amount) AS total_income
-          FROM 
-            Payment p
-          JOIN 
-            Customer c ON p.customer_id = c.customer_id
-          WHERE 
-            c.membership_type = 'Walk In'
-            AND EXTRACT(YEAR FROM p.payment_date) = $1
-          GROUP BY 
-            CEIL(EXTRACT(MONTH FROM p.payment_date) / 3.0)
-          ORDER BY 
-            quarter;
-        `;
-        queryParams = [year];
-        break;
-
-      default:
-        return res.status(400).json({ 
-          error: 'Invalid period. Use "monthly" or "quarterly".' 
-        });
+    try {
+      let query;
+      let queryParams;
+  
+      switch(period) {
+        case 'monthly':
+          query = `
+            SELECT 
+              EXTRACT(MONTH FROM p.payment_date) AS month,
+              COUNT(p.payment_id) AS total_entries,
+              MAX(p.payment_date) AS recent_payment_date,
+              SUM(p.amount) AS total_income
+            FROM 
+              Payment p
+            JOIN 
+              Customer c ON p.customer_id = c.customer_id
+            WHERE 
+              c.membership_type = 'Walk In'
+              AND EXTRACT(YEAR FROM p.payment_date) = $1
+            GROUP BY 
+              EXTRACT(MONTH FROM p.payment_date)
+            ORDER BY 
+              month;
+          `;
+          queryParams = [year];
+          break;
+  
+        case 'quarterly':
+          query = `
+            SELECT 
+              CEIL(EXTRACT(MONTH FROM p.payment_date) / 3.0) AS month,
+              COUNT(p.payment_id) AS total_entries,
+              MAX(p.payment_date) AS recent_payment_date,
+              SUM(p.amount) AS total_income
+            FROM 
+              Payment p
+            JOIN 
+              Customer c ON p.customer_id = c.customer_id
+            WHERE 
+              c.membership_type = 'Walk In'
+              AND EXTRACT(YEAR FROM p.payment_date) = $1
+            GROUP BY 
+              CEIL(EXTRACT(MONTH FROM p.payment_date) / 3.0)
+            ORDER BY 
+              month;
+          `;
+          queryParams = [year];
+          break;
+  
+        // Retain existing functionality for other periods if needed
+        default:
+          // Fallback to existing implementation or return an error
+          return res.status(400).json({ 
+            success: false,
+            error: 'Invalid period. Use "monthly" or "quarterly".' 
+          });
+      }
+  
+      const result = await pool.query(query, queryParams);
+  
+      // Preserve existing response structure for compatibility
+      res.status(200).json({
+        success: true,
+        data: result.rows.map(row => ({
+          month: row.month,
+          total_entries: parseInt(row.total_entries),
+          total_income: parseFloat(row.total_income),
+          // Preserve any existing fields used in other components
+          recent_payment_date: row.recent_payment_date
+        })),
+        metadata: {
+          year: year,
+          period: period,
+          total_income: result.rows.reduce((sum, row) => sum + parseFloat(row.total_income), 0),
+          total_entries: result.rows.reduce((sum, row) => sum + parseInt(row.total_entries), 0)
+        }
+      });
+  
+    } catch (err) {
+      console.error('Error fetching walk-in customer records:', err);
+      res.status(500).json({ 
+        success: false,
+        error: 'Error fetching walk-in customer records',
+        details: err.message 
+      });
     }
-
-    const result = await pool.query(query, queryParams);
-
-    res.status(200).json({
-      success: true,
-      data: result.rows,
-      metadata: {
-        year: year,
-        period: period,
-        total_income: result.rows.reduce((sum, row) => sum + parseFloat(row.total_income), 0),
-        total_entries: result.rows.reduce((sum, row) => sum + parseInt(row.total_entries), 0)
-      
-    
+  });
+  
+  // Create a similar implementation for getMemberCustomerRecords
+  app.get('/getMemberCustomerRecords', async (req, res) => {
+    const { year, period = 'monthly' } = req.query;
+  
+    // Validate year
+    const currentYear = new Date().getFullYear();
+    const parsedYear = parseInt(year, 10);
+  
+    if (isNaN(parsedYear) || parsedYear < 2000 || parsedYear > currentYear + 1) {
+      return res.status(400).json({ 
+        error: 'Invalid year', 
+        message: `Please provide a valid year between 2000 and ${currentYear + 1}` 
+      });
     }
-    });
-
-  } catch (err) {
-    console.error('Error fetching walk-in customer records:', err);
-    res.status(500).json({ 
-      success: false,
-      error: 'Error fetching walk-in customer records',
-      details: err.message 
-    });
-  }
-});
-
-
-app.get('/getMemberCustomerRecords', async (req, res) => {
-    const { year, period } = req.query;
   
     try {
       let query;
@@ -318,7 +404,7 @@ app.get('/getMemberCustomerRecords', async (req, res) => {
         case 'quarterly':
           query = `
             SELECT 
-              CEIL(EXTRACT(MONTH FROM p.payment_date) / 3.0) AS quarter,
+              CEIL(EXTRACT(MONTH FROM p.payment_date) / 3.0) AS month,
               COUNT(p.payment_id) AS total_entries,
               MAX(p.payment_date) AS recent_payment_date,
               SUM(p.amount) AS total_income
@@ -332,26 +418,29 @@ app.get('/getMemberCustomerRecords', async (req, res) => {
             GROUP BY 
               CEIL(EXTRACT(MONTH FROM p.payment_date) / 3.0)
             ORDER BY 
-              quarter;
+              month;
           `;
           queryParams = [year];
           break;
   
         default:
           return res.status(400).json({ 
+            success: false,
             error: 'Invalid period. Use "monthly" or "quarterly".' 
           });
       }
   
       const result = await pool.query(query, queryParams);
   
-      // Add more detailed logging
-      console.log('Membership Records Query Result:', result.rows);
-      
-      // Enhance response with additional metadata
+      // Preserve existing response structure for compatibility
       res.status(200).json({
         success: true,
-        data: result.rows,
+        data: result.rows.map(row => ({
+          month: row.month,
+          total_entries: parseInt(row.total_entries),
+          total_income: parseFloat(row.total_income),
+          recent_payment_date: row.recent_payment_date
+        })),
         metadata: {
           year: year,
           period: period,

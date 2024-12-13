@@ -1,3 +1,4 @@
+// src/components/admin/CustomerTracking.jsx
 import { useCustomerTracking } from '../../hooks/useCustomerTracking';
 import DatePicker from './DatePicker';
 import '../../css/admin/CustomerTracking.css';
@@ -19,7 +20,6 @@ function CustomerTracking() {
       <DatePicker setDate={setDate} />
     </div>
   );
-
 
   // Render loading state
   if (isLoading) {
@@ -47,7 +47,7 @@ function CustomerTracking() {
   }
 
   // Render empty state
-  if (!customerData || customerData.length === 0) {
+  if (!Array.isArray(customerData) || customerData.length === 0) {
     return (
       <div className="member-tracking">
         {renderHeader()}
