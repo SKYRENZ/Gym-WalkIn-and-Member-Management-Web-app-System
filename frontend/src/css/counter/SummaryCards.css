@@ -9,7 +9,7 @@
 
 /* Individual card styling */
 .card {
-    flex: 1; /* Cards take equal width */
+    flex: 1 1 calc(33.333% - 2rem); /* Cards take equal width with margin */
     max-width: 300px; /* Optional: Max width for each card */
     padding: 1rem;
     border-radius: 8px;
@@ -19,7 +19,7 @@
     justify-content: space-between;
     align-items: flex-start;
     position: relative; /* Allow positioning of icon */
-    margin-bottom: 1rem; /* Space between cards */
+    margin: 1rem; /* Space between cards */
 }
 
 /* Specific colors for cards */
@@ -98,9 +98,9 @@
     }
 
     .card {
-        flex: 0 0 100%; /* Make each card take full width */
+        flex: 1 1 calc(100% - 2rem); /* Make each card take full width with margin */
         max-width: 100%; /* Ensure the card is fully responsive */
-        margin-bottom: 1rem; /* Space between stacked cards */
+        margin: 1rem; /* Space between stacked cards */
     }
 
     .card .number {

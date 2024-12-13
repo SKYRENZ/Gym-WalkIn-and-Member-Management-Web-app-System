@@ -1,15 +1,14 @@
-import CheckIn from './CheckInBtn.jsx';
-import NewTransaction from './NewTransactionBtn.jsx';
+import CheckInBtn from './CheckInBtn.jsx';
+import NewTransactionBtn from './NewTransactionBtn.jsx';
 import '../../css/counter/TopBar.css';
 
-
-function TopBar() {
+function TopBar({ onCheckInClick }) {
     return (
-        <div className= "topbarContainer">
+        <div className="topbarContainer">
             <h1>Overview</h1>
             <div className="buttonContainer">
-                <CheckIn />
-                <NewTransaction />
+                <CheckInBtn onCheckInClick={onCheckInClick} />
+                <NewTransactionBtn />
             </div>
         </div>
     );
