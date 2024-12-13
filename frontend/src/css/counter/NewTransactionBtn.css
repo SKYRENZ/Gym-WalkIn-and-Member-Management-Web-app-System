@@ -20,3 +20,7 @@
 .newTransactionButton:hover {
     background-color: #2e8a00; /* Darker green on hover */
 }
+
+.newTransactionButton:focus{
+    outline: none;
+}

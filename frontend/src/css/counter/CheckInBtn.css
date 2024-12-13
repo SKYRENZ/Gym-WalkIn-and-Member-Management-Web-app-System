@@ -20,3 +20,8 @@
 .checkInButton:hover {
     background-color: #405fad; /* Darker blue on hover */
 }
+
+.checkInButton:focus {
+    outline: none;
+}
+
