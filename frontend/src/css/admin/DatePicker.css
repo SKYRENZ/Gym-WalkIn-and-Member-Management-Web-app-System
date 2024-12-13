@@ -1,19 +1,50 @@
-.datepicker button {
-    padding: 10px 80px;
-    background-color: #3A506B;
-    color: white;
-    box-sizing: border-box;
+.datepicker {
+  width: 100%;
+}
+
+.date-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 16px;
+  background-color: #f9f9f9;
+  color: #333; /* Ensure text is dark */
+  transition: all 0.3s ease;
+  appearance: none; /* Remove default styling */
+  -webkit-appearance: none; /* For webkit browsers */
+  -moz-appearance: none; /* For Firefox */
+}
+
+.date-input:focus {
+  outline: none;
+  border-color: #3A506B;
+  background-color: #ffffff;
+}
+
+/* Custom styling to ensure text is visible */
+.date-input::-webkit-calendar-picker-indicator {
+  filter: invert(0.5); /* Adjust the color of the calendar icon */
+  cursor: pointer;
+}
+
+.date-input::-webkit-datetime-edit-text,
+.date-input::-webkit-datetime-edit-month-field,
+.date-input::-webkit-datetime-edit-day-field,
+.date-input::-webkit-datetime-edit-year-field {
+  color: #333; /* Ensure text is dark */
+}
+
+@media (max-width: 768px) {
+  .date-input {
+    font-size: 14px;
+    padding: 8px;
   }
-  
-  /* Media Queries for Responsiveness */
-  @media (max-width: 768px) {
-    .datepicker button {
-      padding: 8px 60px;
-    }
+}
+
+@media (max-width: 480px) {
+  .date-input {
+    font-size: 12px;
+    padding: 6px;
   }
-  
-  @media (max-width: 480px) {
-    .datepicker button {
-      padding: 5px 40px;
-    }
-  }
+}

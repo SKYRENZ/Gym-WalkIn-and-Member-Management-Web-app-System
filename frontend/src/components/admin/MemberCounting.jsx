@@ -96,7 +96,12 @@ function MemberCounting() {
           </select>
         </div>
       </div>
-      <div style={{ width: '100%', height: '400px' }}>
+      <div style={{ 
+        width: '100%', 
+        height: '400px',
+        maxHeight: '50vh', // Limit height on smaller screens
+        minHeight: '300px' // Minimum height
+      }}>
         <Bar
           data={membershipData}
           options={{
@@ -107,6 +112,11 @@ function MemberCounting() {
                 title: {
                   display: true,
                   text: 'Months'
+                },
+                ticks: {
+                  font: {
+                    size: window.innerWidth < 768 ? 10 : 12
+                  }
                 }
               },
               y: {
@@ -114,17 +124,30 @@ function MemberCounting() {
                   display: true,
                   text: 'Number of Entries'
                 },
-                beginAtZero: true
+                beginAtZero: true,
+                ticks: {
+                  font: {
+                    size: window.innerWidth < 768 ? 10 : 12
+                  }
+                }
               }
             },
             plugins: {
               title: {
                 display: true,
-                text: `Membership and Walk-in Data for ${selectedYear}`
+                text: `Membership and Walk-in Data for ${selectedYear}`,
+                font: {
+                  size: window.innerWidth < 768 ? 14 : 16
+                }
               },
               legend: {
                 display: true,
-                position: 'top'
+                position: 'top',
+                labels: {
+                  font: {
+                    size: window.innerWidth < 768 ? 10 : 12
+                  }
+                }
               }
             }
           }}

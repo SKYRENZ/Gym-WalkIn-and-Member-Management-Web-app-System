@@ -78,11 +78,7 @@ function CustomerTracking() {
               <td>{customer.name}</td>
               <td>{customer.timestamp}</td>
               <td>{customer.role}</td>
-              <td>
-                {customer.payment 
-                  ? `₱${parseFloat(customer.payment).toFixed(2)}` 
-                  : 'N/A'}
-              </td>
+              <td>{customer.payment ? `₱${parseFloat(customer.payment).toFixed(2)}` : 'N/A'}</td>
             </tr>
           ))}
         </tbody>

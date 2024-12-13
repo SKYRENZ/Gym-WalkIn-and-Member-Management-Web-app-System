@@ -1,22 +1,30 @@
-
-import PropTypes from 'prop-types'; // Import PropTypes
+import  { useState } from 'react';
+import PropTypes from 'prop-types';
 import '../../css/admin/DatePicker.css';
 
 function DatePicker({ setDate }) {
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+
   const handleDateChange = (event) => {
-    setDate(event.target.value); // Update the date in the parent component
+    const newDate = event.target.value;
+    setSelectedDate(newDate);
+    setDate(newDate);
   };
 
   return (
-    <div className='datepicker'>
-      <input type="date" onChange={handleDateChange} />
+    <div className="datepicker">
+      <input 
+        type="date" 
+        value={selectedDate}
+        onChange={handleDateChange}
+        className="date-input"
+      />
     </div>
   );
 }
 
-// Define prop types for the component
 DatePicker.propTypes = {
-  setDate: PropTypes.func.isRequired, // setDate should be a required function
+  setDate: PropTypes.func.isRequired,
 };
 
 export default DatePicker;

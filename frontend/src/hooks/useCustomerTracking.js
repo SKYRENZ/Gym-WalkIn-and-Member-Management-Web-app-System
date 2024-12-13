@@ -1,33 +1,41 @@
-import { useState } from 'react';
-import useFetchData from './useFetchData';
+import { useState, useEffect } from 'react';
+import api from '../api';
 
 export const useCustomerTracking = () => {
+  const [customerData, setCustomerData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
 
-  const { 
-    data: customerData, 
-    isLoading, 
-    error,
-    refetch 
-  } = useFetchData(
-    `http://localhost:3000/customerTracking?date=${date}`, 
-    [date]
-  );
-
-  // Format the selected date
   const formattedDate = new Date(date).toLocaleDateString('en-US', {
+    year: 'numeric',
     month: 'long',
-    day: 'numeric',
-    year: 'numeric'
+    day: 'numeric'
   });
 
-  return {
-    customerData,
-    isLoading,
-    error,
-    date,
-    setDate,
+  const fetchCustomerData = async () => {
+    try {
+      setIsLoading(true);
+      const response = await api.get(`/customerTracking?date=${date}`);
+      setCustomerData(response.data);
+      setIsLoading(false);
+    } catch (err) {
+      console.error('Error fetching customer tracking data:', err);
+      setError(err.message);
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCustomerData();
+  }, [date]);
+
+  return { 
+    customerData, 
+    isLoading, 
+    error, 
+    setDate, 
     formattedDate,
-    refetch
+    refetch: fetchCustomerData 
   };
 };

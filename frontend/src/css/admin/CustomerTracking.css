@@ -1,124 +1,106 @@
 .member-tracking {
-  width: 100%;
-  padding: 20px;
-  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  align-items: flex-start;
+  justify-content: flex-start;
+  font-family: 'Poppins', sans-serif;
+  color: #333;
+  background-color: #ffffff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Adjusted drop shadow */
+  margin-top: 20px;
+  border-radius: 10px;
+  padding: 10px 40px;
+  margin-left: 20px;
+  width: calc(100% - 40px); /* Adjust width to account for padding */
 }
 
 .member-tracking-header {
   display: flex;
+  flex-direction: row;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  width: 100%;
+  margin-bottom: 10px;
 }
 
-.member-tracking-header > div {
-  display: flex;
-  flex-direction: column;
-}
-
-.member-tracking-header h1 {
-  margin: 0;
-  font-size: 2rem;
+.member-tracking h1 {
+  font-size: 30px;
+  font-weight: 700;
   color: #333;
-}
-
-.current-date {
-  font-size: 14px;
-  color: #666;
-  margin-top: 5px;
 }
 
 .member-tracking-table {
   width: 100%;
   border-collapse: collapse;
-}
-
-.member-tracking-table th,
-.member-tracking-table td {
-  padding: 12px;
-  text-align: left;
-  border-bottom: 1px solid #ddd;
-  color: black; /* Add this line to ensure black text color */
-}
-
-/* Optional: If you want to differentiate header and data colors */
-.member-tracking-table th {
-  color: #333; /* Slightly darker for headers */
-}
-
-.member-tracking-table tbody tr {
-  color: black; /* Ensure tbody rows are black */
-}
-
-.table-footer {
   margin-top: 20px;
-  text-align: right;
-  color: #666;
+  font-size: 15px;
+  table-layout: fixed; /* Ensures even spacing */
 }
 
-/* Media Queries for Responsiveness */
+.member-tracking-table th, .member-tracking-table td {
+  padding: 8px;
+  text-align: left;
+}
+
+.member-tracking-table th {
+  font-weight: 600;
+  border-bottom: 1px solid #ddd; /* Changed to a lighter border */
+}
+
+.member-tracking-table td {
+  font-weight: 400;
+}
+
+/* Adjust column widths */
+.member-tracking-table th:nth-child(1), .member-tracking-table td:nth-child(1) {
+  width: 35%; /* Name */
+}
+
+.member-tracking-table th:nth-child(2), .member-tracking-table td:nth-child(2) {
+  width: 25%; /* Timestamp */
+}
+
+.member-tracking-table th:nth-child(3), .member-tracking-table td:nth-child(3) {
+  width: 15%; /* Role */
+}
+
+.member-tracking-table th:nth-child(4), .member-tracking-table td:nth-child(4) {
+  width: 25%; /* Payment */
+}
+
 @media (max-width: 768px) {
+  .member-tracking {
+    padding: 10px 20px;
+    margin-left: 0;
+    width: calc(100% - 20px); /* Adjust width for smaller screens */
+  }
+
   .member-tracking-header {
     flex-direction: column;
     align-items: flex-start;
-    margin-bottom: 15px;
   }
 
-  .member-tracking-header > div {
-    margin-bottom: 10px;
-    width: 100%;
-  }
-
-  .member-tracking-header h1 {
-    font-size: 1.5rem;
-  }
-
-  .current-date {
-    font-size: 12px;
+  .member-tracking h1 {
+    font-size: 24px;
   }
 
   .member-tracking-table {
-    font-size: 12px;
-  }
-
-  .member-tracking-table th,
-  .member-tracking-table td {
-    padding: 8px;
-  }
-
-  .table-footer {
-    text-align: center;
+    font-size: 13px;
   }
 }
 
 @media (max-width: 480px) {
   .member-tracking {
-    padding: 10px;
+    padding: 5px 10px;
+    width: calc(100% - 10px); /* Further adjust width for very small screens */
+  }
+
+  .member-tracking h1 {
+    font-size: 20px;
   }
 
   .member-tracking-table {
-    font-size: 11px;
+    font-size: 12px;
   }
-
-  .member-tracking-table th,
-  .member-tracking-table td {
-    padding: 6px;
-  }
-
-  .member-tracking-header h1 {
-    font-size: 1.3rem;
-  }
-}
-
-/* Loading and Error States */
-.loading-container,
-.error-container,
-.empty-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 300px;
-  text-align: center;
-  color: #666;
 }

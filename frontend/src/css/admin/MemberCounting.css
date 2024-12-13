@@ -1,24 +1,23 @@
+/* In src/css/admin/MemberCounting.css */
 .member-counting {
-  display: flex;
-  flex-direction: column; /* Stack elements vertically */
-  align-items: center; /* Center align items */
-  padding: 20px; /* Add some padding */
-  max-width: 800px; /* Set a max width for larger screens */
-  margin: 0 auto; /* Center the component horizontally */
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 20px; /* Add some space between components */
 }
 
-.member-counting h1 {
-  margin-bottom: 20px; /* Space below the header */
-  text-align: center; /* Center the header text */
-  font-size: 2rem; /* Responsive font size */
-  color: black;
-}
-/* Add this to your MemberCounting.css */
 .member-counting-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+}
+
+.member-counting-header h1 {
+  margin: 0;
+  font-size: 2rem;
+  color: #333;
 }
 
 .year-selector {
@@ -27,21 +26,16 @@
   gap: 10px;
 }
 
+.year-selector label {
+  font-size: 14px;
+  color: #666;
+}
+
 .year-selector select {
-  padding: 5px;
-  font-size: 16px;
+  padding: 8px;
   border-radius: 4px;
   border: 1px solid #ccc;
-}
-.loading-container, 
-.error-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 300px;
-  text-align: center;
-  color: #666;
+  font-size: 14px;
 }
 
 .summary-stats {
@@ -56,6 +50,7 @@
 .stat-box {
   text-align: center;
   padding: 10px;
+  flex: 1;
 }
 
 .stat-box h3 {
@@ -68,15 +63,90 @@
   margin: 0;
   font-size: 24px;
   font-weight: bold;
-  color: #000
+  color: #000;
 }
 
-@media (max-width: 600px) {
-  .member-counting h1 {
-      font-size: 1.5rem; /* Smaller font size for smaller screens */
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .member-counting-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
   }
 
-  .member-counting {
-      padding: 10px; /* Less padding on smaller screens */
+  .member-counting-header h1 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
   }
+
+  .year-selector {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .year-selector select {
+    flex-grow: 1;
+  }
+
+  .summary-stats {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .stat-box {
+    padding: 10px 0;
+  }
+
+  .stat-box h3 {
+    font-size: 14px;
+  }
+
+  .stat-box p {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .member-counting {
+    padding: 15px;
+  }
+
+  .member-counting-header h1 {
+    font-size: 1.3rem;
+  }
+
+  .year-selector {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+
+  .year-selector label {
+    font-size: 12px;
+  }
+
+  .year-selector select {
+    width: 100%;
+    font-size: 12px;
+  }
+
+  .stat-box h3 {
+    font-size: 12px;
+  }
+
+  .stat-box p {
+    font-size: 18px;
+  }
+}
+
+/* Loading and Error States */
+.loading-container, 
+.error-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 300px;
+  text-align: center;
+  color: #666;
 }
