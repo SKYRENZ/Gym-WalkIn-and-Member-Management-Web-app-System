@@ -2,22 +2,27 @@
 .member-counting {
   background-color: white;
   border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   padding: 20px;
   margin-bottom: 20px; /* Add some space between components */
+  font-family: 'poppins', sans-serif;
+  color: #333;
 }
 
 .member-counting-header {
   display: flex;
+  flex-direction: column;
   justify-content: space-between;
   align-items: center;
+  gap: 20px;
+  padding: 0px;
   margin-bottom: 20px;
 }
 
 .member-counting-header h1 {
   margin: 0;
   font-size: 2rem;
-  color: #333;
+  margin-top: 10px;
 }
 
 .year-selector {

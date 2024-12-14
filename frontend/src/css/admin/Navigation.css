@@ -4,6 +4,7 @@
     justify-content: space-evenly;
     font-family: 'Poppins', sans-serif;
     width: 100%;
+    margin-bottom: 10px;
   }
   
   .navigation button:nth-child(1) {

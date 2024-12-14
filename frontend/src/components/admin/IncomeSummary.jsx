@@ -1,9 +1,9 @@
-import  { useState } from 'react';
+import { useState } from 'react';
 import { Chart, registerables } from 'chart.js';
 import { useIncomeSummary } from '../../hooks/useIncomeSummary';
-import IncomeChart from './IncomeChart';  // Remove 'components/'
-import IncomeSummaryStats from './IncomeSummaryStats';  // Remove 'components/'
-import { Spinner, ErrorMessage } from './StatusComponents';  // Remove 'components/'
+import IncomeChart from './IncomeChart';
+import IncomeSummaryStats from './IncomeSummaryStats';
+import { Spinner, ErrorMessage } from './StatusComponents';
 import '../../css/admin/IncomeSummary.css';
 
 Chart.register(...registerables);
@@ -24,27 +24,33 @@ function IncomeSummary() {
 
   return (
     <div className="income-summary-container">
-      <div className="filters">
-        <select 
-          value={selectedYear} 
-          onChange={(e) => setSelectedYear(Number(e.target.value))}
-        >
-          {[
-            new Date().getFullYear(), 
-            new Date().getFullYear() - 1, 
-            new Date().getFullYear() - 2
-          ].map(year => (
-            <option key={year} value={year}>{year}</option>
-          ))}
-        </select>
-        
-        <select 
-          value={selectedPeriod} 
-          onChange={(e) => setSelectedPeriod(e.target.value)}
-        >
-          <option value="monthly">Monthly</option>
-          <option value="daily">Daily</option>
-        </select>
+      <div className="income-summary-header">
+        <h1>Income Summary</h1>
+        <div className="filters">
+          <div className="year-selector">
+            <label htmlFor="year-select">Select Year: </label>
+            <select 
+              id="year-select"
+              value={selectedYear} 
+              onChange={(e) => setSelectedYear(Number(e.target.value))}
+            >
+              {[new Date().getFullYear(), new Date().getFullYear() - 1, new Date().getFullYear() - 2].map(year => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+          </div>
+          <div className="period-selector">
+            <label htmlFor="period-select">Select Period: </label>
+            <select 
+              id="period-select"
+              value={selectedPeriod} 
+              onChange={(e) => setSelectedPeriod(e.target.value)}
+            >
+              <option value="monthly">Monthly</option>
+              <option value="daily">Daily</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       <div className="chart-container">

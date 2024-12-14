@@ -26,13 +26,13 @@
     flex-direction: column; /* Stack elements vertically */
 }
 
-.referrerInfoForm{
+.referrerInfoForm {
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     gap: 15px; /* Add space between form fields */
     margin-top: 50px; /* Add space above the form */
-    padding: 0px 50px;
+    padding: 25px 50px;
     color: #333;
     flex-grow: 1; /* Allow the form to grow and take available space */
     overflow-y: auto; /* Add scroll if content overflows */
@@ -50,4 +50,39 @@
     border-radius: 5px;
     background-color: white;
     color: #333;
+}
+
+/* Media Queries for Responsiveness */
+@media (max-width: 768px) {
+    .referrerInfoModalContent {
+        width: 90%;
+        height: 500px; /* Adjust height for smaller screens */
+        padding: 20px;
+    }
+
+    .VoucherHeader h2 {
+        font-size: 28px; /* Adjust font size for smaller screens */
+    }
+
+    .voucherBackButton img {
+        width: 30px;
+        height: 30px;
+    }
+}
+
+@media (max-width: 480px) {
+    .referrerInfoModalContent {
+        width: 100%;
+        height: 500px; /* Adjust height for smaller screens */
+        padding: 15px;
+    }
+
+    .VoucherHeader h2 {
+        font-size: 24px; /* Adjust font size for smaller screens */
+    }
+
+    .voucherBackButton img {
+        width: 25px;
+        height: 25px;
+    }
 }

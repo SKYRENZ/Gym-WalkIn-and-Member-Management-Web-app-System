@@ -7,6 +7,41 @@
   height: 80vh;
   display: flex;
   flex-direction: column;
+  font-family: 'poppins', sans-serif;
+}
+
+.income-summary-header {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding: 0px;
+  margin-bottom: 20px;
+}
+
+.income-summary-header h1 {
+  margin: 0;
+  font-size: 2rem;
+  margin-top: 10px;
+}
+
+.filters {
+  display: flex;
+  align-items: center;
+  gap: 20px; /* Increased gap between filters */
+}
+
+.filters label {
+  font-size: 14px;
+  color: #666;
+}
+
+.filters select {
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font-size: 14px;
 }
 
 .chart-container {
@@ -18,19 +53,6 @@
 .chart-container canvas {
   max-height: 100%;
   width: 100% !important;
-}
-
-.filters {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-  margin-bottom: 20px;
-}
-
-.filters select {
-  padding: 8px;
-  border-radius: 4px;
-  border: 1px solid #ccc;
 }
 
 .summary-stats {
@@ -89,14 +111,31 @@
     min-height: 60vh;
   }
 
+  .income-summary-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .income-summary-header h1 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+  }
+
   .filters {
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
+    width: 100%;
+    gap: 10px;
+  }
+
+  .filters .year-selector,
+  .filters .period-selector {
+    width: 100%;
   }
 
   .filters select {
     width: 100%;
-    margin-bottom: 10px;
   }
 
   .summary-stats {
