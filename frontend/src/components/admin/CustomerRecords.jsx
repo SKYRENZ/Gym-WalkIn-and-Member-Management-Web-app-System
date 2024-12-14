@@ -1,8 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import Modal from 'react-modal';
 import { useNavigate } from "react-router-dom";
 import "../../css/admin/CustomerRecords.css";
+import BackIcon from '../../assets/Back.png';
+import SearchBar from '../counter/SearchBar.jsx';
+import InformationModal from './InformationModal.jsx';
+import TotalRecordsModal from './TotalRecordsModal.jsx';
 
-const CustomerRecords = () => {
+Modal.setAppElement('#root'); // Set the root element for accessibility
+
+const CustomerRecords = ({ isOpen, onClose }) => {
   const [view, setView] = useState("WalkIn");
   const [selectedRow, setSelectedRow] = useState(null);
   const [showInfoModal, setShowInfoModal] = useState(false);
@@ -10,9 +17,15 @@ const CustomerRecords = () => {
 
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedRow(null);
+    }
+  }, [isOpen]);
+
   const handleRowClick = (index) => {
     if (view === "Member") {
-      setSelectedRow(index);
+      setSelectedRow(selectedRow === index ? null : index);
     }
   };
 
@@ -21,16 +34,13 @@ const CustomerRecords = () => {
     setSelectedRow(null);
   };
 
-  const handleBackClick = () => {
-    navigate(-1);
-  };
-
   const openInfoModal = () => {
     setShowInfoModal(true);
   };
 
   const closeInfoModal = () => {
     setShowInfoModal(false);
+    setSelectedRow(null); // Reset selected row when modal is closed
   };
 
   const openTotalRecordsModal = () => {
@@ -39,179 +49,118 @@ const CustomerRecords = () => {
 
   const closeTotalRecordsModal = () => {
     setShowTotalRecordsModal(false);
+    setSelectedRow(null); // Reset selected row when modal is closed
   };
 
   return (
-    <div className="container">
-      {/* Darkened Background Overlay (always shown when Customer Records is active) */}
-      {(view === "WalkIn" || view === "Member") && (
-        <div className="overlay"></div>
-      )}
-
-      {/* Customer Records Modal */}
-      {!showInfoModal && !showTotalRecordsModal && (
-        <div className="box">
-          <div className="header-box">
-            <button className="back-btn" onClick={handleBackClick}>
-              ←
+    <>
+      <Modal
+        isOpen={isOpen && !showInfoModal && !showTotalRecordsModal}
+        onRequestClose={onClose}
+        contentLabel="Customer Records Modal"
+        className="customerRecordsModalContent"
+        overlayClassName="customerRecordsModalOverlay"
+      >
+        <div className="AccountHeader">
+          <button className="accountBackButton" onClick={onClose}>
+            <img src={BackIcon} alt="Back Icon" />
+          </button>
+          <h2>Customer Records</h2>
+        </div>
+        
+        <div className="button-container">
+          <div className="search-container">
+            <SearchBar />
+          </div>
+          <div className="view-buttons">
+            <button
+              className={view === "WalkIn" ? "active-btn" : "btn"}
+              onClick={() => handleViewChange("WalkIn")}
+            >
+              Walk In
             </button>
-            <h1 className="header">Customer Records</h1>
-          </div>
-          <hr className="header-separator-line" />
-
-          <div className="button-container">
-            <div className="search-container">
-              <input type="text" className="search-bar" placeholder="Search..." />
-            </div>
-            <div className="view-buttons">
-              <button
-                className={view === "WalkIn" ? "active-btn" : "btn"}
-                onClick={() => handleViewChange("WalkIn")}
-              >
-                Walk In
-              </button>
-              <button
-                className={view === "Member" ? "active-btn" : "btn"}
-                onClick={() => handleViewChange("Member")}
-              >
-                Member
-              </button>
-            </div>
-          </div>
-
-          <div className="table-section">
-            <div className="customer-table">
-              <div className="table-header">
-                <span className="header-item">Name</span>
-                <span className="header-item">Entries</span>
-                <span className="header-item">Date Paid</span>
-              </div>
-              <hr className="separator-line" />
-              {/* Static data removed, keeping table structure */}
-              <div className="table-row">
-                <span className="row-item">N/A</span>
-                <span className="row-item">N/A</span>
-                <span className="row-item">N/A</span>
-              </div>
-              <div className="table-row">
-                <span className="row-item">N/A</span>
-                <span className="row-item">N/A</span>
-                <span className="row-item">N/A</span>
-              </div>
-              <div className="table-row">
-                <span className="row-item">N/A</span>
-                <span className="row-item">N/A</span>
-                <span className="row-item">N/A</span>
-              </div>
-              <div className="table-row">
-                <span className="row-item">N/A</span>
-                <span className="row-item">N/A</span>
-                <span className="row-item">N/A</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="action-buttons">
-            <div className="left-buttons">
-              {view === "Member" && (
-                <>
-                  <button
-                    className="btn"
-                    onClick={openInfoModal}
-                  >
-                    Information
-                  </button>
-                  <button
-                    className="btn"
-                    onClick={openTotalRecordsModal}
-                  >
-                    Total Records
-                  </button>
-                </>
-              )}
-            </div>
-            <div className="right-buttons">
-              <button className="deactivated-btn">Deactivated Accounts</button>
-            </div>
+            <button
+              className={view === "Member" ? "active-btn" : "btn"}
+              onClick={() => handleViewChange("Member")}
+            >
+              Member
+            </button>
           </div>
         </div>
-      )}
 
-      {/* Information Modal */}
-      {showInfoModal && (
-        <div className="box information-modal">
-          <div className="header-box">
-            <button className="back-btn" onClick={closeInfoModal}>
-              ←
-            </button>
-            <h1 className="header">Customer Information</h1>
+        <div className="table-section">
+          {view === "WalkIn" ? (
+            <table className="customer-table">
+              <thead>
+                <tr className="table-header">
+                  <th>Name</th>
+                  <th>Entries</th>
+                  <th>Date Paid</th>
+                </tr>
+              </thead>
+              <tbody>
+                {/* Static data removed, keeping table structure */}
+                <tr className="table-row">
+                  <td>N/A</td>
+                  <td>N/A</td>
+                  <td>N/A</td>
+                </tr>
+              </tbody>
+            </table>
+          ) : (
+            <table className="customer-table">
+              <thead>
+                <tr className="table-header">
+                  <th>Name</th>
+                  <th>Entries</th>
+                  <th>Date Paid</th>
+                </tr>
+              </thead>
+              <tbody>
+                {/* Static data removed, keeping table structure */}
+                <tr
+                  className={`table-row ${selectedRow === 0 ? "selected" : ""}`}
+                  onClick={() => handleRowClick(0)}
+                >
+                  <td>N/A</td>
+                  <td>N/A</td>
+                  <td>N/A</td>
+                </tr>
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        <div className="action-buttons">
+          <div className="left-buttons">
+            {view === "Member" && (
+              <>
+                <button
+                  className="btn"
+                  onClick={openInfoModal}
+                  disabled={selectedRow === null}
+                >
+                  Information
+                </button>
+                <button
+                  className="btn"
+                  onClick={openTotalRecordsModal}
+                  disabled={selectedRow === null}
+                >
+                  Total Records
+                </button>
+              </>
+            )}
           </div>
-          <hr className="header-separator-line" />
-          <div className="information-content">
-            <div className="information-row">
-              <strong>Name:</strong>
-              <span>N/A</span>
-            </div>
-            <div className="information-row">
-              <strong>Gender:</strong>
-              <span>N/A</span>
-            </div>
-            <div className="information-row">
-              <strong>Birthday:</strong>
-              <span>N/A</span>
-            </div>
-            <div className="information-row">
-              <strong>Phone Number:</strong>
-              <span>N/A</span>
-            </div>
-            <div className="information-row">
-              <strong>Email:</strong>
-              <span>N/A</span>
-            </div>
+          <div className="right-buttons">
+            <button className="deactivated-btn">Deactivated Accounts</button>
           </div>
         </div>
-      )}
+      </Modal>
 
-      {/* Total Records Modal */}
-{showTotalRecordsModal && (
-  <div className="box total-records-modal">
-    <div className="header-box">
-      <button className="back-btn" onClick={closeTotalRecordsModal}>
-        ←
-      </button>
-      <h1 className="header">Total Records</h1>
-    </div>
-    <hr className="header-separator-line" />
-    <div className="customer-name">
-      <h2>N/A</h2> {/* Placeholder for customer name */}
-    </div>
-    <div className="records-table">
-      <div className="table-header">
-        <span>Payment Amount</span>
-        <span>Payment Method</span>
-        <span>Date of Payments</span>
-      </div>
-      <hr className="separator-line" />
-      {/* Placeholder rows for data */}
-      <div className="table-row">
-        <span>N/A</span> {/* Placeholder for payment amount */}
-        <span>N/A</span> {/* Placeholder for payment method */}
-        <span>N/A</span> {/* Placeholder for payment date */}
-      </div>
-      <div className="table-row">
-        <span>N/A</span> {/* Placeholder for payment amount */}
-        <span>N/A</span> {/* Placeholder for payment method */}
-        <span>N/A</span> {/* Placeholder for payment date */}
-      </div>
-    </div>
-    <div className="total-info">
-      <p>Total Entries: <span>N/A</span></p> {/* Placeholder for total entries */}
-      <p>Total Payment: <span>N/A</span></p> {/* Placeholder for total payment */}
-    </div>
-  </div>
-)}
-
-    </div>
+      <InformationModal isOpen={showInfoModal} onClose={closeInfoModal} />
+      <TotalRecordsModal isOpen={showTotalRecordsModal} onClose={closeTotalRecordsModal} />
+    </>
   );
 };
 

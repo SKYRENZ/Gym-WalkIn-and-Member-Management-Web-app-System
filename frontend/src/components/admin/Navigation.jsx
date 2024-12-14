@@ -6,9 +6,12 @@ import voucher from '../../assets/Voucher.png';
 import accounts from '../../assets/Account.png';
 import AccountModal from './AccountModal.jsx';
 import VoucherModal from './VoucherModal.jsx';
+import CustomerRecords from './CustomerRecords.jsx';
 
 function Navigation() {
     const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
+    const [isVoucherModalOpen, setIsVoucherModalOpen] = useState(false);
+    const [isCustomerRecordsModalOpen, setIsCustomerRecordsModalOpen] = useState(false);
 
     const openAccountModal = () => {
         setIsAccountModalOpen(true);
@@ -18,19 +21,25 @@ function Navigation() {
         setIsAccountModalOpen(false);
     };
 
-    const [isVoucherModalOpen, setIsVoucherModalOpen] = useState(false);
-
     const openVoucherModal = () => {
         setIsVoucherModalOpen(true);
-    }
+    };
 
     const closeVoucherModal = () => {
         setIsVoucherModalOpen(false);
-    }
+    };
+
+    const openCustomerRecordsModal = () => {
+        setIsCustomerRecordsModalOpen(true);
+    };
+
+    const closeCustomerRecordsModal = () => {
+        setIsCustomerRecordsModalOpen(false);
+    };
 
     return (
         <div className="navigation">
-            <button>
+            <button onClick={openCustomerRecordsModal}>
                 <img src={customerRecords} alt="Customer Records" />
                 <span>Customer Records</span>
             </button>
@@ -38,7 +47,7 @@ function Navigation() {
                 <img src={qrMembershipPrint} alt="Qr Membership Print" />
                 <span>Qr Membership Print</span>
             </button>
-            <button onClick = {openVoucherModal}>
+            <button onClick={openVoucherModal}>
                 <img src={voucher} alt="Voucher" />
                 <span>Voucher</span>
             </button>
@@ -48,6 +57,7 @@ function Navigation() {
             </button>
             <AccountModal isOpen={isAccountModalOpen} onClose={closeAccountModal} />
             <VoucherModal isOpen={isVoucherModalOpen} onClose={closeVoucherModal} />
+            <CustomerRecords isOpen={isCustomerRecordsModalOpen} onClose={closeCustomerRecordsModal} />
         </div>
     );
 }
