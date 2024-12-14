@@ -1,4 +1,8 @@
+<<<<<<< Updated upstream
 import React, { useState } from 'react';
+=======
+import { useNavigate } from 'react-router-dom';
+>>>>>>> Stashed changes
 import '../../css/admin/Navigation.css';
 import customerRecords from '../../assets/Customer-Records.png';
 import qrMembershipPrint from '../../assets/Qr.png';
@@ -29,6 +33,7 @@ function Navigation() {
     }
 
 
+<<<<<<< Updated upstream
     return (
         <div className="navigation">
             <button>
@@ -51,6 +56,35 @@ function Navigation() {
             <VoucherModal isOpen={isVoucherModalOpen} onClose={closeVoucherModal} />
         </div>
     );
+=======
+function Navigation() {
+  const navigate = useNavigate(); // Get the navigate function
+
+  const handleCustomerRecordsClick = () => {
+    navigate("/admin/customer-records"); // Navigate to the Customer Records page
+  };
+
+  return (
+    <div className="navigation">
+      <button onClick={handleCustomerRecordsClick}>
+        <img src={customerRecords} alt="Customer Records" />
+        <span>Customer Records</span>
+      </button>
+      <button>
+        <img src={qrMembershipPrint} alt="Qr Membership Print" />
+        <span>Qr Membership Print</span>
+      </button>
+      <button>
+        <img src={voucher} alt="Voucher" />
+        <span>Voucher</span>
+      </button>
+      <button>
+        <img src={accounts} alt="Accounts" />
+        <span>Accounts</span>
+      </button>
+    </div>
+  );
+>>>>>>> Stashed changes
 }
 
 export default Navigation;
