@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import Modal from 'react-modal';
 import QrScanner from 'react-qr-scanner';
-import '/src/css/counter/QRCodeModal.css';
+import CheckInInfoModal from './CheckInInfoModal';
+import '../../css/counter/QRCodeModal.css';
 
 Modal.setAppElement('#root'); // Set the root element for accessibility
 
-function QRCodeModal({ isOpen, onClose = () => {} }) {
+function QRCodeModal({ isOpen, onClose }) {
     const [scanResult, setScanResult] = useState(null);
     const [customerDetails, setCustomerDetails] = useState(null);
+    const [isCheckInInfoModalOpen, setIsCheckInInfoModalOpen] = useState(false);
 
     const handleScan = async (data) => {
         if (data) {
@@ -33,8 +35,9 @@ Email: ${result.customerDetails.email}
 Contact Info: ${result.customerDetails.contact_info}
 Start Date: ${startDate}
 End Date: ${endDate}`);
+                    console.log('Debug Info:', result.debug);
                     setCustomerDetails(result.customerDetails);
-                    console.log('Customer checked in for today');
+                    setIsCheckInInfoModalOpen(true); // Open the CheckInInfoModal
                 } else {
                     if (result.error === 'Membership is not valid at the current time') {
                         console.log('Membership Expired');
@@ -56,6 +59,10 @@ End Date: ${endDate}`);
         console.error('QR Scanner Error:', err);
     };
 
+    const handleCheckInInfoModalClose = () => {
+        setIsCheckInInfoModalOpen(false);
+    };
+
     const previewStyle = {
         height: 300,
         width: 300,
@@ -66,24 +73,31 @@ End Date: ${endDate}`);
     };
 
     return (
-        <Modal
-            isOpen={isOpen}
-            onRequestClose={onClose}
-            contentLabel="QR Code Scanner"
-            className="modalContent"
-            overlayClassName="modalOverlay"
-        >
-            <span className="closeButton" onClick={onClose}>&times;</span>
-            <h2 style={{ color: 'black' }}>QR Code Scanner</h2>
-            <div style={previewStyle} className="qr-scanner-container">
-                <QrScanner
-                    delay={300}
-                    style={{ width: '100%', height: '100%' }}
-                    onError={handleError}
-                    onScan={handleScan}
-                />
-            </div>
-        </Modal>
+        <>
+            <Modal
+                isOpen={isOpen}
+                onRequestClose={onClose}
+                contentLabel="QR Code Scanner"
+                className="modalContent"
+                overlayClassName="modalOverlay"
+            >
+                <span className="closeButton" onClick={onClose}>&times;</span>
+                <h2 style={{ color: 'black' }}>QR Code Scanner</h2>
+                <div style={previewStyle} className="qr-scanner-container">
+                    <QrScanner
+                        delay={300}
+                        style={{ width: '100%', height: '100%' }}
+                        onError={handleError}
+                        onScan={handleScan}
+                    />
+                </div>
+            </Modal>
+            <CheckInInfoModal
+                isOpen={isCheckInInfoModalOpen}
+                onClose={handleCheckInInfoModalClose}
+                customerDetails={customerDetails}
+            />
+        </>
     );
 }
 

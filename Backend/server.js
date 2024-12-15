@@ -1054,6 +1054,7 @@ async function fetchCustomerDetails(membership_id) {
   }
 }
 
+/* ----------------- Function to insert check-in data(With Restrictions) ----------------- 
 // Function to insert check-in data
 async function insertCheckInData(membership_id, customer_id) {
   try {
@@ -1121,5 +1122,84 @@ app.post('/scan-qr', async (req, res) => {
   } catch (error) {
       console.error('Error in /scan-qr endpoint:', error);
       res.status(500).json({ success: false, error: 'Error fetching customer details', details: error.message });
+  }
+});
+
+// Endpoint to fetch check-in count
+app.get('/checkin-count', async (req, res) => {
+  try {
+      const result = await pool.query('SELECT COUNT(*) FROM checkin');
+      const count = result.rows[0].count;
+      res.status(200).json({ count });
+  } catch (error) {
+      console.error('Error fetching check-in count:', error);
+      res.status(500).json({ error: 'Error fetching check-in count' });
+  }
+});
+*/
+
+/* ----------------- Function to insert check-in data(Without Restrictions) ----------------- */
+// Function to insert check-in data
+async function insertCheckInData(membership_id, customer_id) {
+  try {
+      // Get the current date and time in ISO 8601 format with timezone
+      const check_in_time = new Date().toISOString();
+
+      // Fetch membership details to check start_date and end_date
+      const membershipResult = await pool.query('SELECT * FROM membership WHERE membership_id = $1', [membership_id]);
+      if (membershipResult.rows.length === 0) {
+          console.log('No membership found with the given ID');
+          return { success: false, error: 'No membership found with the given ID' };
+      }
+
+      const membership = membershipResult.rows[0];
+      const currentTime = new Date();
+
+      // Check if the current time is within the membership period
+      if (currentTime < new Date(membership.start_date) || currentTime > new Date(membership.end_date)) {
+          console.log('Membership is not valid at the current time');
+          return { success: false, error: 'Membership is not valid at the current time' };
+      }
+
+      // For debugging purposes, return success without inserting data
+      console.log('Check-in data would be inserted successfully');
+      return { success: true, debug: { membership, check_in_time } };
+  } catch (error) {
+      console.error('Error inserting check-in data:', error);
+      throw error;
+  }
+}
+
+// Endpoint to scan QR code and fetch customer details
+app.post('/scan-qr', async (req, res) => {
+  const { qrCodeValue } = req.body;
+  try {
+      const customerDetails = await fetchCustomerDetails(qrCodeValue);
+      if (customerDetails) {
+          // Insert check-in data
+          const checkInResult = await insertCheckInData(qrCodeValue, customerDetails.customer_id);
+          if (checkInResult.success) {
+              res.status(200).json({ success: true, customerDetails, debug: checkInResult.debug });
+          } else {
+              res.status(400).json({ success: false, error: checkInResult.error });
+          }
+      } else {
+          res.status(404).json({ success: false, error: 'Customer not found' });
+      }
+  } catch (error) {
+      console.error('Error in /scan-qr endpoint:', error);
+      res.status(500).json({ success: false, error: 'Error fetching customer details', details: error.message });
+  }
+});
+
+// Endpoint to fetch check-in count
+app.get('/checkin-count', async (req, res) => {
+  try {
+      const result = await pool.query('SELECT COUNT(*) FROM checkin');
+      const count = result.rows[0].count;
+      res.status(200).json({ count });
+  } catch (error) {
+      console.error('Error fetching check-in count:', error);
+      res.status(500).json({ error: 'Error fetching check-in count' });
   }
 });
