@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Modal from 'react-modal';
-import QrScanner from 'react-qr-scanner';
+import CustomQrScanner from './CustomQrScanner';
 import '/src/css/counter/QRCodeModal.css';
 
 Modal.setAppElement('#root'); // Set the root element for accessibility
@@ -73,7 +73,7 @@ End Date: ${endDate}`);
             <span className="closeButton" onClick={onClose}>&times;</span>
             <h2 style={{ color: 'black' }}>QR Code Scanner</h2>
             <div style={previewStyle} className="qr-scanner-container">
-                <QrScanner
+                <CustomQrScanner
                     delay={300}
                     style={{ width: '100%', height: '100%' }}
                     onError={handleError}
