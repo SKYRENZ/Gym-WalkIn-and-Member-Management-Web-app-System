@@ -736,6 +736,7 @@ app.post('/addMembershipTransaction', async (req, res) => {
         }
     }
 });
+
 app.post('/renewMembership', async (req, res) => {
     const { name, paymentMethod, referenceNumber } = req.body;
     const amount = PRICES.MEMBERSHIP; // Use global membership renewal price
@@ -1073,6 +1074,18 @@ async function insertCheckInData(membership_id, customer_id) {
       if (currentTime < new Date(membership.start_date) || currentTime > new Date(membership.end_date)) {
           console.log('Membership is not valid at the current time');
           return { success: false, error: 'Membership is not valid at the current time' };
+      }
+
+      // Check if a check-in has already been recorded for today
+      const today = new Date().toISOString().split('T')[0];
+      const checkInResult = await pool.query(
+          'SELECT * FROM checkin WHERE customer_id = $1 AND membership_id = $2 AND DATE(check_in_time) = $3',
+          [customer_id, membership_id, today]
+      );
+
+      if (checkInResult.rows.length > 0) {
+          console.log('Check-in already recorded for today');
+          return { success: false, error: 'Check-in already recorded for today' };
       }
 
       // Insert the check-in data into the checkin table

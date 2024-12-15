@@ -10,7 +10,7 @@ function QRCodeModal({ isOpen, onClose = () => {} }) {
     const [customerDetails, setCustomerDetails] = useState(null);
 
     const handleScan = async (data) => {
-        if (data && data.text !== scanResult) {
+        if (data) {
             setScanResult(data.text || data);
             console.log('Scan Result:', data);
 
@@ -34,9 +34,12 @@ Contact Info: ${result.customerDetails.contact_info}
 Start Date: ${startDate}
 End Date: ${endDate}`);
                     setCustomerDetails(result.customerDetails);
+                    console.log('Customer checked in for today');
                 } else {
                     if (result.error === 'Membership is not valid at the current time') {
                         console.log('Membership Expired');
+                    } else if (result.error === 'Check-in already recorded for today') {
+                        console.log('Check-in already recorded for today');
                     } else {
                         console.error('Error fetching customer details:', result.error);
                     }
@@ -71,7 +74,7 @@ End Date: ${endDate}`);
             overlayClassName="modalOverlay"
         >
             <span className="closeButton" onClick={onClose}>&times;</span>
-            <h2 style={{ color: '   black' }}>QR Code Scanner</h2>
+            <h2 style={{ color: 'black' }}>QR Code Scanner</h2>
             <div style={previewStyle} className="qr-scanner-container">
                 <QrScanner
                     delay={300}
