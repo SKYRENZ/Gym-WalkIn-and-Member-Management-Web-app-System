@@ -4,9 +4,9 @@ import customerRecords from '../../assets/Customer-Records.png';
 import qrMembershipPrint from '../../assets/Qr.png';
 import voucher from '../../assets/Voucher.png';
 import accounts from '../../assets/Account.png';
-import AccountModal from './AccountModal.jsx';
-import VoucherModal from './VoucherModal.jsx';
-import CustomerRecords from './CustomerRecords.jsx';
+import AccountModal from './accounts/AccountModal.jsx';
+import VoucherModal from './voucher/VoucherModal.jsx';
+import CustomerRecords from './customerRecords/CustomerRecordsModal.jsx';
 
 function Navigation() {
     const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);

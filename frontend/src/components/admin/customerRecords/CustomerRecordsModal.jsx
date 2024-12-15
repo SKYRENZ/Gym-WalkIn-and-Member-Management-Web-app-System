@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import Modal from 'react-modal';
 import { useNavigate } from "react-router-dom";
-import "../../css/admin/CustomerRecords.css";
-import BackIcon from '../../assets/Back.png';
-import SearchBar from '../counter/SearchBar.jsx';
+import "../../../css/admin/CustomerRecordsModal.css";
+import BackIcon from '../../../assets/Back.png';
+import SearchBar from '../../counter/SearchBar.jsx';
 import InformationModal from './InformationModal.jsx';
 import TotalRecordsModal from './TotalRecordsModal.jsx';
 

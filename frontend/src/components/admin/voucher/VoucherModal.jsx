@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Modal from 'react-modal';
-import BackIcon from '../../assets/Back.png';
-import '../../css/admin/VoucherModal.css';
+import BackIcon from '../../../assets/Back.png';
+import '../../../css/admin/VoucherModal.css';
 import MoreInfoBtn from './MoreInfoBtn.jsx';
 import ReferrerInfoModal from './ReferrerInfoModal.jsx';
 

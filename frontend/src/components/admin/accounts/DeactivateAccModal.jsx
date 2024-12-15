@@ -1,6 +1,6 @@
 import React from 'react';
 import Modal from 'react-modal';
-import '../../css/admin/DeactivateAccModal.css';
+import '../../../css/admin/DeactivateAccModal.css';
 
 function DeactivateAccModal({ isOpen, onClose }){
 

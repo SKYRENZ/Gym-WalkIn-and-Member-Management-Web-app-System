@@ -1,28 +1,32 @@
 import React from 'react';
 import Modal from 'react-modal';
-import '../../css/admin/EditAccountModal.css';
-import BackIcon from '../../assets/Back.png';
+import '../../../css/admin/AddAccountModal.css';
+import BackIcon from '../../../assets/Back.png';
 
 Modal.setAppElement('#root'); // Set the root element for accessibility
 
-function EditAccount({ isOpen, onClose }) {
+function AddAccountModal({ isOpen, onClose }) {
+    const handleAddAccount = () => {
+        // Handle add account logic here
+        console.log('Add Account');
+    };
 
     return (
         <Modal
             isOpen={isOpen}
             onRequestClose={onClose}
-            contentLabel="Edit Account Modal"
-            className="editAccountModalContent"
-            overlayClassName="editAccountModalOverlay" // Use the new overlay class
+            contentLabel="Add Account Modal"
+            className="addAccountModalContent"
+            overlayClassName="addAccountModalOverlay" // Use the new overlay class
         >
             <div className="AccountHeader">
                 <button className="accountBackButton" onClick={onClose}>
                     <img src={BackIcon} alt="Back Icon" />
                 </button>
-                <h2>Edit Account</h2>
+                <h2>Add Account</h2>
             </div>
 
-            <div className="editAccountForm">
+            <div className="addAccountForm">
                 <label htmlFor="name">Name:</label>
                 <input type="text" id="name" placeholder="Name" />
 
@@ -39,9 +43,9 @@ function EditAccount({ isOpen, onClose }) {
                 </select>
             </div>
                 
-            <button className="saveBtn">Save</button>
+            <button className="addAccountBtn" onClick={handleAddAccount}>Add Account</button>
         </Modal>
     );
 }
 
-export default EditAccount;
+export default AddAccountModal;

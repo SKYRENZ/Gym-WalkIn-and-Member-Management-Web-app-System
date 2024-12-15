@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import '../../css/admin/AccountModal.css';
+import '../../../css/admin/AccountModal.css';
 
 function AccountModalBtns({ onAddAccount, onEditAccount, onDeactivate, isEditDisabled, isDeactivateDisabled }) {
     return (

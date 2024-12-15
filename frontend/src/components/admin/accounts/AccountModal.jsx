@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Modal from 'react-modal';
-import '../../css/admin/AccountModal.css';
-import BackIcon from '../../assets/Back.png';
+import '../../../css/admin/AccountModal.css';
+import BackIcon from '../../../assets/Back.png';
 import AccountModalBtns from './AccountModalBtns.jsx';
 import AddAccountModal from './AddAccountModal.jsx';
 import EditAccountModal from './EditAccountModal.jsx';

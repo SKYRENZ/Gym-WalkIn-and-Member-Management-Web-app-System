@@ -1,7 +1,7 @@
 import React from 'react';
 import Modal from 'react-modal';
-import '../../css/admin/TotalRecordsModal.css';
-import BackIcon from '../../assets/Back.png';
+import '../../../css/admin/TotalRecordsModal.css';
+import BackIcon from '../../../assets/Back.png';
 
 Modal.setAppElement('#root'); // Set the root element for accessibility
 

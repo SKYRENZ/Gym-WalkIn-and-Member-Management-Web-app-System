@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import '../../css/admin/VoucherModal.css';
+import '../../../css/admin/VoucherModal.css';
 
 function MoreInfoBtn({ onMoreInfoBtn, disabled }) {
     return (

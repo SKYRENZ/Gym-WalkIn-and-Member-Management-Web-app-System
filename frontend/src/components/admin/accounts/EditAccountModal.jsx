@@ -1,33 +1,28 @@
-
+import React from 'react';
 import Modal from 'react-modal';
-import '../../css/admin/AddAccountModal.css';
-import BackIcon from '../../assets/Back.png';
-import PropTypes from 'prop-types';
+import '../../../css/admin/EditAccountModal.css';
+import BackIcon from '../../../assets/Back.png';
 
 Modal.setAppElement('#root'); // Set the root element for accessibility
 
-function AddAccountModal({ isOpen, onClose }) {
-    const handleAddAccount = () => {
-        // Handle add account logic here
-        console.log('Add Account');
-    };
+function EditAccount({ isOpen, onClose }) {
 
     return (
         <Modal
             isOpen={isOpen}
             onRequestClose={onClose}
-            contentLabel="Add Account Modal"
-            className="addAccountModalContent"
-            overlayClassName="addAccountModalOverlay" // Use the new overlay class
+            contentLabel="Edit Account Modal"
+            className="editAccountModalContent"
+            overlayClassName="editAccountModalOverlay" // Use the new overlay class
         >
             <div className="AccountHeader">
                 <button className="accountBackButton" onClick={onClose}>
                     <img src={BackIcon} alt="Back Icon" />
                 </button>
-                <h2>Add Account</h2>
+                <h2>Edit Account</h2>
             </div>
 
-            <div className="addAccountForm">
+            <div className="editAccountForm">
                 <label htmlFor="name">Name:</label>
                 <input type="text" id="name" placeholder="Name" />
 
@@ -44,13 +39,9 @@ function AddAccountModal({ isOpen, onClose }) {
                 </select>
             </div>
                 
-            <button className="addAccountBtn" onClick={handleAddAccount}>Add Account</button>
+            <button className="saveBtn">Save</button>
         </Modal>
     );
 }
-AddAccountModal.propTypes = {
-    isOpen: PropTypes.bool.isRequired, // Ensure isOpen is a boolean and required
-    onClose: PropTypes.func.isRequired, // Ensure onClose is a function and required
-};
 
-export default AddAccountModal;
+export default EditAccount;
