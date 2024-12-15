@@ -1,7 +1,8 @@
-import React from 'react';
+
 import Modal from 'react-modal';
 import '../../css/admin/AddAccountModal.css';
 import BackIcon from '../../assets/Back.png';
+import PropTypes from 'prop-types';
 
 Modal.setAppElement('#root'); // Set the root element for accessibility
 
@@ -47,5 +48,9 @@ function AddAccountModal({ isOpen, onClose }) {
         </Modal>
     );
 }
+AddAccountModal.propTypes = {
+    isOpen: PropTypes.bool.isRequired, // Ensure isOpen is a boolean and required
+    onClose: PropTypes.func.isRequired, // Ensure onClose is a function and required
+};
 
 export default AddAccountModal;
