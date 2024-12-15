@@ -1,117 +1,168 @@
+/* Import Poppins font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
 body {
-    font-family: Arial, sans-serif;
-  }
-  
-  .profile-container {
+    font-family: 'Poppins', sans-serif;
+    color: #000000; /* Set text color to black */
+}
+
+.checkInModalContent {
+    background-color: #EAEAEC; /* Set modal background color */
+    padding: 40px 40px 10px 40px; /* Add padding to the modal content */
+    border-radius: 8px;
+    margin: auto;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    position: relative; /* Ensure positioning for buttons */
+    padding-bottom: 80px; /* Add padding to the bottom to prevent overlap */
+}
+
+.profile-container {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    background-color: #f5f5f5;
-    padding: 20px;
-    border-radius: 8px;
-    max-width: 1200px;
-    margin: auto;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  }
-  
-  .profile-card {
+    gap: 20px; /* Add gap between columns */
+    margin-left: -15px; /* Adjust position to align with modal content */
+}
+
+.profile-card {
     width: 60%;
-  }
-  
-  .customer-profile,
-  .subscription-info {
-    background-color: #ffffff;
-    border-radius: 8px;
+    background-color: #ffffff; /* Set profile card background color to white */
     padding: 20px;
-    margin-bottom: 20px;
+    border-radius: 8px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  }
-  
-  h2 {
+    color: #000000; /* Set text color to black */
+}
+
+.profile-form {
+    width: 100%;
+}
+
+h2 {
     font-size: 1.2rem;
-    margin-bottom: 15px;
-  }
-  
-  .profile-info,
-  .dates div,
-  .attendance-info div {
-    margin-bottom: 15px;
-  }
-  
-  label {
-    display: block;
-    font-weight: bold;
+    margin-bottom: 0px;
+    color: #000000; /* Set text color to black */
+    text-align: left; /* Align titles to the left */
+}
+
+.subscription-title {
+    margin-top: 30px; /* Add margin to separate the section */
+}
+
+.form-group {
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    color: #000000; /* Set text color to black */
+}
+
+label {
+    font-weight: 500;
     margin-bottom: 5px;
-  }
-  
-  input {
+    color: #000000; /* Set text color to black */
+    text-align: left; /* Align labels to the left */
+}
+
+input {
     width: 100%;
     padding: 10px;
-    border: 1px solid #ddd;
+    border: 1px solid #F2F3F6;
     border-radius: 5px;
-    background-color: #f5f5f5;
+    background-color: #F2F3F6;
     font-size: 1rem;
-  }
-  
-  .qr-section {
+    color: #000000; /* Set text color to black */
+    box-sizing: border-box; /* Ensure padding and border are included in the element's total width and height */
+    pointer-events: none; /* Make the input non-clickable */
+}
+
+.buttons {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1px;
+    position: absolute;
+    bottom: 10px;
+    right: 20px;
+}
+
+.cancel-btn,
+.checkin-btn {
+    padding: 10px 20px;
+    font-size: 1rem;
+    border: none;
+    border-radius: 100px;
+    cursor: pointer;
+    color: #000000; /* Set text color to black */
+    margin-left: 10px; /* Add margin between buttons */
+    width: 150px;
+}
+
+.cancel-btn {
+    background-color: #F6F8FA;
+    color: #000000; /* Set text color to black */
+    border: #C9CACF solid 1px;
+}
+
+.checkin-btn {
+    background-color: #007bff;
+    color: white;
+}
+
+.checkin-btn:hover {
+    background-color: #0056b3;
+}
+
+.cancel-btn:hover {
+    background-color: #bbbbbb;
+}
+
+.qr-section {
     width: 35%;
     display: flex;
     flex-direction: column;
     align-items: center;
-  }
-  
-  .qr-code {
-    background-color: #ffffff;
-    padding: 20px;
-    border-radius: 8px;
+    color: #000000; /* Set text color to black */
+    gap: 20px; /* Add gap between sections */
+    margin-left: 20px; /* Add margin to separate from profile-card */
+}
+
+.qr-code {
+    background-color: #606169; /* Set QR code background color to white */
+    padding: 10px;
+    border-radius: 5px;
     margin-bottom: 20px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  }
-  
-  .qr-code img {
+    color: #000000; /* Set text color to black */
+    width: 300px; /* Set width to 300px */
+    height: 300px; /* Set height to 300px */
+}
+
+.qr-code img {
     width: 100%;
     height: auto;
-    max-width: 250px;
-  }
-  
-  .attendance {
-    background-color: #ffffff;
+    max-width: 300px; /* Set max-width to 300px */
+    border-radius: 10px;
+}
+
+.attendance {
+    background-color: #ffffff; /* Set attendance background color to white */
     padding: 20px;
     border-radius: 8px;
     width: 100%;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  }
-  
-  .buttons {
+    color: #000000; /* Set text color to black */
+}
+
+.attendance-info {
     display: flex;
     justify-content: space-between;
-    margin-top: 20px;
-  }
-  
-  .cancel-btn,
-  .checkin-btn {
-    padding: 10px 20px;
-    font-size: 1rem;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  
-  .cancel-btn {
-    background-color: #dddddd;
-    color: #333333;
-  }
-  
-  .checkin-btn {
-    background-color: #007bff;
-    color: white;
-  }
-  
-  .checkin-btn:hover {
-    background-color: #0056b3;
-  }
-  
-  .cancel-btn:hover {
-    background-color: #bbbbbb;
-  }
-  
+    margin-bottom: 20px;
+    color: #000000; /* Set text color to black */
+}
+
+.attendance-info input {
+    margin-right: 0.5rem; /* Add margin to separate the textboxes */
+    width: 90%; /* Set width to 45% */
+}
+
+.attendance-info input:last-child {
+    margin-right: 0; /* Remove margin from the last input */
+}
