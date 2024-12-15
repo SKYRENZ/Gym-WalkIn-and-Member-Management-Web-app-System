@@ -42,7 +42,7 @@ const LoginPage = () => {
         // Navigate based on role
         if (data.staff.role === 'admin') {
           navigate('/admin');
-        } else if (data.staff.role === 'staff') {
+        } else if (data.staff.role === 'receptionist') {
           navigate('/counter');
         }
       } else {
@@ -55,6 +55,7 @@ const LoginPage = () => {
       alert('An error occurred during login');
     }
   };
+
 
 return (
   <div className="login-page">

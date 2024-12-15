@@ -1,4 +1,3 @@
-// frontend/src/App.jsx
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import PrivateRoute from "./components/PrivateRoute";
 import Admin from "./pages/Admin.jsx";
@@ -13,7 +12,7 @@ function App() {
         <Route 
           path="/counter" 
           element={
-            <PrivateRoute requiredRole="staff">
+            <PrivateRoute requiredRole="receptionist">
               <Counter />
             </PrivateRoute>
           } 

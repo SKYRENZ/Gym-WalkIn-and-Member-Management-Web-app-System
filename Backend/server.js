@@ -904,44 +904,71 @@ app.post('/addStaff', async (req, res) => {
 });
 // Endpoint for staff login
 app.post('/staffLogin', async (req, res) => {
-    const { password } = req.body;
+  const { password } = req.body;
 
-    // Validate input
-    if (!password) {
-        return res.status(400).json({ error: 'Password is required' });
+  // Validate input
+  if (!password) {
+    return res.status(400).json({ error: 'Password is required' });
+  }
+
+  const loginQuery = `
+    SELECT * FROM Staff WHERE password = $1;
+  `;
+
+  let client;
+
+  try {
+    client = await pool.connect();
+    const result = await client.query(loginQuery, [password]);
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const loginQuery = `
-        SELECT * FROM Staff WHERE password = $1;  -- Adjust this query as needed
-    `;
+    const staffMember = result.rows[0];
 
-    let client; // Declare client variable here
+    // Log the staff member details for debugging
+    console.log('Staff Member Details:', {
+      id: staffMember.staff_id,
+      name: staffMember.name,
+      role: staffMember.role
+    });
 
-    try {
-        client = await pool.connect();
-        const result = await client.query(loginQuery, [password]);
-
-        if (result.rows.length === 0) {
-            return res.status(401).json({ error: 'Invalid credentials' });
+    // Check the role and respond accordingly
+    if (staffMember.role === 'admin') {
+      res.status(200).json({ 
+        message: 'Admin login successful', 
+        staff: {
+          staff_id: staffMember.staff_id,
+          name: staffMember.name,
+          role: 'admin'
         }
-
-        const staffMember = result.rows[0];
-
-        // Check if the role is staff
-        if (staffMember.role === 'staff') {
-            res.status(200).json({ message: 'Login successful', staff: staffMember });
-        } else {
-            res.status(403).json({ error: 'You do not have access to the admin page.' });
+      });
+    } else if (staffMember.role === 'receptionist') {
+      res.status(200).json({ 
+        message: 'Receptionist login successful', 
+        staff: {
+          staff_id: staffMember.staff_id,
+          name: staffMember.name,
+          role: 'receptionist'
         }
-    } catch (error) {
-        console.error('Error during staff login:', error);
-        res.status(500).json({ error: 'Error during staff login' });
-    } finally {
-        // Ensure the client is released back to the pool
-        if (client) {
-            client.release();
-        }
+      });
+    } else {
+      // If role is neither admin nor receptionist
+      return res.status(403).json({ 
+        error: 'Access denied. Invalid role.',
+        details: `Current role: ${staffMember.role}`
+      });
     }
+
+  } catch (err) {
+    console.error('Error during staff login:', err);
+    res.status(500).json({ error: 'Error during staff login' });
+  } finally {
+    if (client) {
+      client.release();
+    }
+  }
 });
 // Endpoint to get role counts
 app.get('/getRoleCounts', async (req, res) => {

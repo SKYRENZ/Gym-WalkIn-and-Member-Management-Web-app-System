@@ -1,4 +1,3 @@
-// frontend/src/components/DropdownMenu.jsx
 
 import { useNavigate } from 'react-router-dom';
 import dropdown from '../assets/Dropdown.png';
