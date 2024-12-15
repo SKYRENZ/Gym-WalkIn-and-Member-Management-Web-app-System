@@ -7,12 +7,45 @@ Modal.setAppElement('#root'); // Set the root element for accessibility
 
 function QRCodeModal({ isOpen, onClose = () => {} }) {
     const [scanResult, setScanResult] = useState(null);
+    const [customerDetails, setCustomerDetails] = useState(null);
 
-    const handleScan = (data) => {
+    const handleScan = async (data) => {
         if (data && data.text !== scanResult) {
-            setScanResult(data.text || data); 
+            setScanResult(data.text || data);
             console.log('Scan Result:', data);
-            onClose(); 
+
+            try {
+                const response = await fetch('http://localhost:3000/scan-qr', { // Update the URL to match your backend server
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ qrCodeValue: data.text || data }),
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    const startDate = new Date(result.customerDetails.start_date).toLocaleDateString();
+                    const endDate = new Date(result.customerDetails.end_date).toLocaleDateString();
+                    console.log(`Customer Details:
+Name: ${result.customerDetails.name}
+Email: ${result.customerDetails.email}
+Contact Info: ${result.customerDetails.contact_info}
+Start Date: ${startDate}
+End Date: ${endDate}`);
+                    setCustomerDetails(result.customerDetails);
+                } else {
+                    if (result.error === 'Membership is not valid at the current time') {
+                        console.log('Membership Expired');
+                    } else {
+                        console.error('Error fetching customer details:', result.error);
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+
+            onClose();
         }
     };
 
@@ -47,7 +80,6 @@ function QRCodeModal({ isOpen, onClose = () => {} }) {
                     onScan={handleScan}
                 />
             </div>
-            {scanResult && <p style={{ color: 'black' }}>Scanned Result: {JSON.stringify(scanResult)}</p>}
         </Modal>
     );
 }
