@@ -1,0 +1,73 @@
+.deactivatedAccountsModalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.75);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1100;
+}
+
+.deactivatedAccountsModalContent {
+    background: white;
+    border-radius: 8px;
+    width: 600px;
+    max-width: 90%;
+    max-height: 80vh;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.deactivatedAccountsList {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.deactivated-account-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    padding: 15px 0;
+    color: #333; /* Add this line to set text color to black/dark gray */
+}
+
+.account-details {
+    flex-grow: 1;
+    color: #333; /* Ensure text is dark */
+}
+
+.account-details p {
+    color: #333; /* Additional specificity for paragraph text */
+}
+
+.deactivated-account-item.selected {
+    background-color: #f0f0f0; /* Optional: light background for selected item */
+    color: #000; /* Ensure text remains visible on selection */
+}
+
+.reactivate-btn {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.reactivate-btn:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+}
+
+.no-accounts {
+    text-align: center;
+    color: #666;
+    padding: 20px;
+}

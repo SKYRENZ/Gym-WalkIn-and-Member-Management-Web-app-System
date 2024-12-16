@@ -38,6 +38,15 @@
     flex-grow: 1; /* Allow the form to grow and take available space */
     overflow-y: auto; /* Add scroll if content overflows */
 }
+.error-message {
+    color: red;
+    margin-bottom: 10px;
+}
+
+.success-message {
+    color: green;
+    margin-bottom: 10px;
+}
 
 .editAccountForm label {
     font-weight: 600;

@@ -1,52 +1,78 @@
 .deactivateAccountModalOverlay {
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    z-index: 1100; /* Ensure this is higher than the AccountModal */
+    background-color: rgba(0, 0, 0, 0.75); /* Darkened background */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1100; /* Ensure it's above other elements */
 }
 
 .deactivateAccountModalContent {
     background: white;
     color: #333;
-    padding: 20px 30px;
+    padding: 30px;
     border-radius: 8px;
-    width: 500px;
+    width: 400px;
     max-width: 90%;
     text-align: center;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
     position: relative;
-    font-family: 'Poppins', sans-serif;
-    display: flex;
-    flex-direction: column; /* Stack elements vertically */
+}
+
+.deactivateAccountModalContent h2 {
+    margin-bottom: 20px;
+    color: #dc3545;
+}
+
+.deactivateAccountModalContent p {
+    margin-bottom: 25px;
+    line-height: 1.5;
 }
 
 .deactivateAccountButtons {
     display: flex;
-    justify-content: space-around;
-    margin-top: 20px;
+    justify-content: space-between;
+    gap: 15px;
 }
 
 .deactivateAccountButtons button {
-    padding: 10px 20px;
-    font-size: 1rem;
+    flex: 1;
+    padding: 12px 20px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    background-color: #333;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    font-weight: 500;
+}
+
+.deactivateAccountButtons button:first-child {
+    background-color: #f4f4f4;
+    color: #333;
+}
+
+.deactivateAccountButtons button.deactivate-btn {
+    background-color: #dc3545;
     color: white;
-    transition: background-color 0.3s ease;
 }
 
 .deactivateAccountButtons button:hover {
-    background-color: #0056b3;
+    transform: translateY(-2px);
+    opacity: 0.9;
 }
 
-.deactivateAccountButtons button:focus {
-    outline: none;
+.deactivateAccountButtons button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    transform: none;
+    opacity: 1;
+}
+
+.error-message {
+    color: red;
+    margin-bottom: 15px;
+    font-size: 0.9em;
 }

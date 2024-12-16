@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import dropdown from '../assets/Dropdown.png';
 import SignOut from '../assets/Sign Out.png';
 import '../css/DropdownMenu.css';
+import PropTypes from 'prop-types';
 
 function DropdownMenu({ isDropdownVisible, toggleDropdown }) {
   const navigate = useNavigate();
@@ -32,5 +33,10 @@ function DropdownMenu({ isDropdownVisible, toggleDropdown }) {
     </div>
   );
 }
+// Define prop types
+DropdownMenu.propTypes = {
+  isDropdownVisible: PropTypes.bool.isRequired, // isDropdownVisible should be a required boolean
+  toggleDropdown: PropTypes.func.isRequired,    // toggleDropdown should be a required function
+};
 
 export default DropdownMenu;

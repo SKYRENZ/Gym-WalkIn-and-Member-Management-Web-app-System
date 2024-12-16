@@ -876,31 +876,57 @@ app.post('/checkIn', async (req, res) => {
 
 //LOGIN UI
 // Endpoint to add a staff member
+
 app.post('/addStaff', async (req, res) => {
-    const { name, role, password, contact_info } = req.body;
+  const { name, password, role, contact_info } = req.body;
 
-    // Validate input
-    if (!name || !role || !password) {
-        return res.status(400).json({ error: 'Name, role, and password are required' });
-    }
+  // Validate input
+  if (!name || !password || !role) {
+      return res.status(400).json({ error: 'Name, password, and role are required' });
+  }
 
-    const staffQuery = `
-        INSERT INTO Staff (name, role, password, contact_info)
-        VALUES ($1, $2, $3, $4) RETURNING staff_id;
-    `;
+  // Validate role
+  if (!['receptionist', 'admin'].includes(role.toLowerCase())) {
+      return res.status(400).json({ error: 'Invalid role. Must be either "receptionist" or "admin"' });
+  }
 
-    try {
-        const client = await pool.connect();
-        const result = await client.query(staffQuery, [name, role, password, contact_info]);
-        res.status(201).json({ message: 'Staff member added successfully', staffId: result.rows[0].staff_id });
-    } catch (error) {
-        console.error('Error adding staff member:', error);
-        res.status(500).json({ error: 'Error adding staff member' });
-    } finally {
-        if (client) {
-            client.release();
-        }
-    }
+  try {
+      const client = await pool.connect();
+
+      // Check if staff with same name already exists
+      const existingStaffQuery = 'SELECT * FROM Staff WHERE name = $1';
+      const existingStaffResult = await client.query(existingStaffQuery, [name]);
+
+      if (existingStaffResult.rows.length > 0) {
+          client.release();
+          return res.status(409).json({ error: 'An account with this name already exists' });
+      }
+
+      // Insert new staff account
+      const insertStaffQuery = `
+          INSERT INTO Staff (name, role, password, contact_info) 
+          VALUES ($1, $2, $3, $4) 
+          RETURNING staff_id;
+      `;
+
+      const result = await client.query(insertStaffQuery, [
+          name, 
+          role.toLowerCase(), 
+          password, // In a real-world scenario, hash the password
+          contact_info || null // Optional contact info
+      ]);
+
+      client.release();
+
+      res.status(201).json({ 
+          message: 'Staff account created successfully', 
+          staffId: result.rows[0].staff_id 
+      });
+
+  } catch (error) {
+      console.error('Error adding staff:', error);
+      res.status(500).json({ error: 'Error creating staff account', details: error.message });
+  }
 });
 // Endpoint for staff login
 app.post('/staffLogin', async (req, res) => {
@@ -1034,6 +1060,223 @@ app.get('/getRoleCounts', async (req, res) => {
             details: error.message 
         });
     }
+});
+
+// Endpoint to get all staff accounts
+app.get('/getStaffAccounts', async (req, res) => { 
+  try { 
+      const client = await pool.connect(); 
+
+      const query = ` 
+          SELECT 
+              staff_id, 
+              name, 
+              role, 
+              contact_info,
+              status
+          FROM Staff 
+          WHERE status = 'Active'
+          ORDER BY name 
+      `; 
+
+      const result = await client.query(query); 
+      client.release(); 
+
+      res.status(200).json(result.rows); 
+  } catch (error) { 
+      console.error('Error fetching staff accounts:', error); 
+      console.error('Full error details:', error.message); // Add more detailed logging
+      res.status(500).json({ 
+          error: 'Error retrieving staff accounts', 
+          details: error.message 
+      }); 
+  } 
+}); 
+
+// Endpoint to update staff account
+app.put('/updateStaff/:staffId', async (req, res) => {
+  const { staffId } = req.params;
+  const { name, role, contact_info, password } = req.body;
+
+  // Validate input
+  if (!name || !role) {
+      return res.status(400).json({ error: 'Name and role are required' });
+  }
+
+  // Validate role
+  if (!['receptionist', 'admin'].includes(role.toLowerCase())) {
+      return res.status(400).json({ error: 'Invalid role. Must be either "receptionist" or "admin"' });
+  }
+
+  try {
+      const client = await pool.connect();
+
+      // Prepare the update query
+      let query = `
+          UPDATE Staff 
+          SET name = $1, 
+              role = $2, 
+              contact_info = $3
+      `;
+      const queryParams = [name, role, contact_info || null];
+
+      // Add password update if provided
+      if (password) {
+          query += `, password = $${queryParams.length + 1}`;
+          queryParams.push(password); // In production, hash the password
+      }
+
+      query += ` WHERE staff_id = $${queryParams.length + 1} RETURNING *`;
+      queryParams.push(staffId);
+
+      // Execute the update
+      const result = await client.query(query, queryParams);
+
+      client.release();
+
+      // Check if the account was found and updated
+      if (result.rows.length === 0) {
+          return res.status(404).json({ error: 'Staff account not found' });
+      }
+
+      res.status(200).json({ 
+          message: 'Staff account updated successfully', 
+          staff: result.rows[0] 
+      });
+
+  } catch (error) {
+      console.error('Error updating staff:', error);
+      
+      // Handle specific error cases
+      if (error.code === '23505') { // Unique constraint violation
+          return res.status(409).json({ error: 'An account with this name already exists' });
+      }
+
+      res.status(500).json({ 
+          error: 'Error updating staff account', 
+          details: error.message 
+      });
+  }
+});
+
+// Endpoint to get deactivated staff accounts
+app.get('/getDeactivatedStaffAccounts', async (req, res) => { 
+  try { 
+      const client = await pool.connect(); 
+
+      const query = ` 
+          SELECT 
+              staff_id, 
+              name, 
+              role, 
+              contact_info,
+              deactivated_at
+          FROM Staff 
+          WHERE status = 'Inactive'
+          ORDER BY deactivated_at DESC 
+      `; 
+
+      const result = await client.query(query); 
+      client.release(); 
+
+      res.status(200).json(result.rows); 
+  } catch (error) { 
+      console.error('Error fetching deactivated staff accounts:', error); 
+      res.status(500).json({ 
+          error: 'Error retrieving deactivated staff accounts', 
+          details: error.message 
+      }); 
+  } 
+}); 
+// Endpoint to get deactivated staff accounts
+app.put('/deactivateStaff/:staffId', async (req, res) => { 
+  const { staffId } = req.params; 
+
+  try { 
+      const client = await pool.connect(); 
+
+      // Update query to set account as inactive and record deactivation time
+      const deactivateQuery = ` 
+          UPDATE Staff 
+          SET 
+              status = 'Inactive', 
+              deactivated_at = CURRENT_TIMESTAMP 
+          WHERE staff_id = $1 
+          RETURNING *; 
+      `; 
+
+      const result = await client.query(deactivateQuery, [staffId]); 
+
+      client.release(); 
+
+      // Check if the account was found and updated 
+      if (result.rows.length === 0) { 
+          return res.status(404).json({ error: 'Staff account not found' }); 
+      } 
+
+      res.status(200).json({ 
+          message: 'Staff account deactivated successfully', 
+          staff: result.rows[0] 
+      }); 
+
+  } catch (error) { 
+      console.error('Error deactivating staff:', error); 
+      res.status(500).json({ 
+          error: 'Error deactivating staff account', 
+          details: error.message 
+      }); 
+  } 
+}); 
+
+// Endpoint to reactivate a staff account
+app.put('/reactivateStaff/:staffId', async (req, res) => {
+  const { staffId } = req.params;
+
+  let client;
+  try {
+      client = await pool.connect();
+
+      // Check if the account is currently inactive
+      const checkQuery = `
+          SELECT * FROM Staff 
+          WHERE staff_id = $1 AND status = 'Inactive';
+      `;
+      const checkResult = await client.query(checkQuery, [staffId]);
+
+      if (checkResult.rows.length === 0) {
+          return res.status(404).json({ 
+              error: 'Account not found or already active' 
+          });
+      }
+
+      // Reactivate the account
+      const reactivateQuery = `
+          UPDATE Staff 
+          SET 
+              status = 'Active', 
+              deactivated_at = NULL 
+          WHERE staff_id = $1 
+          RETURNING *;
+      `;
+
+      const result = await client.query(reactivateQuery, [staffId]);
+
+      res.status(200).json({ 
+          message: 'Staff account reactivated successfully', 
+          staff: result.rows[0] 
+      });
+
+  } catch (error) {
+      console.error('Error reactivating staff:', error);
+      res.status(500).json({ 
+          error: 'Error reactivating staff account', 
+          details: error.message 
+      });
+  } finally {
+      if (client) {
+          client.release();
+      }
+  }
 });
 
 app.listen(PORT, () => {
