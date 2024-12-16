@@ -7,11 +7,13 @@ import accounts from '../../assets/Account.png';
 import AccountModal from './accounts/AccountModal.jsx';
 import VoucherModal from './voucher/VoucherModal.jsx';
 import CustomerRecords from './customerRecords/CustomerRecordsModal.jsx';
+import QrMembershipPrintModal from './qrMembershipPrint/qrMembershipPrintModal.jsx'; // Import the modal component
 
 function Navigation() {
     const [isAccountModalOpen, setIsAccountModalOpen] = useState(false);
     const [isVoucherModalOpen, setIsVoucherModalOpen] = useState(false);
     const [isCustomerRecordsModalOpen, setIsCustomerRecordsModalOpen] = useState(false);
+    const [isQrMembershipPrintModalOpen, setIsQrMembershipPrintModalOpen] = useState(false); // State for QR Membership Print modal
 
     const openAccountModal = () => {
         setIsAccountModalOpen(true);
@@ -37,13 +39,21 @@ function Navigation() {
         setIsCustomerRecordsModalOpen(false);
     };
 
+    const openQrMembershipPrintModal = () => {
+        setIsQrMembershipPrintModalOpen(true);
+    };
+
+    const closeQrMembershipPrintModal = () => {
+        setIsQrMembershipPrintModalOpen(false);
+    };
+
     return (
         <div className="navigation">
             <button onClick={openCustomerRecordsModal}>
                 <img src={customerRecords} alt="Customer Records" />
                 <span>Customer Records</span>
             </button>
-            <button>
+            <button onClick={openQrMembershipPrintModal}>
                 <img src={qrMembershipPrint} alt="Qr Membership Print" />
                 <span>Qr Membership Print</span>
             </button>
@@ -58,6 +68,7 @@ function Navigation() {
             <AccountModal isOpen={isAccountModalOpen} onClose={closeAccountModal} />
             <VoucherModal isOpen={isVoucherModalOpen} onClose={closeVoucherModal} />
             <CustomerRecords isOpen={isCustomerRecordsModalOpen} onClose={closeCustomerRecordsModal} />
+            <QrMembershipPrintModal isOpen={isQrMembershipPrintModalOpen} onClose={closeQrMembershipPrintModal} /> {/* Add the modal component */}
         </div>
     );
 }
