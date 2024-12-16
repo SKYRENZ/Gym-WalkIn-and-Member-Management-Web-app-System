@@ -6,7 +6,7 @@ import '../../css/counter/QRCodeModal.css';
 
 Modal.setAppElement('#root'); // Set the root element for accessibility
 
-function QRCodeModal({ isOpen, onClose }) {
+function QRCodeModal({ isOpen, onClose, onCheckInSuccess }) {
     const [scanResult, setScanResult] = useState(null);
     const [customerDetails, setCustomerDetails] = useState(null);
     const [isCheckInInfoModalOpen, setIsCheckInInfoModalOpen] = useState(false);
@@ -35,7 +35,6 @@ Email: ${result.customerDetails.email}
 Contact Info: ${result.customerDetails.contact_info}
 Start Date: ${startDate}
 End Date: ${endDate}`);
-                    console.log('Debug Info:', result.debug);
                     setCustomerDetails(result.customerDetails);
                     setIsCheckInInfoModalOpen(true); // Open the CheckInInfoModal
                 } else {
@@ -60,6 +59,11 @@ End Date: ${endDate}`);
     };
 
     const handleCheckInInfoModalClose = () => {
+        setIsCheckInInfoModalOpen(false);
+    };
+
+    const handleCheckInSuccess = () => {
+        onCheckInSuccess();
         setIsCheckInInfoModalOpen(false);
     };
 
@@ -96,6 +100,7 @@ End Date: ${endDate}`);
                 isOpen={isCheckInInfoModalOpen}
                 onClose={handleCheckInInfoModalClose}
                 customerDetails={customerDetails}
+                onCheckInSuccess={handleCheckInSuccess} // Pass the onCheckInSuccess prop
             />
         </>
     );

@@ -2,23 +2,16 @@ import React, { useState, useEffect } from "react";
 import Modal from 'react-modal';
 import '../../css/counter/CheckInInfoModal.css';
 
-const CheckInInfoModal = ({ isOpen, onClose, customerDetails }) => {
-  const [qrCodeUrl, setQrCodeUrl] = useState('');
-
+const CheckInInfoModal = ({ isOpen, onClose, customerDetails, onCheckInSuccess }) => {
   useEffect(() => {
     console.log('Customer Details:', customerDetails); // Debugging information
-    if (customerDetails && customerDetails.membership_id) {
-      const url = `/qrcodes/${customerDetails.membership_id}.png`;
-      setQrCodeUrl(url);
-      console.log('QR Code URL:', url); // Debugging information
-    }
   }, [customerDetails]);
 
   if (!customerDetails) return null;
 
   const handleCheckIn = async () => {
     try {
-      const response = await fetch('/check-in', {
+      const response = await fetch('http://localhost:3000/check-in', { // Ensure the correct backend URL
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -26,15 +19,21 @@ const CheckInInfoModal = ({ isOpen, onClose, customerDetails }) => {
         body: JSON.stringify({ membership_id: customerDetails.membership_id, customer_id: customerDetails.customer_id }),
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
       const result = await response.json();
       if (result.success) {
         alert('Check-in successful');
+        onCheckInSuccess(); // Notify parent component of successful check-in
+        onClose(); // Close the modal after successful check-in
       } else {
         alert(`Check-in failed: ${result.error}`);
       }
     } catch (error) {
       console.error('Error during check-in:', error);
-      alert('Error during check-in');
+      alert(`Error during check-in: ${error.message}`);
     }
   };
 
@@ -77,9 +76,8 @@ const CheckInInfoModal = ({ isOpen, onClose, customerDetails }) => {
         <div className="qr-section">
           <div className="qr-code">
             <img
-              src={qrCodeUrl} // Use the constructed QR code URL
+              src="https://via.placeholder.com/150" // Placeholder image
               alt="QR Code"
-              onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/150'; }} // Fallback image
             />
           </div>
           <div className="attendance">

@@ -1,21 +1,21 @@
 const express = require('express');
 const cors = require('cors');
-const { 
-    updateMembershipStatus, 
-    checkInMember, 
-    generateQRCode, 
-    generateQRCodesForExistingMembers 
+const {
+    updateMembershipStatus,
+    checkInMember,
+    generateQRCode,
+    generateQRCodesForExistingMembers
 } = require('./membershipService');
 const pool = require('./db'); // Import your database connection
 const cron = require('node-cron');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const { PRICES } = require('./config');
-const corsConfig = require('./Middleware/corsConfig'); 
+const corsConfig = require('./Middleware/corsConfig');
 
 
 // Apply CORS middleware
-app.use(cors(corsConfig.corsOptions)); 
+app.use(cors(corsConfig.corsOptions));
 
 // Other middleware
 app.use(express.json());
@@ -30,59 +30,59 @@ cron.schedule('0 0 * * *', async () => {
 // Endpoint to get available years
 app.get('/getAvailableYears', async (req, res) => {
     try {
-      const yearsQuery = `
+        const yearsQuery = `
         SELECT DISTINCT EXTRACT(YEAR FROM start_date) AS year 
         FROM Membership 
         UNION 
         SELECT DISTINCT EXTRACT(YEAR FROM payment_date) 
         FROM Payment
       `;
-  
-      const result = await pool.query(yearsQuery);
-  
-      const years = result.rows.map(row => row.year);
-  
-      // Ensure current year is included if not already present
-      const currentYear = new Date().getFullYear();
-      if (!years.includes(currentYear)) {
-        years.push(currentYear);
-      }
-  
-      res.status(200).json({ 
-        "success": true,
-        "years": [2023, 2022, 2021]
-      });
+
+        const result = await pool.query(yearsQuery);
+
+        const years = result.rows.map(row => row.year);
+
+        // Ensure current year is included if not already present
+        const currentYear = new Date().getFullYear();
+        if (!years.includes(currentYear)) {
+            years.push(currentYear);
+        }
+
+        res.status(200).json({
+            "success": true,
+            "years": [2023, 2022, 2021]
+        });
     } catch (err) {
-      console.error('Error fetching available years:', err);
-      res.status(500).json({ 
-        success: false,
-        error: 'Error fetching available years',
-        details: err.message 
-      });
+        console.error('Error fetching available years:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Error fetching available years',
+            details: err.message
+        });
     }
-  });
+});
 // Example route to fetch memberships
 
 app.get('/memberships', async (req, res) => {
     const { year } = req.query;
-    
+
     try {
-      await updateMembershipStatus(); // Update statuses before fetching
-  
-      const membershipsQuery = year 
-        ? `SELECT * FROM Membership WHERE EXTRACT(YEAR FROM start_date) = $1;`
-        : `SELECT * FROM Membership;`;
-  
-      const result = year 
-        ? await pool.query(membershipsQuery, [year])
-        : await pool.query(membershipsQuery);
-  
-      res.status(200).json(result.rows);
+        await updateMembershipStatus(); // Update statuses before fetching
+
+        const membershipsQuery = year
+            ? `SELECT * FROM Membership WHERE EXTRACT(YEAR FROM start_date) = $1;`
+            : `SELECT * FROM Membership;`;
+
+        const result = year
+            ? await pool.query(membershipsQuery, [year])
+            : await pool.query(membershipsQuery);
+
+        res.status(200).json(result.rows);
     } catch (error) {
-      console.error('Error fetching memberships:', error);
-      res.status(500).json({ error: 'An error occurred while fetching memberships' });
+        console.error('Error fetching memberships:', error);
+        res.status(500).json({ error: 'An error occurred while fetching memberships' });
     }
-  });
+});
 //customer records
 app.get('/customerTracking', async (req, res) => {
     const dateParam = req.query.date || new Date().toISOString().split('T')[0];
@@ -90,9 +90,9 @@ app.get('/customerTracking', async (req, res) => {
 
     // Validate date input
     if (isNaN(testDate.getTime())) {
-        return res.status(400).json({ 
+        return res.status(400).json({
             error: 'Invalid date format. Please use YYYY-MM-DD.',
-            success: false 
+            success: false
         });
     }
 
@@ -157,23 +157,23 @@ app.get('/customerTracking', async (req, res) => {
         const result = await client.query(trackingQuery, [startOfDay]);
 
         // Ensure data is always an array
-        const formattedResult = Array.isArray(result.rows) 
+        const formattedResult = Array.isArray(result.rows)
             ? result.rows.map(row => {
-                const timestamp = row.timestamp ? 
-                    new Date(row.timestamp).toLocaleTimeString('en-PH', { 
-                        hour: '2-digit', 
-                        minute: '2-digit', 
-                        hour12: true, 
-                        timeZone: 'Asia/Manila' 
-                    }) : 
+                const timestamp = row.timestamp ?
+                    new Date(row.timestamp).toLocaleTimeString('en-PH', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true,
+                        timeZone: 'Asia/Manila'
+                    }) :
                     null;
 
-                return { 
+                return {
                     name: row.name,
                     timestamp: timestamp,
                     role: row.role,
                     payment: row.payment ? parseFloat(row.payment).toFixed(2) : null
-                }; 
+                };
             })
             : [];
 
@@ -189,11 +189,11 @@ app.get('/customerTracking', async (req, res) => {
         });
     } catch (err) {
         console.error('Error fetching customer tracking records:', err);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
             data: [], // Always return an array
-            error: 'Error fetching customer tracking records', 
-            details: err.message 
+            error: 'Error fetching customer tracking records',
+            details: err.message
         });
     } finally {
         if (client) {
@@ -205,20 +205,20 @@ app.get('/customerTracking', async (req, res) => {
 // Example route modification
 app.get('/getDailyCustomerRecords', async (req, res) => {
     const { year, type } = req.query;
-  
+
     // Validate year
     const currentYear = new Date().getFullYear();
     const parsedYear = parseInt(year, 10);
-  
+
     if (isNaN(parsedYear) || parsedYear < 2000 || parsedYear > currentYear + 1) {
-      return res.status(400).json({ 
-        error: 'Invalid year', 
-        message: `Please provide a valid year between 2000 and ${currentYear + 1}` 
-      });
+        return res.status(400).json({
+            error: 'Invalid year',
+            message: `Please provide a valid year between 2000 and ${currentYear + 1}`
+        });
     }
-  
+
     try {
-      const dailyQuery = `
+        const dailyQuery = `
         SELECT 
           DATE(payment_date) AS date, 
           COUNT(payment_id) AS total_entries, 
@@ -235,49 +235,49 @@ app.get('/getDailyCustomerRecords', async (req, res) => {
         ORDER BY 
           date;
       `;
-  
-      const result = await pool.query(dailyQuery, [type, parsedYear]);
-  
-      res.status(200).json({ 
-        success: true, 
-        data: result.rows.map(row => ({ 
-          date: row.date, 
-          total_entries: parseInt(row.total_entries), 
-          total_income: parseFloat(row.total_income) 
-        })) 
-      });
+
+        const result = await pool.query(dailyQuery, [type, parsedYear]);
+
+        res.status(200).json({
+            success: true,
+            data: result.rows.map(row => ({
+                date: row.date,
+                total_entries: parseInt(row.total_entries),
+                total_income: parseFloat(row.total_income)
+            }))
+        });
     } catch (error) {
-      console.error('Error fetching daily records:', error);
-      res.status(500).json({ 
-        success: false, 
-        error: 'Failed to fetch daily records', 
-        message: error.message 
-      });
+        console.error('Error fetching daily records:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to fetch daily records',
+            message: error.message
+        });
     }
-  });
+});
 // customer records
 // Similar implementation for walk-in records
 app.get('/getWalkInCustomerRecords', async (req, res) => {
     const { year, period = 'monthly' } = req.query;
-  
+
     // Validate year
     const currentYear = new Date().getFullYear();
     const parsedYear = parseInt(year, 10);
-  
+
     if (isNaN(parsedYear) || parsedYear < 2000 || parsedYear > currentYear + 1) {
-      return res.status(400).json({ 
-        error: 'Invalid year', 
-        message: `Please provide a valid year between 2000 and ${currentYear + 1}` 
-      });
+        return res.status(400).json({
+            error: 'Invalid year',
+            message: `Please provide a valid year between 2000 and ${currentYear + 1}`
+        });
     }
-  
+
     try {
-      let query;
-      let queryParams;
-  
-      switch(period) {
-        case 'monthly':
-          query = `
+        let query;
+        let queryParams;
+
+        switch (period) {
+            case 'monthly':
+                query = `
             SELECT 
               EXTRACT(MONTH FROM p.payment_date) AS month,
               COUNT(p.payment_id) AS total_entries,
@@ -295,11 +295,11 @@ app.get('/getWalkInCustomerRecords', async (req, res) => {
             ORDER BY 
               month;
           `;
-          queryParams = [year];
-          break;
-  
-        case 'quarterly':
-          query = `
+                queryParams = [year];
+                break;
+
+            case 'quarterly':
+                query = `
             SELECT 
               CEIL(EXTRACT(MONTH FROM p.payment_date) / 3.0) AS month,
               COUNT(p.payment_id) AS total_entries,
@@ -317,70 +317,70 @@ app.get('/getWalkInCustomerRecords', async (req, res) => {
             ORDER BY 
               month;
           `;
-          queryParams = [year];
-          break;
-  
-        // Retain existing functionality for other periods if needed
-        default:
-          // Fallback to existing implementation or return an error
-          return res.status(400).json({ 
-            success: false,
-            error: 'Invalid period. Use "monthly" or "quarterly".' 
-          });
-      }
-  
-      const result = await pool.query(query, queryParams);
-  
-      // Preserve existing response structure for compatibility
-      res.status(200).json({
-        success: true,
-        data: result.rows.map(row => ({
-          month: row.month,
-          total_entries: parseInt(row.total_entries),
-          total_income: parseFloat(row.total_income),
-          // Preserve any existing fields used in other components
-          recent_payment_date: row.recent_payment_date
-        })),
-        metadata: {
-          year: year,
-          period: period,
-          total_income: result.rows.reduce((sum, row) => sum + parseFloat(row.total_income), 0),
-          total_entries: result.rows.reduce((sum, row) => sum + parseInt(row.total_entries), 0)
+                queryParams = [year];
+                break;
+
+            // Retain existing functionality for other periods if needed
+            default:
+                // Fallback to existing implementation or return an error
+                return res.status(400).json({
+                    success: false,
+                    error: 'Invalid period. Use "monthly" or "quarterly".'
+                });
         }
-      });
-  
+
+        const result = await pool.query(query, queryParams);
+
+        // Preserve existing response structure for compatibility
+        res.status(200).json({
+            success: true,
+            data: result.rows.map(row => ({
+                month: row.month,
+                total_entries: parseInt(row.total_entries),
+                total_income: parseFloat(row.total_income),
+                // Preserve any existing fields used in other components
+                recent_payment_date: row.recent_payment_date
+            })),
+            metadata: {
+                year: year,
+                period: period,
+                total_income: result.rows.reduce((sum, row) => sum + parseFloat(row.total_income), 0),
+                total_entries: result.rows.reduce((sum, row) => sum + parseInt(row.total_entries), 0)
+            }
+        });
+
     } catch (err) {
-      console.error('Error fetching walk-in customer records:', err);
-      res.status(500).json({ 
-        success: false,
-        error: 'Error fetching walk-in customer records',
-        details: err.message 
-      });
+        console.error('Error fetching walk-in customer records:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Error fetching walk-in customer records',
+            details: err.message
+        });
     }
-  });
-  
-  // Create a similar implementation for getMemberCustomerRecords
-  app.get('/getMemberCustomerRecords', async (req, res) => {
+});
+
+// Create a similar implementation for getMemberCustomerRecords
+app.get('/getMemberCustomerRecords', async (req, res) => {
     const { year, period = 'monthly' } = req.query;
-  
+
     // Validate year
     const currentYear = new Date().getFullYear();
     const parsedYear = parseInt(year, 10);
-  
+
     if (isNaN(parsedYear) || parsedYear < 2000 || parsedYear > currentYear + 1) {
-      return res.status(400).json({ 
-        error: 'Invalid year', 
-        message: `Please provide a valid year between 2000 and ${currentYear + 1}` 
-      });
+        return res.status(400).json({
+            error: 'Invalid year',
+            message: `Please provide a valid year between 2000 and ${currentYear + 1}`
+        });
     }
-  
+
     try {
-      let query;
-      let queryParams;
-  
-      switch(period) {
-        case 'monthly':
-          query = `
+        let query;
+        let queryParams;
+
+        switch (period) {
+            case 'monthly':
+                query = `
             SELECT 
               EXTRACT(MONTH FROM p.payment_date) AS month,
               COUNT(p.payment_id) AS total_entries,
@@ -398,11 +398,11 @@ app.get('/getWalkInCustomerRecords', async (req, res) => {
             ORDER BY 
               month;
           `;
-          queryParams = [year];
-          break;
-  
-        case 'quarterly':
-          query = `
+                queryParams = [year];
+                break;
+
+            case 'quarterly':
+                query = `
             SELECT 
               CEIL(EXTRACT(MONTH FROM p.payment_date) / 3.0) AS month,
               COUNT(p.payment_id) AS total_entries,
@@ -420,45 +420,45 @@ app.get('/getWalkInCustomerRecords', async (req, res) => {
             ORDER BY 
               month;
           `;
-          queryParams = [year];
-          break;
-  
-        default:
-          return res.status(400).json({ 
-            success: false,
-            error: 'Invalid period. Use "monthly" or "quarterly".' 
-          });
-      }
-  
-      const result = await pool.query(query, queryParams);
-  
-      // Preserve existing response structure for compatibility
-      res.status(200).json({
-        success: true,
-        data: result.rows.map(row => ({
-          month: row.month,
-          total_entries: parseInt(row.total_entries),
-          total_income: parseFloat(row.total_income),
-          recent_payment_date: row.recent_payment_date
-        })),
-        metadata: {
-          year: year,
-          period: period,
-          total_income: result.rows.reduce((sum, row) => sum + parseFloat(row.total_income), 0),
-          total_entries: result.rows.reduce((sum, row) => sum + parseInt(row.total_entries), 0)
+                queryParams = [year];
+                break;
+
+            default:
+                return res.status(400).json({
+                    success: false,
+                    error: 'Invalid period. Use "monthly" or "quarterly".'
+                });
         }
-      });
-  
+
+        const result = await pool.query(query, queryParams);
+
+        // Preserve existing response structure for compatibility
+        res.status(200).json({
+            success: true,
+            data: result.rows.map(row => ({
+                month: row.month,
+                total_entries: parseInt(row.total_entries),
+                total_income: parseFloat(row.total_income),
+                recent_payment_date: row.recent_payment_date
+            })),
+            metadata: {
+                year: year,
+                period: period,
+                total_income: result.rows.reduce((sum, row) => sum + parseFloat(row.total_income), 0),
+                total_entries: result.rows.reduce((sum, row) => sum + parseInt(row.total_entries), 0)
+            }
+        });
+
     } catch (err) {
-      console.error('Error fetching membership customer records:', err);
-      res.status(500).json({ 
-        success: false,
-        error: 'Error fetching membership customer records',
-        details: err.message 
-      });
+        console.error('Error fetching membership customer records:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Error fetching membership customer records',
+            details: err.message
+        });
     }
-  });
-  
+});
+
 // Endpoint to fetch customer membership information
 app.get('/getCustomerMember_TotalRecords/:name', async (req, res) => {
     const { name } = req.params;
@@ -588,7 +588,7 @@ app.post('/addWalkInTransaction', async (req, res) => {
 
         // Insert customer
         const customerResult = await client.query(customerQuery, [
-            name, 
+            name,
             null, // email 
             phone || null // contact_info
         ]);
@@ -608,11 +608,11 @@ app.post('/addWalkInTransaction', async (req, res) => {
 
         // Insert payment using CURRENT_TIMESTAMP
         const paymentResult = await client.query(paymentQuery, [
-            amount, 
-            paymentMethod, 
-            paymentStatus, 
-            customerId, 
-            gcashRefNum, 
+            amount,
+            paymentMethod,
+            paymentStatus,
+            customerId,
+            gcashRefNum,
             mayaRefNum
         ]);
 
@@ -629,7 +629,7 @@ app.post('/addWalkInTransaction', async (req, res) => {
         // Log the full error for debugging
         console.error('Error adding walk-in transaction:', err);
         console.error('Full error details:', JSON.stringify(err, null, 2));
-        
+
         // Rollback the transaction in case of error
         if (client) {
             try {
@@ -640,7 +640,7 @@ app.post('/addWalkInTransaction', async (req, res) => {
         }
 
         // Send error response
-        res.status(500).json({ 
+        res.status(500).json({
             error: 'Error adding walk-in transaction',
             details: err.message,
             fullError: err
@@ -706,10 +706,10 @@ app.post('/addMembershipTransaction', async (req, res) => {
         const paymentDate = new Date().toISOString(); // Current timestamp
 
         const paymentResult = await client.query(paymentQuery, [
-            amount, 
-            paymentMethod, 
-            paymentStatus, 
-            paymentDate, 
+            amount,
+            paymentMethod,
+            paymentStatus,
+            paymentDate,
             customerId
         ]);
 
@@ -726,7 +726,7 @@ app.post('/addMembershipTransaction', async (req, res) => {
         if (client) {
             await client.query('ROLLBACK');
         }
-        res.status(500).json({ 
+        res.status(500).json({
             error: 'An error occurred while adding the membership transaction',
             details: error.message
         });
@@ -781,7 +781,7 @@ app.post('/renewMembership', async (req, res) => {
 
         const membershipId = membershipResult.rows[0].membership_id;
         const currentEndDate = new Date(membershipResult.rows[0].end_date);
-        
+
         // Extend the membership by one month
         currentEndDate.setMonth(currentEndDate.getMonth() + 1);
 
@@ -812,13 +812,13 @@ app.post('/renewMembership', async (req, res) => {
 
         // Insert payment record
         const paymentResult = await client.query(paymentQuery, [
-            amount, 
-            paymentMethod, 
-            paymentStatus, 
-            paymentDate, 
-            customerId, 
-            membershipId, 
-            gcashRefNum, 
+            amount,
+            paymentMethod,
+            paymentStatus,
+            paymentDate,
+            customerId,
+            membershipId,
+            gcashRefNum,
             mayaRefNum
         ]);
 
@@ -1002,154 +1002,143 @@ app.get('/getRoleCounts', async (req, res) => {
 
     } catch (error) {
         console.error('Error fetching role counts:', error);
-        res.status(500).json({ 
-            success: false, 
+        res.status(500).json({
+            success: false,
             error: 'Error fetching role counts',
-            details: error.message 
+            details: error.message
         });
     }
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });
 
 /* ----------------- Function to insert check-in data(With Restrictions) ----------------- */
 app.use(cors(corsConfig));
 app.use(express.json());
 
-// Serve static files from the "qrcodes" directory
-app.use('/qrcodes', express.static(path.join(__dirname, 'qrcodes')));
-
-/// Function to fetch customer details based on membership_id
+// Function to fetch customer details based on membership_id
 async function fetchCustomerDetails(membership_id) {
-  try {
-      // Fetch membership details
-      const membershipResult = await pool.query('SELECT * FROM membership WHERE membership_id = $1', [membership_id]);
-      if (membershipResult.rows.length === 0) {
-          console.log('No membership found with the given ID');
-          return null;
-      }
+    try {
+        // Fetch membership details
+        const membershipResult = await pool.query('SELECT * FROM membership WHERE membership_id = $1', [membership_id]);
+        if (membershipResult.rows.length === 0) {
+            console.log('No membership found with the given ID');
+            return null;
+        }
 
-      const membership = membershipResult.rows[0];
+        const membership = membershipResult.rows[0];
+        const customerResult = await pool.query('SELECT * FROM customer WHERE customer_id = $1', [membership.customer_id]);
+        if (customerResult.rows.length === 0) {
+            console.log('No customer found with the given ID');
+            return null;
+        }
 
-      // Fetch customer details
-      const customerResult = await pool.query('SELECT * FROM customer WHERE customer_id = $1', [membership.customer_id]);
-      if (customerResult.rows.length === 0) {
-          console.log('No customer found with the given ID');
-          return null;
-      }
+        const customer = customerResult.rows[0];
 
-      const customer = customerResult.rows[0];
-
-      // Combine membership and customer details
-      const customerDetails = {
-          ...customer,
-          start_date: membership.start_date,
-          end_date: membership.end_date
-      };
-
-      // Log and return customer details in JSON format
-      console.log('Customer Details:', JSON.stringify(customerDetails, null, 2));
-      return customerDetails;
-  } catch (error) {
-      console.error('Error fetching customer details:', error);
-      throw error;
-  }
-}
-
-// Function to insert check-in data
-async function insertCheckInData(membership_id, customer_id) {
-  try {
-      // Get the current date and time in ISO 8601 format with timezone
-      const check_in_time = new Date().toISOString();
-
-      // Fetch membership details to check start_date and end_date
-      const membershipResult = await pool.query('SELECT * FROM membership WHERE membership_id = $1', [membership_id]);
-      if (membershipResult.rows.length === 0) {
-          console.log('No membership found with the given ID');
-          return { success: false, error: 'No membership found with the given ID' };
-      }
-
-      const membership = membershipResult.rows[0];
-      const currentTime = new Date();
-
-      // Check if the current time is within the membership period
-      if (currentTime < new Date(membership.start_date) || currentTime > new Date(membership.end_date)) {
-          console.log('Membership is not valid at the current time');
-          return { success: false, error: 'Membership is not valid at the current time' };
-      }
-
-      // Check if a check-in has already been recorded for today
-      const today = new Date().toISOString().split('T')[0];
-      const checkInResult = await pool.query(
-          'SELECT * FROM checkin WHERE customer_id = $1 AND membership_id = $2 AND DATE(check_in_time) = $3',
-          [customer_id, membership_id, today]
-      );
-
-      if (checkInResult.rows.length > 0) {
-          console.log('Check-in already recorded for today');
-          return { success: false, error: 'Check-in already recorded for today' };
-      }
-
-      // Insert the check-in data into the checkin table
-      await pool.query(
-          'INSERT INTO checkin (customer_id, check_in_time, membership_id) VALUES ($1, $2, $3)',
-          [customer_id, check_in_time, membership_id]
-      );
-
-      console.log('Check-in data inserted successfully');
-      return { success: true };
-  } catch (error) {
-      console.error('Error inserting check-in data:', error);
-      throw error;
-  }
+        // Combine customer and membership details
+        return {
+            ...customer,
+            membership_id: membership.membership_id,
+            start_date: membership.start_date,
+            end_date: membership.end_date,
+        };
+    } catch (error) {
+        console.error('Error fetching customer details:', error);
+        throw error;
+    }
 }
 
 // Endpoint to scan QR code and fetch customer details
 app.post('/scan-qr', async (req, res) => {
-  const { qrCodeValue } = req.body;
-  try {
-      const customerDetails = await fetchCustomerDetails(qrCodeValue);
-      if (customerDetails) {
-          res.status(200).json({ success: true, customerDetails });
-      } else {
-          res.status(404).json({ success: false, error: 'Customer not found' });
-      }
-  } catch (error) {
-      console.error('Error in /scan-qr endpoint:', error);
-      res.status(500).json({ success: false, error: 'Error fetching customer details', details: error.message });
-  }
+    const { qrCodeValue } = req.body;
+    try {
+        const customerDetails = await fetchCustomerDetails(qrCodeValue);
+        if (customerDetails) {
+            res.status(200).json({ success: true, customerDetails });
+        } else {
+            res.status(404).json({ success: false, error: 'Customer not found' });
+        }
+    } catch (error) {
+        console.error('Error in /scan-qr endpoint:', error);
+        res.status(500).json({ success: false, error: 'Error fetching customer details', details: error.message });
+    }
 });
 
 // Endpoint to handle check-in
 app.post('/check-in', async (req, res) => {
-  const { membership_id, customer_id } = req.body;
-  try {
-      // Insert check-in data
-      const checkInResult = await insertCheckInData(membership_id, customer_id);
-      if (checkInResult.success) {
-          res.status(200).json({ success: true });
-      } else {
-          res.status(400).json({ success: false, error: checkInResult.error });
-      }
-  } catch (error) {
-      console.error('Error in /check-in endpoint:', error);
-      res.status(500).json({ success: false, error: 'Error inserting check-in data', details: error.message });
-  }
+    const { membership_id, customer_id } = req.body;
+    try {
+        // Insert check-in data
+        const checkInResult = await insertCheckInData(membership_id, customer_id);
+        if (checkInResult.success) {
+            res.status(200).json({ success: true });
+        } else {
+            res.status(400).json({ success: false, error: checkInResult.error });
+        }
+    } catch (error) {
+        console.error('Error in /check-in endpoint:', error);
+        res.status(500).json({ success: false, error: 'Error inserting check-in data', details: error.message });
+    }
 });
+
+// Function to insert check-in data
+async function insertCheckInData(membership_id, customer_id) {
+    try {
+        // Get the current date and time in ISO 8601 format with timezone
+        const check_in_time = new Date().toISOString();
+
+        // Fetch membership details to check start_date and end_date
+        const membershipResult = await pool.query('SELECT * FROM membership WHERE membership_id = $1', [membership_id]);
+        if (membershipResult.rows.length === 0) {
+            console.log('No membership found with the given ID');
+            return { success: false, error: 'No membership found with the given ID' };
+        }
+
+        const membership = membershipResult.rows[0];
+        const currentTime = new Date();
+
+        // Check if the current time is within the membership period
+        if (currentTime < new Date(membership.start_date) || currentTime > new Date(membership.end_date)) {
+            console.log('Membership is not valid at the current time');
+            return { success: false, error: 'Membership is not valid at the current time' };
+        }
+
+        // Check if a check-in has already been recorded for today
+        const today = new Date().toISOString().split('T')[0];
+        const checkInResult = await pool.query(
+            'SELECT * FROM checkin WHERE customer_id = $1 AND membership_id = $2 AND DATE(check_in_time) = $3',
+            [customer_id, membership_id, today]
+        );
+
+        if (checkInResult.rows.length > 0) {
+            console.log('Check-in already recorded for today');
+            return { success: false, error: 'Check-in already recorded for today' };
+        }
+
+        // Insert the check-in data into the checkin table
+        await pool.query(
+            'INSERT INTO checkin (customer_id, check_in_time, membership_id) VALUES ($1, $2, $3)',
+            [customer_id, check_in_time, membership_id]
+        );
+
+        console.log('Check-in data inserted successfully');
+        return { success: true };
+    } catch (error) {
+        console.error('Error inserting check-in data:', error);
+        throw error;
+    }
+}
 
 // Endpoint to fetch check-in count
 app.get('/checkin-count', async (req, res) => {
-  try {
-      const result = await pool.query('SELECT COUNT(*) FROM checkin');
-      const count = result.rows[0].count;
-      res.status(200).json({ count });
-  } catch (error) {
-      console.error('Error fetching check-in count:', error);
-      res.status(500).json({ error: 'Error fetching check-in count' });
-  }
+    try {
+        const result = await pool.query('SELECT COUNT(*) FROM checkin');
+        const count = result.rows[0].count;
+        res.status(200).json({ count });
+    } catch (error) {
+        console.error('Error fetching check-in count:', error);
+        res.status(500).json({ error: 'Error fetching check-in count' });
+    }
 });
-
-
-
