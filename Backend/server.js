@@ -493,7 +493,6 @@ app.get('/getCustomerPaymentRecords/:name', async (req, res) => {
       if (client) client.release();
     }
   });
-
 // Endpoint to get customer membership info
 app.get('/getCustomerMember_info/:name', async (req, res) => {
     const { name } = req.params;
@@ -536,7 +535,6 @@ app.get('/getCustomerMember_info/:name', async (req, res) => {
         }
     }
 });
-
 // Endpoint to update customer information
 app.put('/updateCustomerInfo/:name', async (req, res) => {
     const { name } = req.params;
@@ -614,6 +612,8 @@ app.put('/updateCustomerInfo/:name', async (req, res) => {
         }
     }
 });
+
+//qr
 
 app.get('/qrcodes/:membershipId', (req, res) => {
     const { membershipId } = req.params;
