@@ -1,0 +1,133 @@
+.payment-modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex; justify-content: center; align-items: center;
+}
+
+.payment-modal-content {
+    background: white; border-radius: 8px; padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    display: flex; flex-direction: column; align-items: center;
+    width: 600px; /* Increased width */
+}
+
+.payment-modal-header {
+    width: 100%; display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.payment-back-button {
+    background: none; border: none; cursor: pointer; color: blue;
+    display: flex; align-items: center;
+}
+
+.payment-modal-title {
+    margin: 0; color: black; text-align: left; flex-grow: 1;
+}
+
+.payment-tabs {
+    display: flex; justify-content: flex-start; margin-bottom: 20px;
+    color: black;
+}
+
+.payment-tab {
+    padding: 10px 20px; cursor: pointer;
+}
+
+.payment-tab.active {
+    border-bottom: 2px solid black; font-weight: bold;
+}
+
+.payment-indicator-container {
+    display: flex; justify-content: center; margin: 10px 0;
+}
+
+.payment-indicator {
+    width: 130px; height: 5px; border-radius: 100px; background: #D3D3D3; margin: 0 5px;
+}
+
+.payment-indicator.active {
+    background: blue;
+}
+
+.payment-modal-body {
+    display: flex; flex-direction: column; gap: 20px;
+    width: 100%;
+}
+
+.payment-details-container {
+    display: flex; justify-content: space-between; width: 100%; gap: 20px;
+}
+
+.payment-details-column {
+    display: flex; flex-direction: column; gap: 10px; width: 48%;
+}
+
+.payment-details-row {
+    display: flex; justify-content: space-between;
+}
+
+.payment-details-label {
+    font-weight: bold; color: black;
+}
+
+.payment-details-value {
+    color: black;
+}
+
+.payment-details-divider {
+    margin: 20px 0;
+    width: 100%;
+}
+
+.payment-summary-section {
+    display: flex; flex-direction: column; gap: 10px; width: 100%;
+}
+
+.payment-summary-row {
+    display: flex; justify-content: space-between;
+}
+
+.payment-summary-label {
+    font-weight: bold; color: black;
+}
+
+.payment-summary-value {
+    color: black;
+}
+
+.payment-modal-footer {
+    display: flex; justify-content: space-between; margin-top: 20px; width: 100%;
+}
+
+.payment-cancel-button, .payment-confirm-button {
+    width: 48%; padding: 10px; border: none; border-radius: 5px; cursor: pointer;
+}
+
+.payment-cancel-button {
+    background: #F2F3F6;
+}
+
+.payment-confirm-button {
+    background: black; color: white;
+}
+
+.payment-cancel-button:hover {
+    background-color: #e0e0e0;
+}
+
+.payment-confirm-button:hover {
+    background-color: #333;
+}
+
+/* Media Queries for Responsiveness */
+@media (max-width: 600px) {
+    .payment-modal-content { width: 90%; padding: 15px; }
+    .payment-modal-title { font-size: 1.5rem; }
+    .payment-details-label, .payment-summary-label { font-size: 14px; }
+    .payment-details-value, .payment-summary-value { font-size: 14px; }
+    .payment-button-container button { width: 100%; height: 36px; font-size: 14px; }
+    .payment-button-container { flex-direction: column; margin-top: 15px; }
+    .payment-button-container button:not(:last-child) { margin-bottom: 10px; }
+}
