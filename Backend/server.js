@@ -350,106 +350,70 @@ app.get('/getWalkInCustomerRecords', async (req, res) => {
   }
 });
 app.get('/getMemberCustomerRecords', async (req, res) => {
-    const { year, period = 'monthly' } = req.query;
-
-    // Validate year
-    const currentYear = new Date().getFullYear();
-    const parsedYear = parseInt(year, 10);
-
-    if (isNaN(parsedYear) || parsedYear < 2000 || parsedYear > currentYear + 1) {
-        return res.status(400).json({
-            error: 'Invalid year',
-            message: `Please provide a valid year between 2000 and ${currentYear + 1}`
-        });
-    }
-
+    const client = await pool.connect();
+  
     try {
-        let query;
-        let queryParams;
-
-        switch (period) {
-            case 'monthly':
-                query = `
-            SELECT 
-              EXTRACT(MONTH FROM p.payment_date) AS month,
-              COUNT(p.payment_id) AS total_entries,
-              MAX(p.payment_date) AS recent_payment_date,
-              SUM(p.amount) AS total_income
-            FROM 
-              Payment p
-            JOIN 
-              Customer c ON p.customer_id = c.customer_id
-            WHERE 
-              c.membership_type = 'Member'
-              AND EXTRACT(YEAR FROM p.payment_date) = $1
-            GROUP BY 
-              EXTRACT(MONTH FROM p.payment_date)
-            ORDER BY 
-              month;
-          `;
-                queryParams = [year];
-                break;
-
-            case 'quarterly':
-                query = `
-            SELECT 
-              CEIL(EXTRACT(MONTH FROM p.payment_date) / 3.0) AS month,
-              COUNT(p.payment_id) AS total_entries,
-              MAX(p.payment_date) AS recent_payment_date,
-              SUM(p.amount) AS total_income
-            FROM 
-              Payment p
-            JOIN 
-              Customer c ON p.customer_id = c.customer_id
-            WHERE 
-              c.membership_type = 'Member'
-              AND EXTRACT(YEAR FROM p.payment_date) = $1
-            GROUP BY 
-              CEIL(EXTRACT(MONTH FROM p.payment_date) / 3.0)
-            ORDER BY 
-              month;
-          `;
-                queryParams = [year];
-                break;
-
-            default:
-                return res.status(400).json({
-                    success: false,
-                    error: 'Invalid period. Use "monthly" or "quarterly".'
-                });
+      const { year, period = 'monthly' } = req.query;
+      const parsedYear = parseInt(year, 10);
+  
+      console.log('Received year for member records:', parsedYear);
+  
+      const query = ` 
+        SELECT 
+          c.name,
+          COUNT(p.payment_id) AS total_entries,
+          MAX(p.payment_date) AS last_payment_date
+        FROM 
+          Customer c
+        JOIN 
+          Membership m ON c.customer_id = m.customer_id
+        LEFT JOIN 
+          Payment p ON c.customer_id = p.customer_id
+        WHERE 
+          c.membership_type = 'Member' 
+          AND EXTRACT(YEAR FROM p.payment_date) = $1 
+        GROUP BY 
+          c.name
+        ORDER BY 
+          total_entries DESC;
+      `; 
+  
+      console.log('Executing query with year:', parsedYear);
+  
+      const result = await client.query(query, [parsedYear]);
+  
+      console.log('Query result:', result.rows);
+  
+      const processedData = result.rows.map(row => ({
+        names: row.name || 'Unknown',
+        total_entries: parseInt(row.total_entries) || 0,
+        last_payment_date: row.last_payment_date 
+          ? new Date(row.last_payment_date).toLocaleDateString('en-PH') 
+          : 'N/A'
+      }));
+  
+      console.log('Processed data:', processedData);
+  
+      res.status(200).json({
+        success: true,
+        data: processedData,
+        metadata: {
+          year: parsedYear,
+          period: period,
+          total_entries: processedData.reduce((sum, entry) => sum + entry.total_entries, 0)
         }
-
-        const result = await pool.query(query, queryParams);
-
-        // Preserve existing response structure for compatibility
-        res.status(200).json({
-            success: true,
-            data: result.rows.map(row => ({
-                month: row.month,
-                total_entries: parseInt(row.total_entries),
-                total_income: parseFloat(row.total_income),
-                recent_payment_date: row.recent_payment_date
-            })),
-            metadata: {
-                year: year,
-                period: period,
-                total_income: result.rows.reduce((sum, row) => sum + parseFloat(row.total_income), 0),
-                total_entries: result.rows.reduce((sum, row) => sum + parseInt(row.total_entries), 0)
-            }
-        });
-
-    } catch (err) {
-        console.error('Error fetching membership customer records:', err);
-        res.status(500).json({
-            success: false,
-            error: 'Error fetching membership customer records',
-            details: err.message
-        });
+      });
+    } catch (error) {
+      console.error('Error fetching member customer records:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Error fetching member customer records',
+        details: error.message
+      });
+    } finally {
+      client.release();
     }
-  })  ;
-
-
-// Endpoint to fetch customer membership information
+  });
 app.get('/getCustomerMember_TotalRecords/:name', async (req, res) => {
     const { name } = req.params;
 
@@ -494,6 +458,41 @@ app.get('/getCustomerMember_TotalRecords/:name', async (req, res) => {
         }
     }
 });
+app.get('/getCustomerPaymentRecords/:name', async (req, res) => {
+    const { name } = req.params;
+  
+    const paymentRecordsQuery = `
+      SELECT 
+        p.amount, 
+        p.method, 
+        p.payment_date
+      FROM 
+        Payment p
+      JOIN 
+        Customer c ON p.customer_id = c.customer_id
+      WHERE 
+        c.name = $1
+      ORDER BY 
+        p.payment_date DESC;
+    `;
+  
+    let client;
+  
+    try {
+      client = await pool.connect();
+      const result = await client.query(paymentRecordsQuery, [name]);
+  
+      res.status(200).json(result.rows);
+    } catch (err) {
+      console.error('Error fetching payment records:', err);
+      res.status(500).json({ 
+        error: 'Error fetching payment records', 
+        details: err.message 
+      });
+    } finally {
+      if (client) client.release();
+    }
+  });
 
 app.get('/getCustomerMember_info/:name', async (req, res) => {
     const { name } = req.params;

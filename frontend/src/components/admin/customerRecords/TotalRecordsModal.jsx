@@ -1,16 +1,72 @@
-import React from 'react';
+import  { useState, useEffect } from 'react';
 import Modal from 'react-modal';
 import '../../../css/admin/TotalRecordsModal.css';
 import BackIcon from '../../../assets/Back.png';
+import api from '../../../api';
 
 Modal.setAppElement('#root'); // Set the root element for accessibility
 
-const TotalRecordsModal = ({ isOpen, onClose }) => {
+const TotalRecordsModal = ({ isOpen, onClose, customerName }) => {
+  const [totalRecords, setTotalRecords] = useState(null);
+  const [paymentRecords, setPaymentRecords] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchCustomerRecords = async () => {
+      if (isOpen && customerName) {
+        setIsLoading(true);
+        setError(null);
+        try {
+          // Fetch total records (existing endpoint)
+          const totalRecordsResponse = await api.get(`/getCustomerMember_TotalRecords/${customerName}`);
+          setTotalRecords(totalRecordsResponse.data);
+
+          // Fetch detailed payment records (new endpoint from previous suggestion)
+          const paymentRecordsResponse = await api.get(`/getCustomerPaymentRecords/${customerName}`);
+          setPaymentRecords(paymentRecordsResponse.data);
+        } catch (err) {
+          console.error('Error fetching customer records:', err);
+          setError('Failed to fetch customer records');
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchCustomerRecords();
+  }, [isOpen, customerName]);
+
+  if (isLoading) {
+    return (
+      <Modal
+        isOpen={isOpen}
+        onRequestClose={onClose}
+        className="totalRecordsModalContent"
+        overlayClassName="totalRecordsModalOverlay"
+      >
+        <div className="loading-container">Loading...</div>
+      </Modal>
+    );
+  }
+
+  if (error) {
+    return (
+      <Modal
+        isOpen={isOpen}
+        onRequestClose={onClose}
+        className="totalRecordsModalContent"
+        overlayClassName="totalRecordsModalOverlay"
+      >
+        <div className="error-container">{error}</div>
+      </Modal>
+    );
+  }
+
   return (
     <Modal
       isOpen={isOpen}
       onRequestClose={onClose}
-      contentLabel="Total Records Modal"
       className="totalRecordsModalContent"
       overlayClassName="totalRecordsModalOverlay"
     >
@@ -22,36 +78,44 @@ const TotalRecordsModal = ({ isOpen, onClose }) => {
       </div>
 
       <div className="customer-name">
-        <h2>N/A</h2> {/* Placeholder for customer name */}
+        <h2>{customerName}</h2>
       </div>
       
       <div className="records-table">
         <table className="customer-table">
           <thead>
-            <tr className="table-header">
+            <tr>
               <th>Payment Amount</th>
               <th>Payment Method</th>
               <th>Date of Payments</th>
             </tr>
           </thead>
           <tbody>
-            {/* Placeholder rows for data */}
-            <tr className="table-row">
-              <td>N/A</td> {/* Placeholder for payment amount */}
-              <td>N/A</td> {/* Placeholder for payment method */}
-              <td>N/A</td> {/* Placeholder for payment date */}
-            </tr>
-            <tr className="table-row">
-              <td>N/A</td> {/* Placeholder for payment amount */}
-              <td>N/A</td> {/* Placeholder for payment method */}
-              <td>N/A</td> {/* Placeholder for payment date */}
-            </tr>
+            {paymentRecords.length > 0 ? (
+              paymentRecords.map((record, index) => (
+                <tr key={index} className="table-row">
+                  <td>₱{parseFloat(record.amount).toFixed(2)}</td>
+                  <td>{record.method}</td>
+                  <td>{new Date(record.payment_date).toLocaleDateString('en-PH')}</td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="3">No payment records found</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
+      
       <div className="total-info">
-        <p>Total Entries: <span>N/A</span></p> {/* Placeholder for total entries */}
-        <p>Total Payment: <span>N/A</span></p> {/* Placeholder for total payment */}
+        <div>
+          <p>Total Check-ins: <span>{totalRecords?.total_checkins || 0}</span></p>
+          <p>Total Payments: <span>{totalRecords?.total_payments || 0}</span></p>
+        </div>
+        <div>
+          <p>Total Payment Amount: <span>₱{parseFloat(totalRecords?.total_payment || 0).toFixed(2)}</span></p>
+        </div>
       </div>
     </Modal>
   );

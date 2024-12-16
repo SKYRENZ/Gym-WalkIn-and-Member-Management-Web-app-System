@@ -213,12 +213,14 @@ static async getMemberCustomerRecords(year, period = 'monthly') {
     const query = ` 
       SELECT 
         c.name,
-        COUNT(*) AS total_entries,
+        COUNT(p.payment_id) AS total_entries,
         MAX(p.payment_date) AS last_payment_date
       FROM 
-        Payment p 
+        Customer c
       JOIN 
-        Customer c ON p.customer_id = c.customer_id 
+        Membership m ON c.customer_id = m.customer_id
+      LEFT JOIN 
+        Payment p ON c.customer_id = p.customer_id
       WHERE 
         c.membership_type = 'Member' 
         AND EXTRACT(YEAR FROM p.payment_date) = $1 
@@ -231,9 +233,11 @@ static async getMemberCustomerRecords(year, period = 'monthly') {
     const result = await pool.query(query, [parsedYear]);
 
     const processedData = result.rows.map(row => ({
-      names: row.name,
-      total_entries: parseInt(row.total_entries),
-      last_payment_date: row.last_payment_date ? new Date(row.last_payment_date).toLocaleDateString('en-PH') : 'N/A'
+      names: row.name || 'Unknown',
+      total_entries: parseInt(row.total_entries) || 0,
+      last_payment_date: row.last_payment_date 
+        ? new Date(row.last_payment_date).toLocaleDateString('en-PH') 
+        : 'N/A'
     }));
 
     return { 
@@ -250,7 +254,6 @@ static async getMemberCustomerRecords(year, period = 'monthly') {
     throw err;
   }
 }
-
 }
 
 module.exports = ReportService;
