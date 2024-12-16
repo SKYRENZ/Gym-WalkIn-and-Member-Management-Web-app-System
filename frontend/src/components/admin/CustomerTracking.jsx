@@ -1,27 +1,45 @@
-// src/components/admin/CustomerTracking.jsx
+import React, { useState, useEffect } from 'react';
 import { useCustomerTracking } from '../../hooks/useCustomerTracking';
 import DatePicker from './DatePicker';
 import '../../css/admin/CustomerTracking.css';
 
 function CustomerTracking() {
+  // State to manage the selected date
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const today = new Date();
+    // Ensure it's in local timezone
+    return today.toLocaleDateString('en-CA', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).split('/').reverse().join('-');
+  });
+  
+  // Use the custom hook with the selected date
   const { 
     customerData, 
     isLoading, 
-    error, 
-    setDate, 
-    formattedDate, 
-    refetch 
-  } = useCustomerTracking();
+    error,
+    fetchCustomerData
+  } = useCustomerTracking(selectedDate);
 
+  // Debug logging
+  useEffect(() => {
+    console.log('Selected Date:', selectedDate);
+    console.log('Customer Data Length:', customerData.length);
+  }, [selectedDate, customerData]);
+
+  // Render methods
   const renderHeader = () => (
     <div className="member-tracking-header">
       <h1>Customer Tracking</h1>
-      <span className="current-date">{formattedDate}</span>
-      <DatePicker setDate={setDate} />
+      <div className="date-section">
+        <DatePicker setDate={setSelectedDate} />
+      </div>
     </div>
   );
 
-  // Render loading state
+  // Loading State
   if (isLoading) {
     return (
       <div className="member-tracking">
@@ -33,21 +51,20 @@ function CustomerTracking() {
     );
   }
 
-  // Render error state
+  // Error State
   if (error) {
     return (
       <div className="member-tracking">
         {renderHeader()}
         <div className="error-container">
           <p>Error loading data: {error}</p>
-          <button onClick={refetch}>Retry</button>
         </div>
       </div>
     );
   }
 
-  // Render empty state
-  if (!Array.isArray(customerData) || customerData.length === 0) {
+  // Empty State
+  if (!customerData || customerData.length === 0) {
     return (
       <div className="member-tracking">
         {renderHeader()}
@@ -58,7 +75,7 @@ function CustomerTracking() {
     );
   }
 
-  // Main render
+  // Main Render
   return (
     <div className="member-tracking">
       {renderHeader()}

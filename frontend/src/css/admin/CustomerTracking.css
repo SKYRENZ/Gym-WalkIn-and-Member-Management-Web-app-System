@@ -14,7 +14,18 @@
   margin-left: 20px;
   width: calc(100% - 40px); /* Adjust width to account for padding */
 }
+/* In your CustomerTracking.css */
+.date-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 
+.date-input {
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
 .current-date {
   margin: 0 10px;
   font-size: 14px;
