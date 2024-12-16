@@ -1,111 +1,176 @@
-.qr-member-print {
-  background-color: #ffffff;
-  border-radius: 10px;
-  height: 557px;
-  overflow: hidden;
+/* Import Poppins font */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+/* Darkened Background Overlay */
+.qr-modal-overlay {
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+}
+
+/* Modal Content */
+.qr-modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  color: #333;
+  width: 90%;
+  max-width: 900px; /* Increased max-width to widen the modal */
+  height: 590px;
+  text-align: center;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
   position: relative;
-  width: 590px;
+  font-family: 'Poppins', sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.qr-member-print .modal-header {
+  display: flex;
+  align-items: center;
 }
 
 .qr-member-print .text-wrapper-9 {
-  color: #000000;
-  font-family: "Montserrat-Bold", Helvetica;
-  font-size: 35px;
-  font-weight: 700;
-  left: 65px;
-  letter-spacing: 0;
-  line-height: normal;
-  position: absolute;
-  text-align: center;
-  top: 16px;
+  font-size: 24px;
+  font-weight: bold;
+  margin-left: 10px; /* Add margin to separate from the back button */
 }
 
 .qr-member-print .left {
-  height: 30px;
-  left: 20px;
-  position: absolute;
-  top: 24px;
-  width: 30px;
+  cursor: pointer;
+  width: 24px; /* Adjust the size as needed */
+  height: 24px; /* Adjust the size as needed */
 }
 
+/* Divider */
 .qr-member-print .img {
-  height: 1px;
-  left: 17px;
-  object-fit: cover;
-  position: absolute;
-  top: 73px;
-  width: 556px;
+  width: 100%;
+  margin: 10px 0;
 }
 
+/* Main Content */
 .qr-member-print .group-4 {
-  height: 440px;
-  left: 17px;
-  position: absolute;
-  top: 104px;
-  width: 556px;
+  display: flex;
+  justify-content: space-between;
+  column-gap: 100px;
 }
 
+.qr-member-print .group-5,
 .qr-member-print .group-629 {
-  left: 317px !important;
-  position: absolute !important;
-  top: 58px !important;
+  width: 48%;
 }
 
-.qr-member-print .group-5 {
-  height: 440px;
-  left: 0;
-  position: absolute;
-  top: 0;
-  width: 299px;
-}
-
-.qr-member-print .transaction-search {
-  align-items: flex-start;
-  background-color: #f6f8fa;
-  border: 1px solid;
-  border-color: #c9cacf;
-  border-radius: 5px;
+.qr-member-print .transaction-search .search-container {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  height: 28px;
-  justify-content: center;
-  left: 0;
-  padding: 3px 10px 2px;
-  position: absolute;
-  top: 0;
-  width: 200px;
-}
-
-.qr-member-print .frame {
   align-items: center;
-  display: flex;
-  flex: 0 0 auto;
-  gap: 5px;
-  position: relative;
-  width: 69px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 0 5px; /* Adjust padding to ensure the right border is visible */
+  width: 200px; /* Set the width to 200px */
+  height: 28px; /* Set the height to 28px */
+  box-sizing: border-box; /* Ensure padding is included in the width */
 }
 
-.qr-member-print .vector {
-  height: 15px;
-  position: relative;
-  width: 15px;
+.qr-member-print .transaction-search .vector {
+  margin-right: 5px; /* Adjust margin to fit within the container */
+  width: 20px; /* Set the width to 15px */
+  height: 20px; /* Set the height to 15px */
+}
+
+.qr-member-print .transaction-search .search-input {
+  border: none;
+  font-size: 12px; /* Set the font size to 12px */
+  outline: none;
+  flex-grow: 1;
+  font-family: 'Poppins', sans-serif; /* Use Poppins font */
+  padding: 0; /* Remove padding to fit within the container */
+  pointer-events: auto; 
+  border-radius: 0px;
 }
 
 .qr-member-print .text-wrapper-10 {
-  color: #51586a;
-  font-family: "Poppins-Regular", Helvetica;
-  font-size: 12px;
-  font-weight: 400;
-  letter-spacing: 0;
-  line-height: normal;
-  margin-top: -1.00px;
-  position: relative;
-  width: fit-content;
+  font-size: 12px; /* Set the font size to 12px */
+  font-family: 'Poppins', sans-serif; /* Use Poppins font */
 }
 
-.qr-member-print .group-627 {
-  left: 0 !important;
-  position: absolute !important;
-  top: 38px !important;
+.qr-member-print .group-627 h2 {
+  font-size: 25px; /* Set the font size to 16px */
+  font-weight: bold;
+  margin: 10px 0;
+}
+
+.qr-member-print .group-627 ul {
+  list-style: none;
+  padding: 0;
+}
+
+.qr-member-print .group-627 li {
+  margin: 5px 0;
+}
+
+.qr-member-print .preview-area {
+  border: 1px solid #ccc;
+  height: 200px;
+}
+
+/* Media Queries for Responsiveness */
+@media (max-width: 768px) {
+  .qr-modal-content {
+      width: 90%;
+      height: 500px;
+      padding: 20px;
+      margin: 0px 5px;
+  }
+
+  .qr-member-print .text-wrapper-9 {
+      font-size: 28px;
+  }
+
+  .qr-member-print .left {
+      width: 30px;
+      height: 30px;
+  }
+
+  .qr-member-print .group-4 {
+      flex-direction: column;
+      align-items: center;
+  }
+
+  .qr-member-print .group-5,
+  .qr-member-print .group-629 {
+      width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .qr-modal-content {
+      width: 100%;
+      height: 500px;
+      padding: 15px;
+  }
+
+  .qr-member-print .text-wrapper-9 {
+      font-size: 24px;
+  }
+
+  .qr-member-print .left {
+      width: 25px;
+      height: 25px;
+  }
+
+  .qr-member-print .group-627 li {
+      font-size: 0.9rem;
+  }
+
+  .qr-member-print .preview-area {
+      height: 150px;
+  }
 }
