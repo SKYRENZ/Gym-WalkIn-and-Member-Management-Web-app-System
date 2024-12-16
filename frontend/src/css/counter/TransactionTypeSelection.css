@@ -1,8 +1,15 @@
-/* src/css/TransactionTypeSelection.css */
 .transaction-type-selection {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start; /* Align items to the start (left) */
+    padding: 20px; /* Add some padding for better spacing */
+}
+
+.button-grid-container {
+    display: flex;
+    justify-content: center; /* Center the buttons */
+    width: 100%; /* Ensure the container takes full width */
+    margin-bottom: 20px; /* Add some space below the buttons */
 }
 
 .button-grid {
@@ -29,4 +36,126 @@
 
 .transaction-button:hover {
     background-color: #e0e0e0; /* Darker shade on hover */
+}
+
+.input-container {
+    width: 100%;
+    max-width: 600px;
+    margin: 20px 0;
+    display: flex;
+    flex-direction: column; /* Stack input fields vertically */
+    gap: 10px; /* Space between input fields */
+}
+
+.input-wrapper {
+    width: 100%; /* Make input wrapper take full width */
+}
+
+.input-label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.input-field {
+    width: 100%; /* Make input field take full width */
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    pointer-events: auto;
+}
+
+.radio-wrapper {
+    display: flex;
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: wrap; /* Allow radio buttons to wrap */
+    gap: 10px; /* Space between radio buttons */
+}
+
+.radio-label {
+    margin-bottom: 10px;
+}
+
+.radio-input {
+    margin-right: 10px;
+}
+
+.details-columns {
+    display: flex;
+    justify-content: space-between;
+    width: 100%; /* Ensure columns take full width */
+    padding: 0 40px; /* Add padding to the left and right */
+    box-sizing: border-box; /* Include padding in the element's total width and height */
+}
+
+.details-column {
+    flex: 1;
+    margin-right: 20px; /* Adjusted space between columns */
+}
+
+.details-column:last-child {
+    margin-right: 0;
+}
+
+.payment-details-row {
+    margin-bottom: 10px;
+}
+
+.payment-details-label {
+    font-weight: bold;
+    display: block;
+}
+
+.payment-details-value {
+    display: block;
+    margin-top: 5px;
+}
+
+.payment-summary-section {
+    margin-top: 20px;
+    width: 100%; /* Ensure summary section takes full width */
+    padding: 0 40px; /* Add padding to the left and right */
+    box-sizing: border-box; /* Include padding in the element's total width and height */
+}
+
+.payment-summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.payment-summary-label {
+    font-weight: bold;
+}
+
+.payment-summary-value {
+    margin-left: 10px;
+}
+
+.button-container {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.continue-button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.continue-button:hover {
+    background-color: #0056b3;
+}
+
+/* Media Queries for Responsiveness */
+@media (max-width: 600px) {
+    .radio-wrapper {
+        flex-direction: column; /* Stack radio buttons vertically */
+        align-items: flex-start; /* Align radio buttons to the start */
+    }
 }
