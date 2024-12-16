@@ -12,8 +12,22 @@ import '../css/counter/TransactionTypeSelection.css'; // Import the CSS for tran
 
 function Counter() {
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isGenericPopupOpen, setIsGenericPopupOpen] = useState(false); // State for generic popup
-    const [isWalkInDetailsOpen, setIsWalkInDetailsOpen] = useState(false); // State for Walk In details popup
+    const [checkinCount, setCheckinCount] = useState(0);
+    const [customerDetails, setCustomerDetails] = useState(null);
+
+    const fetchCheckinCount = async () => {
+        try {
+            const response = await fetch('http://localhost:3000/checkin-count');
+            const result = await response.json();
+            setCheckinCount(result.count);
+        } catch (error) {
+            console.error('Error fetching check-in count:', error);
+        }
+    };
+
+    useEffect(() => {
+        fetchCheckinCount();
+    }, []);
 
     const handleCheckInClick = () => {
         setIsModalOpen(true);
@@ -45,6 +59,9 @@ function Counter() {
 
     const handleCloseWalkInDetails = () => {
         setIsWalkInDetailsOpen(false); // Close the Walk In details popup
+    const handleCheckInSuccess = () => {
+        fetchCheckinCount();
+        setIsModalOpen(false);
     };
 
     return (
@@ -58,6 +75,8 @@ function Counter() {
                     />
                     <SummaryCards />
                     {/* Add the Walk In button here */}
+                    <TopBar onCheckInClick={handleCheckInClick} />
+                    <SummaryCards checkinCount={checkinCount} />
                 </div>
                 <div className="bottom">
                     <MainTransaction />
@@ -76,6 +95,11 @@ function Counter() {
             </GenericPopup>
 
             
+            <QRCodeModal
+                isOpen={isModalOpen}
+                onClose={handleCloseModal}
+                onCheckInSuccess={handleCheckInSuccess} // Pass the onCheckInSuccess function
+            />
         </>
     );
 }

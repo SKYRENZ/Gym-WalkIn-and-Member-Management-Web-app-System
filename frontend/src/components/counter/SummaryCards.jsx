@@ -4,10 +4,10 @@ import WalkedInCard from './WalkInCard.jsx';
 import NewMembersCard from './NewMembersCard.jsx';
 import VoucherCodesCard from './VoucherCodesCard.jsx';
 
-function SummaryCards() {
+function SummaryCards({ checkinCount }) {
     return (
         <div className="card-container">
-            <CheckedInCard />
+            <CheckedInCard checkinCount={checkinCount} />
             <WalkedInCard />
             <NewMembersCard />
             <VoucherCodesCard />
