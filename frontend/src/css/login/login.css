@@ -91,6 +91,7 @@
   display: block; /* Ensures the input takes up the full width */
   margin-left: auto; /* Center the input horizontally */
   margin-right: auto; /* Center the input horizontally */
+  pointer-events: auto; /* Ensure the input is clickable */
 }
 
 .login-page .password-input::placeholder {
