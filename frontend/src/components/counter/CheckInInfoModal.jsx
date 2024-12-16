@@ -37,6 +37,8 @@ const CheckInInfoModal = ({ isOpen, onClose, customerDetails, onCheckInSuccess }
     }
   };
 
+  const qrCodeSrc = `/images/qrcodes/${customerDetails.membership_id}.png`; // Dynamically set image path
+
   return (
     <Modal
       isOpen={isOpen}
@@ -76,7 +78,7 @@ const CheckInInfoModal = ({ isOpen, onClose, customerDetails, onCheckInSuccess }
         <div className="qr-section">
           <div className="qr-code">
             <img
-              src="https://via.placeholder.com/150" // Placeholder image
+              src={qrCodeSrc} // Dynamically set image path
               alt="QR Code"
             />
           </div>
