@@ -1,0 +1,258 @@
+/* Darkened Background Overlay */
+.expiredAccModalOverlay {
+    background-color: rgba(0, 0, 0, 0.75);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+  }
+  
+  /* Modal Content */
+  .expiredAccModalContent {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    color: #333;
+    width: 90%;
+    max-width: 700px;
+    height: 650px;
+    text-align: center;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    position: relative;
+    font-family: 'Poppins', sans-serif;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Button Container */
+  .expired-button-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    padding: 0px 10px;
+    box-sizing: border-box;
+    justify-content: space-between;
+  }
+  
+  .expired-search-container {
+    width: auto;
+  }
+  
+  .expired-view-buttons {
+    display: flex;
+    gap: 10px;
+  }
+  
+  /* Button Styles */
+  .expired-btn,
+  .expired-active-btn {
+    padding: 10px 20px;
+    border: none; /* Remove borders */
+    border-radius: 25px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .expired-btn {
+    background-color: #333;
+    color: white;
+  }
+  
+  .expired-btn:disabled {
+    background-color: #cccccc; /* Match disabled background */
+    color: #aaa; /* Keep color consistent */
+    cursor: not-allowed; /* Keep cursor style */
+  }
+  
+  .expired-btn:hover:not(:disabled) {
+    background-color: #0056b3; /* Match hover background */
+  }
+  
+  .expired-btn:focus {
+    outline: none; /* Remove focus outline */
+  }
+  
+  .expired-active-btn {
+    background-color: #4665aa;
+    color: #ffffff;
+    cursor: default;
+  }
+  
+  .expired-active-btn:hover {
+    border: none;
+    outline: none;
+  }
+  
+  .expired-active-btn:focus {
+    outline: none;
+  }
+  
+  /* Table Section */
+  .expired-table-section {
+    flex-grow: 1;
+    width: 100%;
+    margin-top: 10px;
+    text-align: center;
+    overflow-y: auto;
+    padding: 0 20px;
+    box-sizing: border-box;
+  }
+  
+  .expired-customer-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 16px;
+    table-layout: fixed;
+  }
+  
+  .expired-customer-table th, .expired-customer-table td {
+    padding: 8px;
+    text-align: left;
+    word-wrap: break-word;
+  }
+  
+  .expired-customer-table th {
+    font-weight: 600;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .expired-customer-table td {
+    font-weight: 400;
+  }
+  
+  /* Adjust column widths */
+  .expired-customer-table th:nth-child(1), .expired-customer-table td:nth-child(1) {
+    width: 35%;
+  }
+  
+  .expired-customer-table th:nth-child(2), .expired-customer-table td:nth-child(2) {
+    width: 25%;
+  }
+  
+  .expired-customer-table th:nth-child(3), .expired-customer-table td:nth-child(3) {
+    width: 40%;
+  }
+  
+  .expired-no-data {
+    font-size: 18px;
+    color: #888;
+  }
+  
+  /* Action Buttons */
+  .expired-action-buttons {
+    margin-top: 10px;
+    display: flex;
+    justify-content: flex-start; /* Align to the left */
+    width: 100%;
+    position: relative;
+  }
+  
+  .expired-activate-btn {
+    padding: 10px 20px;
+    background-color: #4bca7e; /* Light green or pastel green */
+    color: white;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .expired-activate-btn:disabled {
+    background-color: #cccccc; /* Match disabled background */
+    color: #aaa; /* Keep color consistent */
+    cursor: not-allowed; /* Keep cursor style */
+  }
+  
+  .expired-activate-btn:hover:not(:disabled) {
+    background-color: #77dd77; /* Darker shade of light green */
+  }
+  
+  .expired-activate-btn:focus {
+    outline: none; /* Remove focus outline */
+  }
+  
+  /* Media Queries for Responsiveness */
+  @media (max-width: 768px) {
+    .expiredAccModalContent {
+      width: 90%;
+      height: 500px;
+      padding: 20px;
+      margin: 0px 5px;
+    }
+  
+    .AccountHeader h2 {
+      font-size: 28px;
+    }
+  
+    .accountBackButton img {
+      width: 30px;
+      height: 30px;
+    }
+  
+    .expired-button-container {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
+    }
+  
+    .expired-search-container {
+      width: 100%;
+      text-align: center;
+    }
+  
+    .expired-view-buttons {
+      width: 100%;
+      flex-direction: column; /* Stack buttons vertically */
+      gap: 10px;
+    }
+  
+    .expired-action-buttons {
+      flex-direction: column;
+      gap: 10px;
+    }
+  
+    .left-buttons,
+    .right-buttons {
+      flex-direction: column;
+      width: 100%;
+    }
+  
+    .expired-action-buttons button {
+      max-width: none;
+      width: 100%;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .expiredAccModalContent {
+      width: 100%;
+      height: 500px;
+      padding: 15px;
+    }
+  
+    .AccountHeader h2 {
+      font-size: 24px;
+    }
+  
+    .accountBackButton img {
+      width: 25px;
+      height: 25px;
+    }
+  
+    .expired-action-buttons button {
+      padding: 8px;
+      font-size: 0.9rem;
+    }
+  
+    .expired-customer-table {
+      font-size: 12px;
+    }
+  }

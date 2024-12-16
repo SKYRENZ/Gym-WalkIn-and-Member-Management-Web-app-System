@@ -102,18 +102,42 @@
 }
 
 .active-btn {
-  background-color: transparent;
-  color: #333;
-  border: 1px solid #333;
+  background-color: #4665aa;
+  color: white;
   cursor: default;
 }
 
 .active-btn:hover {
-  border: 1px solid #333;
+  border: none;
+  outline: none;
 }
 
 .active-btn:focus {
   outline: none;
+}
+
+.deactbtn {
+  padding: 10px 20px;
+  border: none; /* Remove borders */
+  background-color: #d15757;
+  border-radius: 25px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.deactbtn:hover {
+  background-color: #d62e2e;
+}
+
+.deactbtn:disabled {
+  background-color: #cccccc; /* Match disabled background */
+  color: #aaa; /* Keep color consistent */
+  cursor: not-allowed;
+}
+
+.deactbtn:focus {
+  outline: none
 }
 
 .deactivated-btn {
@@ -136,14 +160,14 @@
   margin-top: 10px;
   text-align: center;
   overflow-y: auto;
-  padding: 0 20px;
+  padding: 0px 20px;
   box-sizing: border-box;
 }
 
 .customer-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 20px;
+  margin-top: 10px;
   font-size: 16px;
   table-layout: fixed;
 }
