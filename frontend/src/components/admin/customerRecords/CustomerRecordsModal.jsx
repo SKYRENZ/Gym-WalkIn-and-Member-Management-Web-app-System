@@ -6,6 +6,8 @@ import BackIcon from '../../../assets/Back.png';
 import SearchBar from '../../counter/SearchBar.jsx';
 import InformationModal from './InformationModal.jsx';
 import TotalRecordsModal from './TotalRecordsModal.jsx';
+import ReasonModal from './ReasonModal.jsx';
+import ExpiredAccModal from './ExpiredAccModal.jsx';
 
 Modal.setAppElement('#root'); // Set the root element for accessibility
 
@@ -14,6 +16,9 @@ const CustomerRecords = ({ isOpen, onClose }) => {
   const [selectedRow, setSelectedRow] = useState(null);
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showTotalRecordsModal, setShowTotalRecordsModal] = useState(false);
+  const [showReasonModal, setShowReasonModal] = useState(false);
+  const [showExpiredAccModal, setShowExpiredAccModal] = useState(false);
+  const [deactivationReason, setDeactivationReason] = useState("");
 
   const navigate = useNavigate();
 
@@ -52,10 +57,34 @@ const CustomerRecords = ({ isOpen, onClose }) => {
     setSelectedRow(null); // Reset selected row when modal is closed
   };
 
+  const openReasonModal = () => {
+    setShowReasonModal(true);
+  };
+
+  const closeReasonModal = () => {
+    setShowReasonModal(false);
+    setDeactivationReason(""); // Reset deactivation reason
+    setSelectedRow(null); // Reset selected row when modal is closed
+  };
+
+  const openExpiredAccModal = () => {
+    setShowExpiredAccModal(true);
+  };
+
+  const closeExpiredAccModal = () => {
+    setShowExpiredAccModal(false);
+  };
+
+  const handleDeactivate = () => {
+    // Add your deactivation logic here
+    console.log(`Deactivating account for row ${selectedRow} with reason: ${deactivationReason}`);
+    closeReasonModal();
+  };
+
   return (
     <>
       <Modal
-        isOpen={isOpen && !showInfoModal && !showTotalRecordsModal}
+        isOpen={isOpen && !showInfoModal && !showTotalRecordsModal && !showExpiredAccModal}
         onRequestClose={onClose}
         contentLabel="Customer Records Modal"
         className="customerRecordsModalContent"
@@ -149,17 +178,38 @@ const CustomerRecords = ({ isOpen, onClose }) => {
                 >
                   Total Records
                 </button>
+                <button
+                  className="deactbtn"
+                  onClick={openReasonModal}
+                  disabled={selectedRow === null}
+                >
+                  Deactivate
+                </button>
               </>
             )}
           </div>
-          <div className="right-buttons">
-            <button className="deactivated-btn">Deactivated Accounts</button>
-          </div>
+          {view === "Member" && (
+            <div className="right-buttons">
+              <button className="deactivated-btn" onClick={openExpiredAccModal}>Deactivated Accounts</button>
+            </div>
+          )}
         </div>
       </Modal>
 
       <InformationModal isOpen={showInfoModal} onClose={closeInfoModal} />
       <TotalRecordsModal isOpen={showTotalRecordsModal} onClose={closeTotalRecordsModal} />
+      <ReasonModal
+        isOpen={showReasonModal}
+        onClose={closeReasonModal}
+        selectedRow={selectedRow}
+        deactivationReason={deactivationReason}
+        setDeactivationReason={setDeactivationReason}
+        handleDeactivate={handleDeactivate}
+      />
+      <ExpiredAccModal
+        isOpen={showExpiredAccModal}
+        onClose={closeExpiredAccModal}
+      />
     </>
   );
 };
