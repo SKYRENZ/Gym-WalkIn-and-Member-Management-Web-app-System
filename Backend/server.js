@@ -494,21 +494,29 @@ app.get('/getCustomerPaymentRecords/:name', async (req, res) => {
     }
   });
 
+// Endpoint to get customer membership info
 app.get('/getCustomerMember_info/:name', async (req, res) => {
     const { name } = req.params;
 
     const customerQuery = `
-        SELECT c.name, c.email, c.contact_info AS phone, m.end_date
-        FROM Customer c
-        JOIN Membership m ON c.customer_id = m.customer_id
-        WHERE c.name = $1
-        GROUP BY c.name, c.email, c.contact_info, m.end_date;
+        SELECT 
+            c.name, 
+            c.email, 
+            c.contact_info AS phone, 
+            m.end_date
+        FROM 
+            Customer c
+        JOIN 
+            Membership m ON c.customer_id = m.customer_id
+        WHERE 
+            c.name = $1
+        LIMIT 1;
     `;
 
-    let client; // Declare client variable here
+    let client;
 
     try {
-        client = await pool.connect(); // Get a client from the pool
+        client = await pool.connect();
         const result = await client.query(customerQuery, [name]);
 
         if (result.rows.length === 0) {
@@ -517,10 +525,90 @@ app.get('/getCustomerMember_info/:name', async (req, res) => {
 
         res.status(200).json(result.rows[0]);
     } catch (err) {
-        console.error('Error fetching customer membership:', err.message); // Log the error message
-        res.status(500).json({ error: 'Error fetching customer membership' });
+        console.error('Error fetching customer membership:', err);
+        res.status(500).json({ 
+            error: 'Error fetching customer membership', 
+            details: err.message 
+        });
     } finally {
-        // Ensure the client is released back to the pool
+        if (client) {
+            client.release();
+        }
+    }
+});
+
+// Endpoint to update customer information
+app.put('/updateCustomerInfo/:name', async (req, res) => {
+    const { name } = req.params;
+    const { name: newName, email, phone, membership_end_date } = req.body;
+
+    let client;
+
+    try {
+        client = await pool.connect();
+
+        // Start a transaction
+        await client.query('BEGIN');
+
+        // Update customer information
+        const updateCustomerQuery = `
+            UPDATE Customer c
+            SET 
+                name = $1, 
+                email = $2, 
+                contact_info = $3
+            FROM Membership m
+            WHERE c.customer_id = m.customer_id AND c.name = $4
+            RETURNING c.customer_id;
+        `;
+
+        const customerResult = await client.query(updateCustomerQuery, [
+            newName, 
+            email, 
+            phone, 
+            name
+        ]);
+
+        if (customerResult.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ error: 'Customer not found' });
+        }
+
+        const customerId = customerResult.rows[0].customer_id;
+
+        // Update membership end date if provided
+        if (membership_end_date) {
+            const updateMembershipQuery = `
+                UPDATE Membership
+                SET end_date = $1
+                WHERE customer_id = $2;
+            `;
+
+            await client.query(updateMembershipQuery, [
+                membership_end_date, 
+                customerId
+            ]);
+        }
+
+        // Commit the transaction
+        await client.query('COMMIT');
+
+        res.status(200).json({ 
+            message: 'Customer information updated successfully',
+            customer_id: customerId
+        });
+    } catch (err) {
+        // Rollback the transaction in case of error
+        if (client) {
+            await client.query('ROLLBACK');
+        }
+
+        console.error('Error updating customer information:', err);
+        res.status(500).json({ 
+            error: 'Error updating customer information', 
+            details: err.message 
+        });
+    } finally {
         if (client) {
             client.release();
         }

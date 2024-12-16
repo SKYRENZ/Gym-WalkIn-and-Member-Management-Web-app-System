@@ -3,6 +3,7 @@ import Modal from 'react-modal';
 import '../../../css/admin/TotalRecordsModal.css';
 import BackIcon from '../../../assets/Back.png';
 import api from '../../../api';
+import PropTypes from 'prop-types';
 
 Modal.setAppElement('#root'); // Set the root element for accessibility
 
@@ -119,6 +120,12 @@ const TotalRecordsModal = ({ isOpen, onClose, customerName }) => {
       </div>
     </Modal>
   );
+};
+
+TotalRecordsModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+  customerName: PropTypes.string.isRequired
 };
 
 export default TotalRecordsModal;

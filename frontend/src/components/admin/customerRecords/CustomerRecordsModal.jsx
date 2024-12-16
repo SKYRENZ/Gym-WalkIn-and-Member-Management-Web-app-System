@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Modal from 'react-modal';
 import { useCustomerRecords } from '../../../hooks/useCustomerRecords';
 import InformationModal from './InformationModal';
@@ -6,7 +6,7 @@ import TotalRecordsModal from './TotalRecordsModal';
 import "../../../css/admin/CustomerRecordsModal.css";
 import BackIcon from '../../../assets/Back.png';
 import SearchBar from '../../counter/SearchBar.jsx';
-
+import PropTypes from 'prop-types';
 const CustomerRecordsModal = ({ isOpen, onClose }) => {
   const [view, setView] = useState("WalkIn");
   const [searchTerm, setSearchTerm] = useState("");
@@ -146,6 +146,11 @@ const CustomerRecordsModal = ({ isOpen, onClose }) => {
       />
     </>
   );
+};
+
+CustomerRecordsModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired
 };
 
 export default CustomerRecordsModal;

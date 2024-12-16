@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Modal from 'react-modal';
 import PropTypes from 'prop-types';
 import '../../../css/admin/InformationModal.css';
 import BackIcon from '../../../assets/Back.png';
-import api from '../../../api'; // Assuming you have an API utility
+import api from '../../../api'; 
+import { FaEdit } from 'react-icons/fa'; 
 
-Modal.setAppElement('#root'); // Set the root element for accessibility
+Modal.setAppElement('#root');
 
 const InformationModal = ({ 
   isOpen, 
@@ -22,6 +23,7 @@ const InformationModal = ({
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
 
   // Fetch customer information when modal opens
   useEffect(() => {
@@ -30,7 +32,6 @@ const InformationModal = ({
         setIsLoading(true);
         setError(null);
         try {
-          // Replace with your actual API endpoint
           const response = await api.get(`/getCustomerMember_info/${customerName}`);
           
           // Update state with fetched information
@@ -53,17 +54,48 @@ const InformationModal = ({
     fetchCustomerInfo();
   }, [isOpen, customerName]);
 
-  const handleBackButtonClick = () => {
-    onClose();
-  };
-
-  // Handle input changes
+  // Handle input changes during editing
   const handleInputChange = (e) => {
     const { id, value } = e.target;
-    setCustomerInfo(prev => ({
-      ...prev,
+    setCustomerInfo(prevInfo => ({
+      ...prevInfo,
       [id]: value
     }));
+  };
+
+  // Handle edit button click
+  const handleEditClick = () => {
+    setIsEditing(true);
+  };
+
+  // Handle cancel editing
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+  };
+
+  // Handle save changes
+  const handleSaveChanges = async () => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await api.put(`/updateCustomerInfo/${customerName}`, {
+        name: customerInfo.name,
+        email: customerInfo.email,
+        phone: customerInfo.phone,
+        membership_end_date: customerInfo.birthday
+      });
+
+      if (response.data) {
+        setIsEditing(false);
+        // Optionally refresh or update parent component
+      }
+    } catch (err) {
+      console.error('Error updating customer information:', err);
+      setError(err.response?.data?.error || 'Failed to update customer information');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -75,7 +107,7 @@ const InformationModal = ({
       overlayClassName="informationModalOverlay"
     >
       <div className="VoucherHeader">
-        <button className="voucherBackButton" onClick={handleBackButtonClick}>
+        <button className="voucherBackButton" onClick={onClose}>
           <img src={BackIcon} alt="Back Icon" />
         </button>
         <h2>Customer Information</h2>
@@ -92,18 +124,29 @@ const InformationModal = ({
           placeholder="Full Name" 
           value={customerInfo.name}
           onChange={handleInputChange}
-          disabled
+          disabled={!isEditing}
         />
 
         <label htmlFor="gender">Gender:</label>
-        <input 
-          type="text" 
-          id="gender" 
-          placeholder="Gender" 
-          value={customerInfo.gender}
-          onChange={handleInputChange}
-          disabled
-        />
+        {isEditing ? (
+          <select
+            id="gender"
+            value={customerInfo.gender}
+            onChange={handleInputChange}
+          >
+            <option value="">Select Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+          </select>
+        ) : (
+          <input 
+            type="text" 
+            id="gender" 
+            placeholder="Gender" 
+            value={customerInfo.gender}
+            disabled
+          />
+        )}
 
         <label htmlFor="birthday">Birthday:</label>
         <input 
@@ -112,7 +155,7 @@ const InformationModal = ({
           placeholder="Birthday" 
           value={customerInfo.birthday}
           onChange={handleInputChange}
-          disabled
+          disabled={!isEditing}
         />
 
         <label htmlFor="phone">Phone Number:</label>
@@ -122,7 +165,7 @@ const InformationModal = ({
           placeholder="Phone Number" 
           value={customerInfo.phone}
           onChange={handleInputChange}
-          disabled
+          disabled={!isEditing}
         />
 
         <label htmlFor="email">Email:</label>
@@ -132,8 +175,40 @@ const InformationModal = ({
           placeholder="Email" 
           value={customerInfo.email}
           onChange={handleInputChange}
-          disabled
+          disabled={!isEditing}
         />
+
+        {/* Edit Button */}
+        {!isEditing && (
+          <div className="edit-button-container">
+            <button 
+              className="editInfoButton" 
+              onClick={handleEditClick}
+            >
+              <FaEdit />
+            </button>
+          </div>
+        )}
+
+        {/* Edit/Save Actions */}
+        {isEditing && (
+          <div className="edit-actions">
+            <button 
+              className="cancel-edit-btn" 
+              onClick={handleCancelEdit}
+              disabled={isLoading}
+            >
+              Cancel
+            </button>
+            <button 
+              className="save-edit-btn" 
+              onClick={handleSaveChanges}
+              disabled={isLoading}
+            >
+              {isLoading ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        )}
       </div>
     </Modal>
   );
