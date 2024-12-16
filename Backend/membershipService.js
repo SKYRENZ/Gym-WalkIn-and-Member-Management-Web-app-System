@@ -108,7 +108,14 @@ async function generateQRCodesForExistingMembers() {
         for (const row of result.rows) {
             const membershipId = row.membership_id;
             console.log(`Generating QR code for membership ID: ${membershipId}`); // Log the membership ID being processed
-            const qrCodePath = await generateQRCode(membershipId); // Generate QR code
+
+            // Define paths for saving the QR code
+            const qrCodePathBackend = path.join(__dirname, 'qrcodes', `${membershipId}.png`);
+            const qrCodePathFrontend = path.join(__dirname, '..', 'frontend', 'public', 'images', 'qrcodes', `${membershipId}.png`);
+
+            // Generate QR code and save to both locations
+            await QRCode.toFile(qrCodePathBackend, membershipId.toString());
+            await QRCode.toFile(qrCodePathFrontend, membershipId.toString());
 
             // Update the Membership table with the QR code path
             const updateQRCodeQuery = `
@@ -116,8 +123,8 @@ async function generateQRCodesForExistingMembers() {
                 SET qr_code_path = $1
                 WHERE membership_id = $2;
             `;
-            await client.query(updateQRCodeQuery, [qrCodePath, membershipId]);
-            console.log(`QR code generated and path updated for membership ID ${membershipId}: ${qrCodePath}`);
+            await client.query(updateQRCodeQuery, [qrCodePathBackend, membershipId]);
+            console.log(`QR code generated and path updated for membership ID ${membershipId}: ${qrCodePathBackend}`);
         }
     } catch (error) {
         console.error('Error generating QR codes for existing members:', error.message); // Log the specific error
@@ -128,6 +135,7 @@ async function generateQRCodesForExistingMembers() {
         }
     }
 }
+
 module.exports = { 
     updateMembershipStatus, 
     checkInMember, 
