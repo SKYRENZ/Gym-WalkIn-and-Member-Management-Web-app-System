@@ -1,0 +1,194 @@
+/* Modal Overlay */
+.accountModalOverlay {
+    background-color: rgba(0, 0, 0, 0.75);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+}
+
+/* Modal Content */
+.accountModalContent {
+    background: white;
+    padding: 20px 30px;
+    border-radius: 8px;
+    width: 700px;
+    max-width: 90%;
+    height: 650px; /* Fixed height */
+    text-align: center;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    position: relative;
+    font-family: 'Poppins', sans-serif;
+    display: flex;
+    flex-direction: column; /* Stack elements vertically */
+}
+
+.AccountHeader {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    flex-direction: row;
+    margin-bottom: 20px; /* Add some space below the header */
+    border-bottom: 2px solid #333;
+}
+
+.accountBackButton {
+    margin-right: 10px; /* Add space between the back button and the header */
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.accountBackButton:focus {
+    outline: none;
+}
+
+.accountBackButton img {
+    width: 40px;
+    height: 40px;
+}
+
+.AccountHeader h2 {
+    margin: 0;
+    font-size: 35px;
+    font-weight: 700;
+    color: #333;
+}
+
+.accountList {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto; /* Enable vertical scrolling */
+    padding: 10px 40px; /* Add padding to the top and bottom */
+    scrollbar-width: none; /* Hide scrollbar in Firefox */
+    -ms-overflow-style: none; /* Hide scrollbar in IE and Edge */
+    height: 500px;
+}
+
+.accountList::-webkit-scrollbar {
+    display: none; /* Hide scrollbar in WebKit browsers */
+}
+
+.accountItem {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px 15px; /* Reduce padding */
+    margin-bottom: 10px; /* Reduce space between items */
+    font-size: 1rem; /* Adjust font size */
+    color: #333;
+    background-color: #efefef; /* Add background color */
+    border-radius: 5px; /* Add border radius */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Add subtle shadow */
+    position: relative; /* Position relative for absolute positioning of the button */
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.accountItem:hover {
+    background-color: #dcdcdc; /* Change background on hover */
+    border: none;
+}
+
+.accountItem:focus {
+    outline: none;
+}
+
+.accountItem.selected {
+    background-color: #333; /* Change background for selected item */
+    color: white; /* Change text color for selected item */
+}
+
+.accountModalButtons {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 10px; /* Add space between the buttons */
+    margin-top: 20px; /* Push buttons to the bottom */
+}
+
+.accountModalButtons button {
+    padding: 10px;
+    font-size: 1rem;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    background-color: #333;
+    color: white;
+    transition: background-color 0.3s ease;
+    flex: 1; /* Make buttons the same size */
+    max-width: 150px; /* Optional: Set a max width for the buttons */
+}
+
+.accountModalButtons button:disabled {
+    background-color: #cccccc; /* Change background for disabled button */
+    cursor: not-allowed; /* Change cursor for disabled button */
+}
+
+.accountModalButtons button:hover:not(:disabled) {
+    background-color: #0056b3;
+}
+
+.accountModalButtons button:focus {
+    outline: none;
+}
+
+/* Media Queries for Responsiveness */
+@media (max-width: 768px) {
+    .accountModalContent {
+        width: 90%;
+        height: 500px; /* Adjust height for smaller screens */
+        padding: 20px;
+    }
+
+    .AccountHeader h2 {
+        font-size: 28px; /* Adjust font size for smaller screens */
+    }
+
+    .accountBackButton img {
+        width: 30px;
+        height: 30px;
+    }
+
+    .accountModalButtons {
+        flex-direction: column; /* Stack buttons vertically on smaller screens */
+        gap: 10px;
+    }
+
+    .accountModalButtons button {
+        max-width: none; /* Remove max width for smaller screens */
+    }
+
+    .accountItem .editButton {
+        position: static; /* Remove absolute positioning */
+        margin-top: 10px; /* Add margin to separate from content */
+        align-self: flex-end; /* Align to the right */
+    }
+}
+
+@media (max-width: 480px) {
+    .accountModalContent {
+        width: 100%;
+        height: 500px; /* Adjust height for smaller screens */
+        padding: 15px;
+    }
+
+    .AccountHeader h2 {
+        font-size: 24px; /* Adjust font size for smaller screens */
+    }
+
+    .accountBackButton img {
+        width: 25px;
+        height: 25px;
+    }
+
+    .accountModalButtons button {
+        padding: 8px;
+        font-size: 0.9rem;
+    }
+}

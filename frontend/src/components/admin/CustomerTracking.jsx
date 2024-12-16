@@ -1,40 +1,67 @@
-import  { useEffect, useState } from 'react';
-import '../../css/admin/CustomerTracking.css';
+// src/components/admin/CustomerTracking.jsx
+import { useCustomerTracking } from '../../hooks/useCustomerTracking';
 import DatePicker from './DatePicker';
+import '../../css/admin/CustomerTracking.css';
 
 function CustomerTracking() {
-  const [customerData, setCustomerData] = useState([]);
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]); // Default to today's date
+  const { 
+    customerData, 
+    isLoading, 
+    error, 
+    setDate, 
+    formattedDate, 
+    refetch 
+  } = useCustomerTracking();
 
-  useEffect(() => {
-    const fetchCustomerData = async () => {
-      try {
-        const response = await fetch(`http://localhost:3000/customerTracking?date=${date}`);
-        console.log('Response status:', response.status); // Log the response status
-        const responseText = await response.text(); // Get the response text
-        console.log('Response body:', responseText); // Log the response body
-    
-        if (!response.ok) {
-          throw new Error(`Network response was not ok: ${response.status} - ${responseText}`);
-        }
-    
-        const data = JSON.parse(responseText); // Parse the response text as JSON
-        console.log('Fetched customer data:', data);
-        setCustomerData(data);
-      } catch (error) {
-        console.error('Error fetching customer data:', error);
-      }
-    };
+  const renderHeader = () => (
+    <div className="member-tracking-header">
+      <h1>Customer Tracking</h1>
+      <span className="current-date">{formattedDate}</span>
+      <DatePicker setDate={setDate} />
+    </div>
+  );
 
-    fetchCustomerData();
-  }, [date]); // Fetch data whenever the date changes
+  // Render loading state
+  if (isLoading) {
+    return (
+      <div className="member-tracking">
+        {renderHeader()}
+        <div className="loading-container">
+          Loading customer data...
+        </div>
+      </div>
+    );
+  }
 
+  // Render error state
+  if (error) {
+    return (
+      <div className="member-tracking">
+        {renderHeader()}
+        <div className="error-container">
+          <p>Error loading data: {error}</p>
+          <button onClick={refetch}>Retry</button>
+        </div>
+      </div>
+    );
+  }
+
+  // Render empty state
+  if (!Array.isArray(customerData) || customerData.length === 0) {
+    return (
+      <div className="member-tracking">
+        {renderHeader()}
+        <div className="empty-container">
+          <p>No customer data found for the selected date.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Main render
   return (
     <div className="member-tracking">
-      <div className="member-tracking-header">
-        <h1>Customer Tracking</h1>
-        <DatePicker setDate={setDate} /> {/* Pass setDate to DatePicker to update the date */}
-      </div>
+      {renderHeader()}
       <table className="member-tracking-table">
         <thead>
           <tr>
@@ -50,11 +77,14 @@ function CustomerTracking() {
               <td>{customer.name}</td>
               <td>{customer.timestamp}</td>
               <td>{customer.role}</td>
-              <td>{customer.payment || 'N/A'}</td>
+              <td>{customer.payment ? `₱${parseFloat(customer.payment).toFixed(2)}` : 'N/A'}</td>
             </tr>
           ))}
         </tbody>
       </table>
+      <div className="table-footer">
+        <p>Total Entries: {customerData.length}</p>
+      </div>
     </div>
   );
 }

@@ -1,0 +1,175 @@
+.voucherModalOverlay {
+    background-color: rgba(0, 0, 0, 0.75);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1000;
+}
+
+.voucherModalContent {
+    background: white;
+    padding: 20px 30px;
+    border-radius: 8px;
+    width: 700px;
+    max-width: 90%;
+    height: 650px; /* Fixed height */
+    text-align: center;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    position: relative;
+    font-family: 'Poppins', sans-serif;
+    display: flex;
+    flex-direction: column; /* Stack elements vertically */
+}
+
+.VoucherHeader {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    flex-direction: row;
+    margin-bottom: 20px; /* Add some space below the header */
+    border-bottom: 2px solid #333;
+}
+
+.voucherBackButton {
+    margin-right: 10px; /* Add space between the back button and the header */
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.voucherBackButton:focus {
+    outline: none;
+}
+
+.voucherBackButton img {
+    width: 40px;
+    height: 40px;
+}
+
+.VoucherHeader h2 {
+    margin: 0;
+    font-size: 35px;
+    font-weight: 700;
+    color: #333;
+}
+
+.voucherList {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto; /* Enable vertical scrolling */
+    padding: 10px 40px; /* Add padding to the top and bottom */
+    scrollbar-width: none; /* Hide scrollbar in Firefox */
+    -ms-overflow-style: none; /* Hide scrollbar in IE and Edge */
+    height: 500px;
+}
+
+.voucherList::-webkit-scrollbar {
+    display: none; /* Hide scrollbar in WebKit browsers */
+}
+
+.voucherItem {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px 15px; /* Reduce padding */
+    margin-bottom: 10px; /* Reduce space between items */
+    font-size: 1rem; /* Adjust font size */
+    color: #333;
+    background-color: #efefef; /* Add background color */
+    border-radius: 5px; /* Add border radius */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Add subtle shadow */
+    position: relative; /* Position relative for absolute positioning of the button */
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.voucherItem:hover {
+    background-color: #dcdcdc; /* Change background on hover */
+    border: none;
+}
+
+.voucherItem:focus {
+    outline: none;
+}
+
+.voucherItem.selected {
+    background-color: #333; /* Change background for selected item */
+    color: white; /* Change text color for selected item */
+}
+
+.moreInfoBtn {
+    padding: 10px 50px;
+    font-size: 1rem;
+    border-radius: 25px;
+    background-color: #333;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    align-self: center; /* Align the button to the center */
+    margin-top: auto; /* Push the button to the bottom */
+}
+
+.moreInfoBtn:disabled {
+    background-color: #cccccc; /* Change background for disabled button */
+    border: none;
+    cursor: not-allowed; /* Change cursor for disabled button */
+}
+
+.moreInfoBtn:focus {
+    outline: none;
+}
+
+.moreInfoBtn:hover:not(:disabled) {
+    background-color: #0056b3;
+    border: none;
+}
+
+/* Media Queries for Responsiveness */
+@media (max-width: 768px) {
+    .voucherModalContent {
+        width: 90%;
+        height: 500px; /* Adjust height for smaller screens */
+        padding: 20px;
+    }
+
+    .VoucherHeader h2 {
+        font-size: 28px; /* Adjust font size for smaller screens */
+    }
+
+    .voucherBackButton img {
+        width: 30px;
+        height: 30px;
+    }
+
+    .moreInfoBtn {
+        padding: 8px 30px; /* Adjust padding for smaller screens */
+        font-size: 0.9rem; /* Adjust font size for smaller screens */
+    }
+}
+
+@media (max-width: 480px) {
+    .voucherModalContent {
+        width: 100%;
+        height: 500px; /* Adjust height for smaller screens */
+        padding: 15px;
+    }
+
+    .VoucherHeader h2 {
+        font-size: 24px; /* Adjust font size for smaller screens */
+    }
+
+    .voucherBackButton img {
+        width: 25px;
+        height: 25px;
+    }
+
+    .moreInfoBtn {
+        padding: 8px 20px; /* Adjust padding for smaller screens */
+        font-size: 0.8rem; /* Adjust font size for smaller screens */
+    }
+}

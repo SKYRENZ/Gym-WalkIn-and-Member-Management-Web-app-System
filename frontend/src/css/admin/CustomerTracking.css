@@ -4,30 +4,37 @@
   flex-grow: 1;
   align-items: flex-start;
   justify-content: flex-start;
-  font-family: 'poppins', sans-serif;
-  color: #000000;
+  font-family: 'Poppins', sans-serif;
+  color: #333;
   background-color: #ffffff;
-  box-shadow: 5px 5px 4px rgba(0, 0, 0, 0.1);
-  margin-top: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Adjusted drop shadow */
+  margin-top: 10px;
   border-radius: 10px;
   padding: 10px 40px;
   margin-left: 20px;
-  width: 100%;
+  width: calc(100% - 40px); /* Adjust width to account for padding */
 }
 
+.current-date {
+  margin: 0 10px;
+  font-size: 14px;
+  white-space: nowrap;
+}
 .member-tracking-header {
   display: flex;
-  flex-direction: row;
   justify-content: space-between;
   align-items: center;
   width: 100%;
   margin-bottom: 10px;
-  margin-left: auto;
+  white-space: nowrap; /* Prevent wrapping */
+  overflow: hidden; /* Hide overflow */
+  text-overflow: ellipsis; /* Add ellipsis if text is too long */
 }
 
 .member-tracking h1 {
   font-size: 30px;
   font-weight: 700;
+  color: #333;
 }
 
 .member-tracking-table {
@@ -41,13 +48,11 @@
 .member-tracking-table th, .member-tracking-table td {
   padding: 8px;
   text-align: left;
-  justify-content: flex-start;
 }
 
 .member-tracking-table th {
   font-weight: 600;
-  border-bottom: 10px solid #000000;
-  border-width: 1px;
+  border-bottom: 1px solid #ddd; /* Changed to a lighter border */
 }
 
 .member-tracking-table td {
@@ -75,6 +80,7 @@
   .member-tracking {
     padding: 10px 20px;
     margin-left: 0;
+    width: calc(100% - 20px); /* Adjust width for smaller screens */
   }
 
   .member-tracking-header {
@@ -94,6 +100,7 @@
 @media (max-width: 480px) {
   .member-tracking {
     padding: 5px 10px;
+    width: calc(100% - 10px); /* Further adjust width for very small screens */
   }
 
   .member-tracking h1 {

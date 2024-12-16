@@ -1,41 +1,61 @@
 import { useState } from "react";
-import "../css/login/login.css"; // Make sure the path is correct
-import logo from "../assets/gym-logo.png"; // Correct image import
-import { FaEye, FaEyeSlash } from "react-icons/fa"; // Import icons for showing/hiding password
+import { useNavigate } from "react-router-dom";
+import "../css/login/login.css";
+import logo from "../assets/gym-logo.png";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [password, setPassword] = useState(''); // State for password
+  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
+
   const handleLogin = async (e) => {
     e.preventDefault();
-    console.log('Attempting to log in with password:', password); // Log the password
+    console.log('Attempting to log in with password:', password);
 
     // Construct the API URL
     const apiUrl = `${import.meta.env.VITE_API_URL}/staffLogin`;
-    console.log('Fetching:', apiUrl); // Log the full URL
+    console.log('Fetching:', apiUrl);
 
-    const response = await fetch(apiUrl, {
+    try {
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/json',
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ password }),
-    });
+      });
 
-    console.log('Response status:', response.status); // Log the response status
+      console.log('Response status:', response.status);
 
-    if (response.ok) {
-        window.location.href = '/admin';
-    } else {
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Store session information
+        localStorage.setItem('staffToken', data.staff.staff_id);
+        localStorage.setItem('staffRole', data.staff.role);
+        
+        // Navigate based on role
+        if (data.staff.role === 'admin') {
+          navigate('/admin');
+        } else if (data.staff.role === 'receptionist') {
+          navigate('/counter');
+        }
+      } else {
         const errorData = await response.json();
-        console.error('Login error:', errorData.error); // Log the error
+        console.error('Login error:', errorData.error);
         alert(errorData.error);
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      alert('An error occurred during login');
     }
-};
+  };
+
 
 return (
   <div className="login-page">

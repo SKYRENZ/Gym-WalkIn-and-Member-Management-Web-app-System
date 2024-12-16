@@ -1,0 +1,53 @@
+.activateAccountModalOverlay {
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1100; /* Ensure this is higher than the AccountModal */
+    padding: 10px;
+}
+
+.activateAccountModalContent {
+    background: white;
+    color: #333;
+    padding: 20px 30px;
+    border-radius: 8px;
+    width: 500px;
+    max-width: 90%;
+    text-align: center;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    position: relative;
+    font-family: 'Poppins', sans-serif;
+    display: flex;
+    flex-direction: column; /* Stack elements vertically */
+}
+
+.activateAccountButtons {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+}
+
+.activateAccountButtons button {
+    padding: 10px 20px;
+    font-size: 1rem;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    background-color: #333;
+    color: white;
+    transition: background-color 0.3s ease;
+}
+
+.activateAccountButtons button:hover {
+    background-color: #0056b3;
+}
+
+.activateAccountButtons button:focus {
+    outline: none;
+}

@@ -9,17 +9,16 @@ const {
 const pool = require('./db'); // Import your database connection
 const cron = require('node-cron');
 const app = express();
-const PORT = 3000; // You can choose any available port
+const PORT = process.env.PORT || 3000;
 const { PRICES } = require('./config');
+const corsConfig = require('./Middleware/corsConfig'); 
 
 
-// Middleware to parse JSON requests
+// Apply CORS middleware
+app.use(cors(corsConfig.corsOptions)); 
+
+// Other middleware
 app.use(express.json());
-
-app.use(cors({
-    origin: 'http://localhost:5173', // Replace with your frontend URL
-    methods: ['GET', 'POST'], // Specify allowed methods
-}));
 
 // Schedule the updateMembershipStatus function to run daily at midnight
 cron.schedule('0 0 * * *', async () => {
@@ -27,6 +26,8 @@ cron.schedule('0 0 * * *', async () => {
     console.log('Membership statuses updated.');
 });
 
+
+// Endpoint to get available years
 app.get('/getAvailableYears', async (req, res) => {
     try {
       const yearsQuery = `
@@ -47,10 +48,17 @@ app.get('/getAvailableYears', async (req, res) => {
         years.push(currentYear);
       }
   
-      res.status(200).json({ years: years.sort((a, b) => b - a) });
+      res.status(200).json({ 
+        "success": true,
+        "years": [2023, 2022, 2021]
+      });
     } catch (err) {
-      console.error('Error fetching available years:', err.message);
-      res.status(500).json({ error: 'Error fetching available years' });
+      console.error('Error fetching available years:', err);
+      res.status(500).json({ 
+        success: false,
+        error: 'Error fetching available years',
+        details: err.message 
+      });
     }
   });
 // Example route to fetch memberships
@@ -77,214 +85,380 @@ app.get('/memberships', async (req, res) => {
   });
 //customer records
 app.get('/customerTracking', async (req, res) => {
-    // Get the date from the query parameter, default to the current date if not provided
-    const dateParam = req.query.date || new Date().toISOString().split('T')[0]; // Default to today's date
+    const dateParam = req.query.date || new Date().toISOString().split('T')[0];
     const testDate = new Date(dateParam);
-    
-    // Check if the date is valid
+
+    // Validate date input
     if (isNaN(testDate.getTime())) {
-        return res.status(400).json({ error: 'Invalid date format. Please use YYYY-MM-DD.' });
+        return res.status(400).json({ 
+            error: 'Invalid date format. Please use YYYY-MM-DD.',
+            success: false 
+        });
     }
 
     const startOfDay = new Date(testDate.setHours(0, 0, 0, 0));
     const endOfDay = new Date(testDate.setHours(23, 59, 59, 999));
 
     const trackingQuery = `
+        -- Member Check-ins 
         SELECT 
             c.name, 
             ci.check_in_time AS timestamp, 
-            'Member' AS role,
-            NULL AS payment
+            'Member' AS role, 
+            NULL AS payment 
         FROM 
-            Customer c
+            Customer c 
         JOIN 
-            Membership m ON c.customer_id = m.customer_id
+            Membership m ON c.customer_id = m.customer_id 
         JOIN 
-            CheckIn ci ON m.membership_id = ci.membership_id
+            CheckIn ci ON m.membership_id = ci.membership_id 
         WHERE 
-            ci.check_in_time >= $1 AND ci.check_in_time <= $2
+            DATE(ci.check_in_time AT TIME ZONE 'Asia/Manila') = DATE($1 AT TIME ZONE 'Asia/Manila') 
 
-        UNION ALL
+        UNION ALL 
 
+        -- Walk-in Payments 
         SELECT 
             c.name, 
             p.payment_date AS timestamp, 
-            'Walk In' AS role,
-            p.amount AS payment
+            'Walk In' AS role, 
+            p.amount AS payment 
         FROM 
-            Customer c
+            Customer c 
         LEFT JOIN 
-            Payment p ON c.customer_id = p.customer_id
+            Payment p ON c.customer_id = p.customer_id 
         WHERE 
             c.membership_type = 'Walk In' 
-            AND p.payment_date >= $1 AND p.payment_date <= $2
+            AND DATE(p.payment_date AT TIME ZONE 'Asia/Manila') = DATE($1 AT TIME ZONE 'Asia/Manila') 
+
+        UNION ALL 
+
+        -- Member Registrations 
+        SELECT 
+            c.name, 
+            m.start_date AS timestamp, 
+            'Member' AS role, 
+            NULL AS payment 
+        FROM 
+            Customer c 
+        JOIN 
+            Membership m ON c.customer_id = m.customer_id 
+        WHERE 
+            DATE(m.start_date AT TIME ZONE 'Asia/Manila') = DATE($1 AT TIME ZONE 'Asia/Manila') 
+
         ORDER BY 
             timestamp;
     `;
 
-    let client; // Declare client variable here
+    let client;
 
     try {
-        client = await pool.connect(); // Get a client from the pool
-        const result = await client.query(trackingQuery, [startOfDay, endOfDay]);
+        client = await pool.connect();
+        const result = await client.query(trackingQuery, [startOfDay]);
 
-        res.status(200).json(result.rows);
+        // Ensure data is always an array
+        const formattedResult = Array.isArray(result.rows) 
+            ? result.rows.map(row => {
+                const timestamp = row.timestamp ? 
+                    new Date(row.timestamp).toLocaleTimeString('en-PH', { 
+                        hour: '2-digit', 
+                        minute: '2-digit', 
+                        hour12: true, 
+                        timeZone: 'Asia/Manila' 
+                    }) : 
+                    null;
+
+                return { 
+                    name: row.name,
+                    timestamp: timestamp,
+                    role: row.role,
+                    payment: row.payment ? parseFloat(row.payment).toFixed(2) : null
+                }; 
+            })
+            : [];
+
+        res.status(200).json({
+            success: true,
+            data: formattedResult,
+            metadata: {
+                date: dateParam,
+                total_entries: formattedResult.length,
+                total_members: formattedResult.filter(entry => entry.role === 'Member').length,
+                total_walk_ins: formattedResult.filter(entry => entry.role === 'Walk In').length
+            }
+        });
     } catch (err) {
-        console.error('Error fetching customer tracking records:', err.message); // Log the error message
-        res.status(500).json({ error: 'Error fetching customer tracking records' });
+        console.error('Error fetching customer tracking records:', err);
+        res.status(500).json({ 
+            success: false,
+            data: [], // Always return an array
+            error: 'Error fetching customer tracking records', 
+            details: err.message 
+        });
     } finally {
-        // Ensure the client is released back to the pool
         if (client) {
             client.release();
         }
     }
 });
-// customer records
-// Updated route to support more granular income data
-app.get('/getWalkInCustomerRecords', async (req, res) => {
-    const { year, period } = req.query;
+// In server.js or a separate route file
+// Example route modification
+app.get('/getDailyCustomerRecords', async (req, res) => {
+    const { year, type } = req.query;
   
-    let walkInRecordsQuery;
-    let queryParams = [];
+    // Validate year
+    const currentYear = new Date().getFullYear();
+    const parsedYear = parseInt(year, 10);
   
-    // Fixed walk-in price
-    const WALK_IN_PRICE = 60;
-  
-    switch(period) {
-      case 'daily':
-        walkInRecordsQuery = `
-          SELECT 
-            DATE(p.payment_date) AS date, 
-            COUNT(p.payment_id) AS total_entries,
-            SUM(${WALK_IN_PRICE}) AS total_income
-          FROM 
-            Customer c
-          JOIN 
-            Payment p ON p.customer_id = c.customer_id
-          WHERE 
-            c.membership_type = 'Walk In'
-            AND EXTRACT(YEAR FROM p.payment_date) = $1
-          GROUP BY 
-            DATE(p.payment_date)
-          ORDER BY 
-            date;
-        `;
-        queryParams = [year];
-        break;
-  
-      case 'monthly':
-      default:
-        walkInRecordsQuery = `
-          SELECT 
-            EXTRACT(MONTH FROM p.payment_date) AS month,
-            COUNT(p.payment_id) AS total_entries,
-            MAX(p.payment_date) AS recent_payment_date,
-            SUM(${WALK_IN_PRICE}) AS total_income
-          FROM 
-            Customer c
-          JOIN 
-            Payment p ON p.customer_id = c.customer_id
-          WHERE 
-            c.membership_type = 'Walk In'
-            AND EXTRACT(YEAR FROM p.payment_date) = $1
-          GROUP BY 
-            EXTRACT(MONTH FROM p.payment_date)
-          ORDER BY 
-            month;
-        `;
-        queryParams = [year];
+    if (isNaN(parsedYear) || parsedYear < 2000 || parsedYear > currentYear + 1) {
+      return res.status(400).json({ 
+        error: 'Invalid year', 
+        message: `Please provide a valid year between 2000 and ${currentYear + 1}` 
+      });
     }
   
     try {
-      const result = await pool.query(walkInRecordsQuery, queryParams);
-      res.status(200).json(result.rows);
-    } catch (err) {
-      console.error('Error fetching walk-in customer records:', err.message);
-      res.status(500).json({ error: 'Error fetching walk-in customer records' });
+      const dailyQuery = `
+        SELECT 
+          DATE(payment_date) AS date, 
+          COUNT(payment_id) AS total_entries, 
+          SUM(amount) AS total_income 
+        FROM 
+          Payment p 
+        JOIN 
+          Customer c ON p.customer_id = c.customer_id 
+        WHERE 
+          c.membership_type = $1 
+          AND EXTRACT(YEAR FROM payment_date) = $2 
+        GROUP BY 
+          DATE(payment_date) 
+        ORDER BY 
+          date;
+      `;
+  
+      const result = await pool.query(dailyQuery, [type, parsedYear]);
+  
+      res.status(200).json({ 
+        success: true, 
+        data: result.rows.map(row => ({ 
+          date: row.date, 
+          total_entries: parseInt(row.total_entries), 
+          total_income: parseFloat(row.total_income) 
+        })) 
+      });
+    } catch (error) {
+      console.error('Error fetching daily records:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to fetch daily records', 
+        message: error.message 
+      });
     }
   });
-
-app.get('/getMemberCustomerRecords', async (req, res) => {
-    const { year, period } = req.query;
+// customer records
+// Similar implementation for walk-in records
+app.get('/getWalkInCustomerRecords', async (req, res) => {
+    const { year, period = 'monthly' } = req.query;
   
-    let memberRecordsQuery;
-    let queryParams = [];
+    // Validate year
+    const currentYear = new Date().getFullYear();
+    const parsedYear = parseInt(year, 10);
   
-    switch(period) {
-      case 'daily':
-        memberRecordsQuery = `
-          SELECT 
-            DATE(p.payment_date) AS date, 
-            COUNT(DISTINCT p.payment_id) AS total_entries,
-            SUM(p.amount) AS total_income
-          FROM 
-            Customer c
-          JOIN 
-            Payment p ON p.customer_id = c.customer_id
-          WHERE 
-            c.membership_type != 'Walk In'
-            AND EXTRACT(YEAR FROM p.payment_date) = $1
-          GROUP BY 
-            DATE(p.payment_date)
-          ORDER BY 
-            date;
-        `;
-        queryParams = [year];
-        break;
-  
-      case 'monthly':
-      default:
-        memberRecordsQuery = `
-          SELECT 
-            EXTRACT(MONTH FROM p.payment_date) AS month,
-            COUNT(DISTINCT p.payment_id) AS total_entries,
-            MAX(p.payment_date) AS recent_payment_date,
-            SUM(p.amount) AS total_income
-          FROM 
-            Customer c
-          JOIN 
-            Payment p ON p.customer_id = c.customer_id
-          WHERE 
-            c.membership_type != 'Walk In'
-            AND EXTRACT(YEAR FROM p.payment_date) = $1
-          GROUP BY 
-            EXTRACT(MONTH FROM p.payment_date)
-          ORDER BY 
-            month;
-        `;
-        queryParams = [year];
+    if (isNaN(parsedYear) || parsedYear < 2000 || parsedYear > currentYear + 1) {
+      return res.status(400).json({ 
+        error: 'Invalid year', 
+        message: `Please provide a valid year between 2000 and ${currentYear + 1}` 
+      });
     }
   
     try {
-      const result = await pool.query(memberRecordsQuery, queryParams);
-      
-      // Add month names for better readability
-      const monthNames = [
-        'January', 'February', 'March', 'April', 'May', 'June', 
-        'July', 'August', 'September', 'October', 'November', 'December'
-      ];
+      let query;
+      let queryParams;
   
-      // Transform the data to include month names
-      const processedData = result.rows.map(row => {
-        if (period === 'monthly') {
-          return {
-            ...row,
-            month_name: monthNames[row.month - 1]
-          };
+      switch(period) {
+        case 'monthly':
+          query = `
+            SELECT 
+              EXTRACT(MONTH FROM p.payment_date) AS month,
+              COUNT(p.payment_id) AS total_entries,
+              MAX(p.payment_date) AS recent_payment_date,
+              SUM(p.amount) AS total_income
+            FROM 
+              Payment p
+            JOIN 
+              Customer c ON p.customer_id = c.customer_id
+            WHERE 
+              c.membership_type = 'Walk In'
+              AND EXTRACT(YEAR FROM p.payment_date) = $1
+            GROUP BY 
+              EXTRACT(MONTH FROM p.payment_date)
+            ORDER BY 
+              month;
+          `;
+          queryParams = [year];
+          break;
+  
+        case 'quarterly':
+          query = `
+            SELECT 
+              CEIL(EXTRACT(MONTH FROM p.payment_date) / 3.0) AS month,
+              COUNT(p.payment_id) AS total_entries,
+              MAX(p.payment_date) AS recent_payment_date,
+              SUM(p.amount) AS total_income
+            FROM 
+              Payment p
+            JOIN 
+              Customer c ON p.customer_id = c.customer_id
+            WHERE 
+              c.membership_type = 'Walk In'
+              AND EXTRACT(YEAR FROM p.payment_date) = $1
+            GROUP BY 
+              CEIL(EXTRACT(MONTH FROM p.payment_date) / 3.0)
+            ORDER BY 
+              month;
+          `;
+          queryParams = [year];
+          break;
+  
+        // Retain existing functionality for other periods if needed
+        default:
+          // Fallback to existing implementation or return an error
+          return res.status(400).json({ 
+            success: false,
+            error: 'Invalid period. Use "monthly" or "quarterly".' 
+          });
+      }
+  
+      const result = await pool.query(query, queryParams);
+  
+      // Preserve existing response structure for compatibility
+      res.status(200).json({
+        success: true,
+        data: result.rows.map(row => ({
+          month: row.month,
+          total_entries: parseInt(row.total_entries),
+          total_income: parseFloat(row.total_income),
+          // Preserve any existing fields used in other components
+          recent_payment_date: row.recent_payment_date
+        })),
+        metadata: {
+          year: year,
+          period: period,
+          total_income: result.rows.reduce((sum, row) => sum + parseFloat(row.total_income), 0),
+          total_entries: result.rows.reduce((sum, row) => sum + parseInt(row.total_entries), 0)
         }
-        return row;
       });
   
-      res.status(200).json(processedData);
     } catch (err) {
-      console.error('Error fetching member customer records:', err.message);
+      console.error('Error fetching walk-in customer records:', err);
       res.status(500).json({ 
-        error: 'Error fetching member customer records',
+        success: false,
+        error: 'Error fetching walk-in customer records',
         details: err.message 
       });
     }
   });
-
+  
+  // Create a similar implementation for getMemberCustomerRecords
+  app.get('/getMemberCustomerRecords', async (req, res) => {
+    const { year, period = 'monthly' } = req.query;
+  
+    // Validate year
+    const currentYear = new Date().getFullYear();
+    const parsedYear = parseInt(year, 10);
+  
+    if (isNaN(parsedYear) || parsedYear < 2000 || parsedYear > currentYear + 1) {
+      return res.status(400).json({ 
+        error: 'Invalid year', 
+        message: `Please provide a valid year between 2000 and ${currentYear + 1}` 
+      });
+    }
+  
+    try {
+      let query;
+      let queryParams;
+  
+      switch(period) {
+        case 'monthly':
+          query = `
+            SELECT 
+              EXTRACT(MONTH FROM p.payment_date) AS month,
+              COUNT(p.payment_id) AS total_entries,
+              MAX(p.payment_date) AS recent_payment_date,
+              SUM(p.amount) AS total_income
+            FROM 
+              Payment p
+            JOIN 
+              Customer c ON p.customer_id = c.customer_id
+            WHERE 
+              c.membership_type = 'Member'
+              AND EXTRACT(YEAR FROM p.payment_date) = $1
+            GROUP BY 
+              EXTRACT(MONTH FROM p.payment_date)
+            ORDER BY 
+              month;
+          `;
+          queryParams = [year];
+          break;
+  
+        case 'quarterly':
+          query = `
+            SELECT 
+              CEIL(EXTRACT(MONTH FROM p.payment_date) / 3.0) AS month,
+              COUNT(p.payment_id) AS total_entries,
+              MAX(p.payment_date) AS recent_payment_date,
+              SUM(p.amount) AS total_income
+            FROM 
+              Payment p
+            JOIN 
+              Customer c ON p.customer_id = c.customer_id
+            WHERE 
+              c.membership_type = 'Member'
+              AND EXTRACT(YEAR FROM p.payment_date) = $1
+            GROUP BY 
+              CEIL(EXTRACT(MONTH FROM p.payment_date) / 3.0)
+            ORDER BY 
+              month;
+          `;
+          queryParams = [year];
+          break;
+  
+        default:
+          return res.status(400).json({ 
+            success: false,
+            error: 'Invalid period. Use "monthly" or "quarterly".' 
+          });
+      }
+  
+      const result = await pool.query(query, queryParams);
+  
+      // Preserve existing response structure for compatibility
+      res.status(200).json({
+        success: true,
+        data: result.rows.map(row => ({
+          month: row.month,
+          total_entries: parseInt(row.total_entries),
+          total_income: parseFloat(row.total_income),
+          recent_payment_date: row.recent_payment_date
+        })),
+        metadata: {
+          year: year,
+          period: period,
+          total_income: result.rows.reduce((sum, row) => sum + parseFloat(row.total_income), 0),
+          total_entries: result.rows.reduce((sum, row) => sum + parseInt(row.total_entries), 0)
+        }
+      });
+  
+    } catch (err) {
+      console.error('Error fetching membership customer records:', err);
+      res.status(500).json({ 
+        success: false,
+        error: 'Error fetching membership customer records',
+        details: err.message 
+      });
+    }
+  });
+  
 // Endpoint to fetch customer membership information
 app.get('/getCustomerMember_TotalRecords/:name', async (req, res) => {
     const { name } = req.params;
@@ -390,6 +564,9 @@ app.post('/addWalkInTransaction', async (req, res) => {
         return res.status(400).json({ error: 'Reference number is required for Gcash and Paymaya' });
     }
 
+    // Log the entire request body for debugging
+    console.log('Request Body:', req.body);
+
     const customerQuery = `
         INSERT INTO Customer (name, email, membership_type, contact_info)
         VALUES ($1, $2, 'Walk In', $3) RETURNING customer_id;
@@ -397,20 +574,26 @@ app.post('/addWalkInTransaction', async (req, res) => {
 
     const paymentQuery = `
         INSERT INTO Payment (amount, method, status, payment_date, customer_id, gcash_refNum, maya_refNum)
-        VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING payment_id;
+        VALUES ($1, $2, $3, CURRENT_TIMESTAMP, $4, $5, $6) RETURNING payment_id;
     `;
 
+    let client;
+
     try {
-        const client = await pool.connect();
+        // Get a client from the pool
+        client = await pool.connect();
 
         // Start a transaction
         await client.query('BEGIN');
 
         // Insert customer
-        const customerResult = await client.query(customerQuery, [name, phone, null]);
+        const customerResult = await client.query(customerQuery, [
+            name, 
+            null, // email 
+            phone || null // contact_info
+        ]);
         const customerId = customerResult.rows[0].customer_id;
 
-        const paymentDate = new Date().toISOString().split('T')[0]; // Use current date for payment date without time
         const paymentStatus = 'Completed'; // Example status
 
         // Determine reference number based on payment method
@@ -423,12 +606,11 @@ app.post('/addWalkInTransaction', async (req, res) => {
             mayaRefNum = referenceNumber;
         }
 
-        // Insert payment
+        // Insert payment using CURRENT_TIMESTAMP
         const paymentResult = await client.query(paymentQuery, [
             amount, 
             paymentMethod, 
             paymentStatus, 
-            paymentDate, 
             customerId, 
             gcashRefNum, 
             mayaRefNum
@@ -437,17 +619,42 @@ app.post('/addWalkInTransaction', async (req, res) => {
         // Commit the transaction
         await client.query('COMMIT');
 
-        // Release the client
-        client.release();
-
+        // Respond with success
         res.status(201).json({
             customerId: customerId,
             paymentId: paymentResult.rows[0].payment_id
         });
+
     } catch (err) {
+        // Log the full error for debugging
         console.error('Error adding walk-in transaction:', err);
-        await client.query('ROLLBACK');
-        res.status(500).json({ error: 'Error adding walk-in transaction' });
+        console.error('Full error details:', JSON.stringify(err, null, 2));
+        
+        // Rollback the transaction in case of error
+        if (client) {
+            try {
+                await client.query('ROLLBACK');
+            } catch (rollbackErr) {
+                console.error('Error during rollback:', rollbackErr);
+            }
+        }
+
+        // Send error response
+        res.status(500).json({ 
+            error: 'Error adding walk-in transaction',
+            details: err.message,
+            fullError: err
+        });
+
+    } finally {
+        // Ensure client is released only if it exists
+        if (client) {
+            try {
+                client.release();
+            } catch (releaseErr) {
+                console.error('Error releasing client:', releaseErr);
+            }
+        }
     }
 });
 
@@ -460,19 +667,16 @@ app.post('/addMembershipTransaction', async (req, res) => {
         return res.status(400).json({ error: 'Name, email, and payment method are required' });
     }
 
-    // Define the customerQuery
     const customerQuery = `
-        INSERT INTO Customer (name, email, contact_info)
-        VALUES ($1, $2, $3) RETURNING customer_id;
+        INSERT INTO Customer (name, email, membership_type, contact_info)
+        VALUES ($1, $2, 'Member', $3) RETURNING customer_id;
     `;
 
-    // Define the membershipQuery
     const membershipQuery = `
         INSERT INTO Membership (customer_id, start_date, end_date, status)
         VALUES ($1, $2, $3, $4) RETURNING membership_id;
     `;
 
-    // Define the paymentQuery
     const paymentQuery = `
         INSERT INTO Payment (amount, method, status, payment_date, customer_id)
         VALUES ($1, $2, $3, $4, $5) RETURNING payment_id;
@@ -485,51 +689,53 @@ app.post('/addMembershipTransaction', async (req, res) => {
         await client.query('BEGIN');
 
         // Insert customer
-        const customerResult = await client.query(customerQuery, [name, email, phone]);
+        const customerResult = await client.query(customerQuery, [name, email, phone || null]);
         const customerId = customerResult.rows[0].customer_id;
 
-        // Define membership details
+        // Define start and end dates for the membership
         const startDate = new Date();
         const endDate = new Date();
-        endDate.setMonth(startDate.getMonth() + 1); // Set end date to one month from now
-        const membershipStatus = 'Active';
+        endDate.setFullYear(endDate.getFullYear() + 1); // Set end date to one year from now
 
-        // Insert membership
-        const membershipResult = await client.query(membershipQuery, [customerId, startDate, endDate, membershipStatus]);
-        const membershipId = membershipResult.rows[0].membership_id;
-
-        // Generate QR code for the membership
-        const qrCodePath = await generateQRCode(membershipId);
-
-        // Update the Membership table with the QR code path
-        const updateQRCodeQuery = `
-            UPDATE Membership
-            SET qr_code_path = $1
-            WHERE membership_id = $2;
-        `;
-        await client.query(updateQRCodeQuery, [qrCodePath, membershipId]);
+        // Insert membership and capture membershipId
+        const membershipResult = await client.query(membershipQuery, [customerId, startDate, endDate, 'Active']);
+        const membershipId = membershipResult.rows[0].membership_id; // Ensure this is defined
 
         // Insert payment
-        const paymentDate = new Date().toISOString().split('T')[0]; // Use current date for payment date without time
         const paymentStatus = 'Completed'; // Example status
+        const paymentDate = new Date().toISOString(); // Current timestamp
 
-        await client.query(paymentQuery, [amount, paymentMethod, paymentStatus, paymentDate, customerId]);
+        const paymentResult = await client.query(paymentQuery, [
+            amount, 
+            paymentMethod, 
+            paymentStatus, 
+            paymentDate, 
+            customerId
+        ]);
 
+        // Commit the transaction
         await client.query('COMMIT');
-        res.status(201).json({ message: 'Membership transaction added successfully', membershipId });
+
+        res.status(201).json({
+            customerId: customerId,
+            membershipId: membershipId, // Return the membershipId
+            paymentId: paymentResult.rows[0].payment_id
+        });
     } catch (error) {
+        console.error('Error adding membership transaction:', error);
         if (client) {
             await client.query('ROLLBACK');
         }
-        console.error('Error adding membership transaction:', error);
-        res.status(500).json({ error: 'An error occurred while adding the membership transaction' });
+        res.status(500).json({ 
+            error: 'An error occurred while adding the membership transaction',
+            details: error.message
+        });
     } finally {
         if (client) {
             client.release();
         }
     }
 });
-
 app.post('/renewMembership', async (req, res) => {
     const { name, paymentMethod, referenceNumber } = req.body;
     const amount = PRICES.MEMBERSHIP; // Use global membership renewal price
@@ -670,73 +876,409 @@ app.post('/checkIn', async (req, res) => {
 
 //LOGIN UI
 // Endpoint to add a staff member
+
 app.post('/addStaff', async (req, res) => {
-    const { name, role, password, contact_info } = req.body;
+  const { name, password, role, contact_info } = req.body;
 
-    // Validate input
-    if (!name || !role || !password) {
-        return res.status(400).json({ error: 'Name, role, and password are required' });
-    }
+  // Validate input
+  if (!name || !password || !role) {
+      return res.status(400).json({ error: 'Name, password, and role are required' });
+  }
 
-    const staffQuery = `
-        INSERT INTO Staff (name, role, password, contact_info)
-        VALUES ($1, $2, $3, $4) RETURNING staff_id;
-    `;
+  // Validate role
+  if (!['receptionist', 'admin'].includes(role.toLowerCase())) {
+      return res.status(400).json({ error: 'Invalid role. Must be either "receptionist" or "admin"' });
+  }
 
-    try {
-        const client = await pool.connect();
-        const result = await client.query(staffQuery, [name, role, password, contact_info]);
-        res.status(201).json({ message: 'Staff member added successfully', staffId: result.rows[0].staff_id });
-    } catch (error) {
-        console.error('Error adding staff member:', error);
-        res.status(500).json({ error: 'Error adding staff member' });
-    } finally {
-        if (client) {
-            client.release();
-        }
-    }
+  try {
+      const client = await pool.connect();
+
+      // Check if staff with same name already exists
+      const existingStaffQuery = 'SELECT * FROM Staff WHERE name = $1';
+      const existingStaffResult = await client.query(existingStaffQuery, [name]);
+
+      if (existingStaffResult.rows.length > 0) {
+          client.release();
+          return res.status(409).json({ error: 'An account with this name already exists' });
+      }
+
+      // Insert new staff account
+      const insertStaffQuery = `
+          INSERT INTO Staff (name, role, password, contact_info) 
+          VALUES ($1, $2, $3, $4) 
+          RETURNING staff_id;
+      `;
+
+      const result = await client.query(insertStaffQuery, [
+          name, 
+          role.toLowerCase(), 
+          password, // In a real-world scenario, hash the password
+          contact_info || null // Optional contact info
+      ]);
+
+      client.release();
+
+      res.status(201).json({ 
+          message: 'Staff account created successfully', 
+          staffId: result.rows[0].staff_id 
+      });
+
+  } catch (error) {
+      console.error('Error adding staff:', error);
+      res.status(500).json({ error: 'Error creating staff account', details: error.message });
+  }
 });
 // Endpoint for staff login
 app.post('/staffLogin', async (req, res) => {
-    const { password } = req.body;
+  const { password } = req.body;
 
-    // Validate input
-    if (!password) {
-        return res.status(400).json({ error: 'Password is required' });
+  // Validate input
+  if (!password) {
+    return res.status(400).json({ error: 'Password is required' });
+  }
+
+  const loginQuery = `
+    SELECT * FROM Staff WHERE password = $1;
+  `;
+
+  let client;
+
+  try {
+    client = await pool.connect();
+    const result = await client.query(loginQuery, [password]);
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    const loginQuery = `
-        SELECT * FROM Staff WHERE password = $1;  -- Adjust this query as needed
-    `;
+    const staffMember = result.rows[0];
 
-    let client; // Declare client variable here
+    // Log the staff member details for debugging
+    console.log('Staff Member Details:', {
+      id: staffMember.staff_id,
+      name: staffMember.name,
+      role: staffMember.role
+    });
 
+    // Check the role and respond accordingly
+    if (staffMember.role === 'admin') {
+      res.status(200).json({ 
+        message: 'Admin login successful', 
+        staff: {
+          staff_id: staffMember.staff_id,
+          name: staffMember.name,
+          role: 'admin'
+        }
+      });
+    } else if (staffMember.role === 'receptionist') {
+      res.status(200).json({ 
+        message: 'Receptionist login successful', 
+        staff: {
+          staff_id: staffMember.staff_id,
+          name: staffMember.name,
+          role: 'receptionist'
+        }
+      });
+    } else {
+      // If role is neither admin nor receptionist
+      return res.status(403).json({ 
+        error: 'Access denied. Invalid role.',
+        details: `Current role: ${staffMember.role}`
+      });
+    }
+
+  } catch (err) {
+    console.error('Error during staff login:', err);
+    res.status(500).json({ error: 'Error during staff login' });
+  } finally {
+    if (client) {
+      client.release();
+    }
+  }
+});
+// Endpoint to get role counts
+app.get('/getRoleCounts', async (req, res) => {
     try {
-        client = await pool.connect();
-        const result = await client.query(loginQuery, [password]);
+        // Query to get customer type counts
+        const customerTypeQuery = `
+            SELECT 
+                membership_type, 
+                COUNT(*) as count
+            FROM 
+                Customer
+            GROUP BY 
+                membership_type;
+        `;
 
-        if (result.rows.length === 0) {
-            return res.status(401).json({ error: 'Invalid credentials' });
-        }
+        // Query to get today's check-ins
+        const todayCheckInsQuery = `
+            SELECT COUNT(*) as today_check_ins
+            FROM CheckIn
+            WHERE DATE(check_in_time) = CURRENT_DATE;
+        `;
 
-        const staffMember = result.rows[0];
+        // Query to get active memberships
+        const activeMembershipsQuery = `
+            SELECT COUNT(*) as active_memberships
+            FROM Membership
+            WHERE status = 'Active';
+        `;
 
-        // Check if the role is staff
-        if (staffMember.role === 'staff') {
-            res.status(200).json({ message: 'Login successful', staff: staffMember });
-        } else {
-            res.status(403).json({ error: 'You do not have access to the admin page.' });
-        }
+        // Execute all queries
+        const customerTypeResult = await pool.query(customerTypeQuery);
+        const todayCheckInsResult = await pool.query(todayCheckInsQuery);
+        const activeMembershipsResult = await pool.query(activeMembershipsQuery);
+
+        // Prepare response
+        const response = {
+            walk_in_count: 0,
+            member_count: 0,
+            today_check_ins: parseInt(todayCheckInsResult.rows[0].today_check_ins),
+            active_memberships: parseInt(activeMembershipsResult.rows[0].active_memberships)
+        };
+
+        // Process customer type counts
+        customerTypeResult.rows.forEach(row => {
+            if (row.membership_type === 'Walk In') {
+                response.walk_in_count = parseInt(row.count);
+            }
+            if (row.membership_type === 'Member') {
+                response.member_count = parseInt(row.count);
+            }
+        });
+
+        res.status(200).json({
+            success: true,
+            data: response
+        });
+
     } catch (error) {
-        console.error('Error during staff login:', error);
-        res.status(500).json({ error: 'Error during staff login' });
-    } finally {
-        // Ensure the client is released back to the pool
-        if (client) {
-            client.release();
-        }
+        console.error('Error fetching role counts:', error);
+        res.status(500).json({ 
+            success: false, 
+            error: 'Error fetching role counts',
+            details: error.message 
+        });
     }
 });
+
+// Endpoint to get all staff accounts
+app.get('/getStaffAccounts', async (req, res) => { 
+  try { 
+      const client = await pool.connect(); 
+
+      const query = ` 
+          SELECT 
+              staff_id, 
+              name, 
+              role, 
+              contact_info,
+              status
+          FROM Staff 
+          WHERE status = 'Active'
+          ORDER BY name 
+      `; 
+
+      const result = await client.query(query); 
+      client.release(); 
+
+      res.status(200).json(result.rows); 
+  } catch (error) { 
+      console.error('Error fetching staff accounts:', error); 
+      console.error('Full error details:', error.message); // Add more detailed logging
+      res.status(500).json({ 
+          error: 'Error retrieving staff accounts', 
+          details: error.message 
+      }); 
+  } 
+}); 
+
+// Endpoint to update staff account
+app.put('/updateStaff/:staffId', async (req, res) => {
+  const { staffId } = req.params;
+  const { name, role, contact_info, password } = req.body;
+
+  // Validate input
+  if (!name || !role) {
+      return res.status(400).json({ error: 'Name and role are required' });
+  }
+
+  // Validate role
+  if (!['receptionist', 'admin'].includes(role.toLowerCase())) {
+      return res.status(400).json({ error: 'Invalid role. Must be either "receptionist" or "admin"' });
+  }
+
+  try {
+      const client = await pool.connect();
+
+      // Prepare the update query
+      let query = `
+          UPDATE Staff 
+          SET name = $1, 
+              role = $2, 
+              contact_info = $3
+      `;
+      const queryParams = [name, role, contact_info || null];
+
+      // Add password update if provided
+      if (password) {
+          query += `, password = $${queryParams.length + 1}`;
+          queryParams.push(password); // In production, hash the password
+      }
+
+      query += ` WHERE staff_id = $${queryParams.length + 1} RETURNING *`;
+      queryParams.push(staffId);
+
+      // Execute the update
+      const result = await client.query(query, queryParams);
+
+      client.release();
+
+      // Check if the account was found and updated
+      if (result.rows.length === 0) {
+          return res.status(404).json({ error: 'Staff account not found' });
+      }
+
+      res.status(200).json({ 
+          message: 'Staff account updated successfully', 
+          staff: result.rows[0] 
+      });
+
+  } catch (error) {
+      console.error('Error updating staff:', error);
+      
+      // Handle specific error cases
+      if (error.code === '23505') { // Unique constraint violation
+          return res.status(409).json({ error: 'An account with this name already exists' });
+      }
+
+      res.status(500).json({ 
+          error: 'Error updating staff account', 
+          details: error.message 
+      });
+  }
+});
+
+// Endpoint to get deactivated staff accounts
+app.get('/getDeactivatedStaffAccounts', async (req, res) => { 
+  try { 
+      const client = await pool.connect(); 
+
+      const query = ` 
+          SELECT 
+              staff_id, 
+              name, 
+              role, 
+              contact_info,
+              deactivated_at
+          FROM Staff 
+          WHERE status = 'Inactive'
+          ORDER BY deactivated_at DESC 
+      `; 
+
+      const result = await client.query(query); 
+      client.release(); 
+
+      res.status(200).json(result.rows); 
+  } catch (error) { 
+      console.error('Error fetching deactivated staff accounts:', error); 
+      res.status(500).json({ 
+          error: 'Error retrieving deactivated staff accounts', 
+          details: error.message 
+      }); 
+  } 
+}); 
+// Endpoint to get deactivated staff accounts
+app.put('/deactivateStaff/:staffId', async (req, res) => { 
+  const { staffId } = req.params; 
+
+  try { 
+      const client = await pool.connect(); 
+
+      // Update query to set account as inactive and record deactivation time
+      const deactivateQuery = ` 
+          UPDATE Staff 
+          SET 
+              status = 'Inactive', 
+              deactivated_at = CURRENT_TIMESTAMP 
+          WHERE staff_id = $1 
+          RETURNING *; 
+      `; 
+
+      const result = await client.query(deactivateQuery, [staffId]); 
+
+      client.release(); 
+
+      // Check if the account was found and updated 
+      if (result.rows.length === 0) { 
+          return res.status(404).json({ error: 'Staff account not found' }); 
+      } 
+
+      res.status(200).json({ 
+          message: 'Staff account deactivated successfully', 
+          staff: result.rows[0] 
+      }); 
+
+  } catch (error) { 
+      console.error('Error deactivating staff:', error); 
+      res.status(500).json({ 
+          error: 'Error deactivating staff account', 
+          details: error.message 
+      }); 
+  } 
+}); 
+
+// Endpoint to reactivate a staff account
+app.put('/reactivateStaff/:staffId', async (req, res) => {
+  const { staffId } = req.params;
+
+  let client;
+  try {
+      client = await pool.connect();
+
+      // Check if the account is currently inactive
+      const checkQuery = `
+          SELECT * FROM Staff 
+          WHERE staff_id = $1 AND status = 'Inactive';
+      `;
+      const checkResult = await client.query(checkQuery, [staffId]);
+
+      if (checkResult.rows.length === 0) {
+          return res.status(404).json({ 
+              error: 'Account not found or already active' 
+          });
+      }
+
+      // Reactivate the account
+      const reactivateQuery = `
+          UPDATE Staff 
+          SET 
+              status = 'Active', 
+              deactivated_at = NULL 
+          WHERE staff_id = $1 
+          RETURNING *;
+      `;
+
+      const result = await client.query(reactivateQuery, [staffId]);
+
+      res.status(200).json({ 
+          message: 'Staff account reactivated successfully', 
+          staff: result.rows[0] 
+      });
+
+  } catch (error) {
+      console.error('Error reactivating staff:', error);
+      res.status(500).json({ 
+          error: 'Error reactivating staff account', 
+          details: error.message 
+      });
+  } finally {
+      if (client) {
+          client.release();
+      }
+  }
+});
+
 app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

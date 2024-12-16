@@ -1,0 +1,88 @@
+.referrerInfoModalOverlay {
+    background-color: rgba(0, 0, 0, 0.75);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1100;
+}
+
+/* Modal Content */
+.referrerInfoModalContent {
+    background: white;
+    padding: 20px 30px;
+    border-radius: 8px;
+    width: 700px;
+    max-width: 90%;
+    height: 650px; /* Fixed height */
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    position: relative;
+    font-family: 'Poppins', sans-serif;
+    display: flex;
+    flex-direction: column; /* Stack elements vertically */
+}
+
+.referrerInfoForm {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 15px; /* Add space between form fields */
+    margin-top: 50px; /* Add space above the form */
+    padding: 25px 50px;
+    color: #333;
+    flex-grow: 1; /* Allow the form to grow and take available space */
+    overflow-y: auto; /* Add scroll if content overflows */
+}
+
+.referrerInfoForm label {
+    font-weight: 600;
+}
+
+.referrerInfoForm input,
+.referrerInfoForm select {
+    padding: 10px;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: white;
+    color: #333;
+}
+
+/* Media Queries for Responsiveness */
+@media (max-width: 768px) {
+    .referrerInfoModalContent {
+        width: 90%;
+        height: 500px; /* Adjust height for smaller screens */
+        padding: 20px;
+    }
+
+    .VoucherHeader h2 {
+        font-size: 28px; /* Adjust font size for smaller screens */
+    }
+
+    .voucherBackButton img {
+        width: 30px;
+        height: 30px;
+    }
+}
+
+@media (max-width: 480px) {
+    .referrerInfoModalContent {
+        width: 100%;
+        height: 500px; /* Adjust height for smaller screens */
+        padding: 15px;
+    }
+
+    .VoucherHeader h2 {
+        font-size: 24px; /* Adjust font size for smaller screens */
+    }
+
+    .voucherBackButton img {
+        width: 25px;
+        height: 25px;
+    }
+}

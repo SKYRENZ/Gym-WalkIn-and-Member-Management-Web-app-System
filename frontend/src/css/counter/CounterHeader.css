@@ -46,14 +46,14 @@ header {
 .user {
   font-size: 20px;
   margin: 0;
-  color: #000;
+  color: #333;
 }
 
 .role {
   font-size: 10px;
   margin: 0;
   margin-top: -5px;
-  color: #000;
+  color: #333;
 }
 
 @media (max-width: 600px) {
