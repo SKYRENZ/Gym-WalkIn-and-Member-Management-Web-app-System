@@ -1,0 +1,14 @@
+/* src/css/admin/CustomerRecordsSearchBar.css */
+.customer-records-search-bar-container {
+    display: flex;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.customer-records-search-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}

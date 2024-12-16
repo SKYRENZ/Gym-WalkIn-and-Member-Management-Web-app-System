@@ -2,7 +2,8 @@
   "name": "gym-management-system",
   "version": "1.0.0",
   "scripts": {
-    "dev": "concurrently \"npm run dev --prefix frontend\" \"node backend/server.js\"",
+    "dev": "concurrently \"npm run dev --prefix frontend\" \"npm run server\"",
+    "server": "nodemon backend/server.js",
     "lint": "eslint src/**/*.{js,jsx}",
     "lint:fix": "eslint src/**/*.{js,jsx} --fix"
   },
@@ -21,6 +22,7 @@
     "react-qr-scanner": "^1.0.0-alpha.11"
   },
   "devDependencies": {
-    "concurrently": "^9.1.0"
+    "concurrently": "^9.1.0",
+    "nodemon": "^3.1.9"
   }
 }

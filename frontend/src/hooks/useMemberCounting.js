@@ -8,27 +8,25 @@ export const useMemberCounting = () => {
   // Fetch available years
   const { 
     data: availableYearsData = { years: [currentYear] }, 
-    isLoading: yearsLoading, 
-    error: yearsError 
   } = useFetchData('http://localhost:3000/getAvailableYears', []);
 
-  // Fetch walk-in data with monthly breakdown
+  // Fetch walk-in data
   const { 
     data: walkInData = [], 
     isLoading: walkInLoading, 
     error: walkInError 
   } = useFetchData(
-    `http://localhost:3000/getWalkInCustomerRecords?year=${selectedYear}&period=monthly`, 
+    `http://localhost:3000/getWalkin&MemberCounting?year=${selectedYear}&period=monthly&type=Walk In`, 
     [selectedYear]
   );
 
-  // Fetch membership data with monthly breakdown
+  // Fetch membership data
   const { 
     data: membershipData = [], 
     isLoading: membershipLoading, 
     error: membershipError 
   } = useFetchData(
-    `http://localhost:3000/getMemberCustomerRecords?year=${selectedYear}&period=monthly`, 
+    `http://localhost:3000/getWalkin&MemberCounting?year=${selectedYear}&period=monthly&type=Member`, 
     [selectedYear]
   );
 
@@ -92,8 +90,15 @@ export const useMemberCounting = () => {
 
     return chartData;
   }, [walkInData, membershipData]);
-  // Add these methods to calculate total counts
+
+  // Calculate total walk-ins and members using metadata if available
   const totalWalkIns = useMemo(() => {
+    // First, try to use metadata
+    if (walkInData?.metadata?.total_entries) {
+      return walkInData.metadata.total_entries;
+    }
+
+    // Fallback to manual calculation
     if (!Array.isArray(walkInData?.data || walkInData)) return 0;
     
     return (walkInData.data || walkInData).reduce((sum, entry) => 
@@ -101,6 +106,12 @@ export const useMemberCounting = () => {
   }, [walkInData]);
 
   const totalMembers = useMemo(() => {
+    // First, try to use metadata
+    if (membershipData?.metadata?.total_entries) {
+      return membershipData.metadata.total_entries;
+    }
+
+    // Fallback to manual calculation
     if (!Array.isArray(membershipData?.data || membershipData)) return 0;
     
     return (membershipData.data || membershipData).reduce((sum, entry) => 
@@ -116,7 +127,7 @@ export const useMemberCounting = () => {
     membershipData: prepareChartData,
     totalWalkIns,
     totalMembers,
-    isLoading: yearsLoading || walkInLoading || membershipLoading,
-    error: yearsError || walkInError || membershipError
+    isLoading: walkInLoading || membershipLoading,
+    error: walkInError || membershipError
   };
 };
