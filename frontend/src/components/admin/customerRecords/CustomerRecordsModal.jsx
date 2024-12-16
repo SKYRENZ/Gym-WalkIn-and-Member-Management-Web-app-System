@@ -1,16 +1,18 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import Modal from 'react-modal';
 import { useCustomerRecords } from '../../../hooks/useCustomerRecords';
 import "../../../css/admin/CustomerRecordsModal.css";
 import BackIcon from '../../../assets/Back.png';
 import SearchBar from '../../counter/SearchBar.jsx';
 
-const CustomerRecords = ({ isOpen, onClose }) => {
+const CustomerRecordsModal = ({ isOpen, onClose }) => {
   const [view, setView] = useState("WalkIn");
+  const [searchTerm, setSearchTerm] = useState("");
   const currentYear = new Date().getFullYear();
 
+  // Destructure data, loading, and error from the hook
   const { 
-    data: customerData, 
+    data = [], // Provide a default empty array
     loading, 
     error 
   } = useCustomerRecords(currentYear, view === "WalkIn" ? "Walk In" : "Member");
@@ -19,7 +21,15 @@ const CustomerRecords = ({ isOpen, onClose }) => {
     setView(viewName);
   };
 
-  // Render table rows
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value);
+  };
+
+  // Safely filter the data
+  const filteredData = (data || []).filter(record => 
+    record && record.names && record.names.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   const renderTableRows = () => {
     if (loading) {
       return (
@@ -37,7 +47,7 @@ const CustomerRecords = ({ isOpen, onClose }) => {
       );
     }
 
-    if (!customerData || customerData.length === 0) {
+    if (!filteredData || filteredData.length === 0) {
       return (
         <tr>
           <td colSpan="3">No records found</td>
@@ -45,14 +55,18 @@ const CustomerRecords = ({ isOpen, onClose }) => {
       );
     }
 
-    return customerData.map((record, index) => (
+    return filteredData.map((record, index) => (
       <tr key={index}>
         <td>{record.names}</td>
         <td>{record.total_entries}</td>
-        <td>{record.date}</td>
+        <td>{record.last_payment_date}</td>
       </tr>
     ));
   };
+
+  // Calculate total entries safely
+  const totalEntries = filteredData.reduce((sum, record) => 
+    sum + (record.total_entries || 0), 0);
 
   return (
     <Modal
@@ -71,7 +85,11 @@ const CustomerRecords = ({ isOpen, onClose }) => {
       
       <div className="button-container">
         <div className="search-container">
-          <SearchBar />
+          <SearchBar 
+            placeholder="Search by name"
+            value={searchTerm}
+            onChange={handleSearchChange}
+          />
         </div>
         <div className="view-buttons">
           <button
@@ -90,12 +108,15 @@ const CustomerRecords = ({ isOpen, onClose }) => {
       </div>
 
       <div className="table-section">
+        <div className="table-summary">
+          <span>Total Entries: {totalEntries}</span>
+        </div>
         <table className="customer-table">
           <thead>
             <tr className="table-header">
               <th>Name</th>
-              <th>Entries</th>
-              <th>Date</th>
+              <th>Total Entries</th>
+              <th>Last Payment Date</th>
             </tr>
           </thead>
           <tbody>
@@ -107,4 +128,4 @@ const CustomerRecords = ({ isOpen, onClose }) => {
   );
 };
 
-export default CustomerRecords;
+export default CustomerRecordsModal;

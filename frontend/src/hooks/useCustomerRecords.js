@@ -1,4 +1,3 @@
-// frontend/src/hooks/useCustomerRecords.js
 import { useState, useEffect } from 'react';
 import api from '../api';
 
@@ -24,6 +23,8 @@ export const useCustomerRecords = (year, type) => {
           return;
         }
 
+        console.log(`Fetching ${type} records for year ${year}`);
+
         const response = await api.get(endpoint, {
           params: { 
             year: year, 
@@ -33,31 +34,36 @@ export const useCustomerRecords = (year, type) => {
 
         console.log('Raw API Response:', response.data);
 
-        const processedData = (response.data.data || []).map(item => {
-          // Parse the date string to a more readable format
-          const [year, month, day] = item.date ? item.date.split('-') : [];
-          const formattedDate = year 
-            ? new Date(year, month - 1, day).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
-              }) 
-            : 'N/A';
+        // Ensure data is an array and has the correct structure
+        const processedData = Array.isArray(response.data.data) 
+          ? response.data.data.map(item => ({
+              names: item.names || 'Unknown',
+              total_entries: item.total_entries || 0,
+              last_payment_date: item.last_payment_date || 'N/A'
+            }))
+          : [];
 
-          return {
-            date: formattedDate,
-            total_entries: item.total_entries || item.entries,
-            names: item.names || 'N/A',
-            total_income: item.total_income
-          };
-        });
-
-        console.log('Processed Frontend Data:', processedData);
+        console.log('Processed Data:', processedData);
 
         setData(processedData);
       } catch (err) {
         console.error('Full error details:', err);
-        setError(err.message);
+        
+        // More detailed error logging
+        if (err.response) {
+          console.error('Error response data:', err.response.data);
+          console.error('Error response status:', err.response.status);
+          setError(`Server Error: ${err.response.data.error || 'Unknown error'}`);
+        } else if (err.request) {
+          console.error('No response received:', err.request);
+          setError('No response from server');
+        } else {
+          console.error('Error setting up request:', err.message);
+          setError(err.message);
+        }
+        
+        // Ensure data is set to an empty array on error
+        setData([]);
       } finally {
         setLoading(false);
       }
