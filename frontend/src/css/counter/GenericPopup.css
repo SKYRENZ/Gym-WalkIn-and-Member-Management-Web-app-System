@@ -3,13 +3,14 @@
     top: 0; left: 0; right: 0; bottom: 0;
     background: rgba(0, 0, 0, 0.5);
     display: flex; justify-content: center; align-items: center;
+    z-index: 1000;
 }
 
 .modal-content {
     background: white; border-radius: 8px; padding: 20px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     display: flex; flex-direction: column; align-items: center;
-    width: 400px; /* Fixed width */
+    width: 500px; /* Fixed width */
 }
 
 .popup-header {
@@ -20,12 +21,27 @@
     background: none; border: none; cursor: pointer; color: blue;
 }
 
+.back-button img {
+    height: 30px;
+    width: 30px;
+}
+
+.back-button:focus{
+    outline: none;
+}
+
 .popup-title {
     margin: 0; color: black; text-align: left; flex-grow: 1;
 }
 
 .indicator-container {
-    display: flex; justify-content: center; margin: 10px 0;
+    display: flex; justify-content: space-between; margin: 10px 0;
+    width: 100%; /* Ensure it takes full width */
+    box-sizing: border-box; /* Include padding in the element's total width and height */
+}
+
+.indicator-wrapper {
+    display: flex; flex-direction: column; align-items: center;
 }
 
 .indicator {
@@ -37,7 +53,7 @@
 }
 
 .indicator-label {
-    text-align: left; color: black; font-size: 14px; margin-top: 5px; width: 100%; /* Adjusted margin and width */
+    text-align: center; color: black; font-size: 14px; margin-top: 5px; /* Adjusted margin and width */
 }
 
 .popup-content {
@@ -111,6 +127,7 @@
 .input-field-horizontal {
     width: 150px; height: 30px; padding: 5px; border: 1px solid #ccc; /* Adjusted size */
     border-radius: 10px; background: #F2F3F6; font-size: 14px; color: black; /* Reduced font size and text color */
+    pointer-events: auto;
     flex-shrink: 0; /* Prevent shrinking */
 }
 
@@ -160,4 +177,6 @@
     .button-container button { width: 100%; height: 36px; font-size: 14px; }
     .button-container { flex-direction: column; margin-top: 15px; }
     .button-container button:not(:last-child) { margin-bottom: 10px; }
+    .indicator-container { padding: 0 10px; } /* Add padding to the indicator container */
+    .indicator { width: 100%; margin: 0 2px; } /* Adjust width and margin of indicators */
 }
