@@ -1,3 +1,15 @@
+.datepicker {
+  position: relative; /* Ensure it has a positioning context */
+  z-index: 10; /* Higher z-index to ensure it's on top */
+}
+
+.date-input {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
 /* Custom styling to ensure text is visible */
 .date-input::-webkit-calendar-picker-indicator {
   filter: invert(0.5); /* Adjust the color of the calendar icon */
@@ -10,23 +22,7 @@
 .date-input::-webkit-datetime-edit-year-field {
   color: #333; /* Ensure text is dark */
 }
-.datepicker {
-  display: flex;
-  align-items: center;
-}
 
-.date-input {
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-/* Custom styling for date input */
-.date-input::-webkit-calendar-picker-indicator {
-  filter: invert(0.5);
-  cursor: pointer;
-}
 @media (max-width: 768px) {
   .date-input {
     font-size: 14px;
