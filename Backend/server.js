@@ -89,125 +89,34 @@ app.get('/memberships', async (req, res) => {
   });
 
 //admin
-
 //customer Tracking
-
 app.get('/customerTracking', async (req, res) => {
-    const dateParam = req.query.date || new Date().toISOString().split('T')[0];
-    const testDate = new Date(dateParam);
+  const { date } = req.query;
+  
+  console.log('Received Date:', date); // Add this line for debugging
 
-    // Validate date input
-    if (isNaN(testDate.getTime())) {
-        return res.status(400).json({
-            error: 'Invalid date format. Please use YYYY-MM-DD.',
-            success: false
-        });
+  try {
+    if (!date) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Date is required' 
+      });
     }
 
-    const startOfDay = new Date(testDate.setHours(0, 0, 0, 0));
-    const endOfDay = new Date(testDate.setHours(23, 59, 59, 999));
+    const trackingData = await ReportService.getCustomerTrackingData(date);
 
-    const trackingQuery = `
-        -- Member Check-ins 
-        SELECT 
-            c.name, 
-            ci.check_in_time AS timestamp, 
-            'Member' AS role, 
-            NULL AS payment 
-        FROM 
-            Customer c 
-        JOIN 
-            Membership m ON c.customer_id = m.customer_id 
-        JOIN 
-            CheckIn ci ON m.membership_id = ci.membership_id 
-        WHERE 
-            DATE(ci.check_in_time AT TIME ZONE 'Asia/Manila') = DATE($1 AT TIME ZONE 'Asia/Manila') 
-
-        UNION ALL 
-
-        -- Walk-in Payments 
-        SELECT 
-            c.name, 
-            p.payment_date AS timestamp, 
-            'Walk In' AS role, 
-            p.amount AS payment 
-        FROM 
-            Customer c 
-        LEFT JOIN 
-            Payment p ON c.customer_id = p.customer_id 
-        WHERE 
-            c.membership_type = 'Walk In' 
-            AND DATE(p.payment_date AT TIME ZONE 'Asia/Manila') = DATE($1 AT TIME ZONE 'Asia/Manila') 
-
-        UNION ALL 
-
-        -- Member Registrations 
-        SELECT 
-            c.name, 
-            m.start_date AS timestamp, 
-            'Member' AS role, 
-            NULL AS payment 
-        FROM 
-            Customer c 
-        JOIN 
-            Membership m ON c.customer_id = m.customer_id 
-        WHERE 
-            DATE(m.start_date AT TIME ZONE 'Asia/Manila') = DATE($1 AT TIME ZONE 'Asia/Manila') 
-
-        ORDER BY 
-            timestamp;
-    `;
-
-    let client;
-
-    try {
-        client = await pool.connect();
-        const result = await client.query(trackingQuery, [startOfDay]);
-
-        // Ensure data is always an array
-        const formattedResult = Array.isArray(result.rows)
-            ? result.rows.map(row => {
-                const timestamp = row.timestamp ?
-                    new Date(row.timestamp).toLocaleTimeString('en-PH', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        hour12: true,
-                        timeZone: 'Asia/Manila'
-                    }) :
-                    null;
-
-                return {
-                    name: row.name,
-                    timestamp: timestamp,
-                    role: row.role,
-                    payment: row.payment ? parseFloat(row.payment).toFixed(2) : null
-                };
-            })
-            : [];
-
-        res.status(200).json({
-            success: true,
-            data: formattedResult,
-            metadata: {
-                date: dateParam,
-                total_entries: formattedResult.length,
-                total_members: formattedResult.filter(entry => entry.role === 'Member').length,
-                total_walk_ins: formattedResult.filter(entry => entry.role === 'Walk In').length
-            }
-        });
-    } catch (err) {
-        console.error('Error fetching customer tracking records:', err);
-        res.status(500).json({
-            success: false,
-            data: [], // Always return an array
-            error: 'Error fetching customer tracking records',
-            details: err.message
-        });
-    } finally {
-        if (client) {
-            client.release();
-        }
-    }
+    res.status(200).json({
+      success: true,
+      data: trackingData
+    });
+  } catch (error) {
+    console.error('Full Customer Tracking Error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Error fetching customer tracking data', 
+      details: error.message 
+    });
+  }
 });
 
 //member counting
@@ -493,7 +402,6 @@ app.get('/getCustomerPaymentRecords/:name', async (req, res) => {
       if (client) client.release();
     }
   });
-
 // Endpoint to get customer membership info
 app.get('/getCustomerMember_info/:name', async (req, res) => {
     const { name } = req.params;
@@ -536,7 +444,6 @@ app.get('/getCustomerMember_info/:name', async (req, res) => {
         }
     }
 });
-
 // Endpoint to update customer information
 app.put('/updateCustomerInfo/:name', async (req, res) => {
     const { name } = req.params;
@@ -614,6 +521,8 @@ app.put('/updateCustomerInfo/:name', async (req, res) => {
         }
     }
 });
+
+//qr
 
 app.get('/qrcodes/:membershipId', (req, res) => {
     const { membershipId } = req.params;

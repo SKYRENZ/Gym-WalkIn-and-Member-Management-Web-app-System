@@ -3,15 +3,20 @@ const express = require('express');
 const router = express.Router();
 const ReportService = require('../services/reportService');
 
-// Customer Tracking Route
+// In reportRoutes.js or server.js
 router.get('/customerTracking', async (req, res) => {
   const dateParam = req.query.date || new Date().toISOString().split('T')[0];
   
   try {
     const trackingData = await ReportService.getCustomerTrackingData(dateParam);
-    res.status(200).json(trackingData);
+    res.status(200).json({
+      success: true,
+      data: trackingData
+    });
   } catch (error) {
+    console.error('Error in customerTracking route:', error);
     res.status(500).json({ 
+      success: false,
       error: 'Error fetching customer tracking data', 
       details: error.message 
     });

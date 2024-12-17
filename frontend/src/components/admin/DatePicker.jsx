@@ -1,30 +1,34 @@
 import  { useState } from 'react';
-import PropTypes from 'prop-types';
-import '../../css/admin/DatePicker.css';
+import DatePicker from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
 
-function DatePicker({ setDate }) {
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+const ExampleDatePicker = () => {
+  const [startDate, setStartDate] = useState(null);
+  const [isOpen, setIsOpen] = useState(false); // State to manage the open state of the datepicker
 
-  const handleDateChange = (event) => {
-    const newDate = event.target.value;
-    setSelectedDate(newDate);
-    setDate(newDate);
+  const handleDateChange = (date) => {
+    setStartDate(date);
+    console.log("Selected date:", date);
+    setIsOpen(false); // Close the datepicker after selecting a date
+  };
+
+  const handleFocus = () => {
+    setIsOpen(true); // Open the datepicker on input focus
   };
 
   return (
-    <div className="datepicker">
-      <input 
-        type="date" 
-        value={selectedDate}
+    <div>
+      <h2>Select a Date</h2>
+      <DatePicker
+        selected={startDate}
         onChange={handleDateChange}
-        className="date-input"
+        onFocus={handleFocus} // Open datepicker on focus
+        shouldCloseOnSelect={true} // Close the datepicker on date selection
+        open={isOpen} // Control the open state
+        inline // Display the datepicker inline
       />
     </div>
   );
-}
-
-DatePicker.propTypes = {
-  setDate: PropTypes.func.isRequired,
 };
 
-export default DatePicker;
+export default ExampleDatePicker;
