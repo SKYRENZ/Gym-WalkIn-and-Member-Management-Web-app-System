@@ -147,23 +147,30 @@ const TransactionTypeSelection = ({ onSelect }) => {
                     case 3:
                         return (
                             <div className="confirmation">
-                                <h3>Confirm Walk-In Transaction Details</h3>
-                                <div>
-                                    <p><strong>Name:</strong> {details.name}</p>
-                                    <p><strong>Phone:</strong> {details.phoneNumber}</p>
-                                    <p><strong>Email:</strong> {details.email || 'N/A'}</p>
-                                    <p><strong>Payment Method:</strong> {details.paymentMethod}</p>
-                                    <p><strong>Walk-in Fee:</strong> ₱{PRICES.WALK_IN.toFixed(2)}</p>
-                                    {details.paymentMethod === 'Cash' && (
-                                        <>
-                                            <p><strong>Amount Received:</strong> {details.receivedAmount}</p>
-                                            <p><strong>Change:</strong> ₱{details.change}</p>
-                                        </>
-                                    )}
-                                    {details.referenceNumber && (
-                                        <p><strong>Reference Number:</strong> {details.referenceNumber}</p>
-                                    )}
+                                <div className="details-columns">
+                                    <div className="details-column">
+                                        <p><strong>Name:</strong> {details.name}</p>
+                                        <p><strong>Phone:</strong> {details.phoneNumber}</p>
+                                        <p><strong>Email:</strong> {details.email || 'N/A'}</p>
+                                    </div>
+                                    <div className="details-column">
+                                        <p><strong>Payment Method:</strong> {details.paymentMethod}</p>
+                                        <p><strong>Walk-in Fee:</strong> ₱{PRICES.WALK_IN.toFixed(2)}</p>
+                                    </div>
                                 </div>
+                                {details.paymentMethod === 'Cash' && (
+                                    <div className="details-columns">
+                                        <div className="details-column">
+                                            <p><strong>Amount Received:</strong> {details.receivedAmount}</p>
+                                        </div>
+                                        <div className="details-column">
+                                            <p><strong>Change:</strong> ₱{details.change}</p>
+                                        </div>
+                                    </div>
+                                )}
+                                {details.referenceNumber && (
+                                    <p><strong>Reference Number:</strong> {details.referenceNumber}</p>
+                                )}
                             </div>
                         );
                     default:
@@ -189,23 +196,30 @@ const TransactionTypeSelection = ({ onSelect }) => {
                     case 3:
                         return (
                             <div className="confirmation">
-                                <h3>Confirm Membership Transaction Details</h3>
-                                <div>
-                                    <p><strong>Name:</strong> {details.name}</p>
-                                    <p><strong>Phone:</strong> {details.phoneNumber}</p>
-                                    <p><strong>Email:</strong> {details.email}</p>
-                                    <p><strong>Payment Method:</strong> {details.paymentMethod}</p>
-                                    <p><strong>Membership Fee:</strong> ₱{PRICES.NEW_MEMBERSHIP.toFixed(2)}</p>
-                                    {details.paymentMethod === 'Cash' && (
-                                        <>
-                                            <p><strong>Amount Received:</strong> {details.receivedAmount}</p>
-                                            <p><strong>Change:</strong> ₱{details.change}</p>
-                                        </>
-                                    )}
-                                    {details.referenceNumber && (
-                                        <p><strong>Reference Number:</strong> {details.referenceNumber}</p>
-                                    )}
+                                <div className="details-columns">
+                                    <div className="details-column">
+                                        <p><strong>Name:</strong> {details.name}</p>
+                                        <p><strong>Phone:</strong> {details.phoneNumber}</p>
+                                        <p><strong>Email:</strong> {details.email}</p>
+                                    </div>
+                                    <div className="details-column">
+                                        <p><strong>Payment Method:</strong> {details.paymentMethod}</p>
+                                        <p><strong>Membership Fee:</strong> ₱{PRICES.NEW_MEMBERSHIP.toFixed(2)}</p>
+                                    </div>
                                 </div>
+                                {details.paymentMethod === 'Cash' && (
+                                    <div className="details-columns">
+                                        <div className="details-column">
+                                            <p><strong>Amount Received:</strong> {details.receivedAmount}</p>
+                                        </div>
+                                        <div className="details-column">
+                                            <p><strong>Change:</strong> ₱{details.change}</p>
+                                        </div>
+                                    </div>
+                                )}
+                                {details.referenceNumber && (
+                                    <p><strong>Reference Number:</strong> {details.referenceNumber}</p>
+                                )}
                             </div>
                         );
                     default:

@@ -29,9 +29,10 @@ const PaymentMethodForm = ({ details, onChange, transactionType }) => {
 
     return (
         <div className="payment-method-container">
-            <div className="input-wrapper">
-                <label className="input-label">Payment Method</label>
-                <div className="radio-wrapper">
+            {/* Radios Container */}
+            <div className="radio-container">
+
+                <div className="radio-wrapper-new">
                     {PAYMENT_METHODS.map((method) => (
                         <label key={method} className="radio-label">
                             <input
@@ -48,6 +49,7 @@ const PaymentMethodForm = ({ details, onChange, transactionType }) => {
                 </div>
             </div>
 
+            {/* Text Fields Container */}
             {details.paymentMethod === 'Cash' && (
                 <>
                     <div className="input-wrapper">
