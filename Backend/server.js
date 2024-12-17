@@ -522,6 +522,22 @@ app.put('/updateCustomerInfo/:name', async (req, res) => {
     }
 });
 
+//income summary
+app.get('/getIncomeSummary', async (req, res) => {
+  const { year, period, date } = req.query;
+
+  try {
+      const incomeSummary = await ReportService.getIncomeSummaryData(
+          year, 
+          period, 
+          period === 'daily' ? date : null
+      );
+      res.status(200).json({ success: true, data: incomeSummary });
+  } catch (error) {
+      console.error('Error fetching income summary:', error);
+      res.status(500).json({ success: false, error: 'Error fetching income summary' });
+  }
+});
 //qr
 
 app.get('/qrcodes/:membershipId', (req, res) => {

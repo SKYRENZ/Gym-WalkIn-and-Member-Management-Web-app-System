@@ -1,14 +1,15 @@
 /* src/css/admin/IncomeSummary.css */
 .income-summary-container {
   background-color: white;
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 20px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Enhanced drop shadow similar to CustomerTracking */
   height: 80vh;
   display: flex;
   flex-direction: column;
   font-family: 'poppins', sans-serif;
   color: #333;
+  position: relative; /* Added to position summary stats */
 }
 
 .income-summary-header {
@@ -27,22 +28,35 @@
   margin-top: 10px;
 }
 
-.filters {
+.filter-container {
   display: flex;
+  gap: 20px;
   align-items: center;
-  gap: 20px; /* Increased gap between filters */
+  margin-bottom: 20px;
 }
 
-.filters label {
-  font-size: 14px;
-  color: #666;
+.filter-container > div {
+  display: flex;
+  flex-direction: column;
 }
 
-.filters select {
+.filter-container label {
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.filter-container select,
+.filter-container input[type="date"] {
   padding: 8px;
-  border-radius: 4px;
   border: 1px solid #ccc;
-  font-size: 14px;
+  border-radius: 4px;
+}
+
+.income-summary-content {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  overflow: hidden;
 }
 
 .chart-container {
@@ -59,16 +73,50 @@
 .summary-stats {
   display: flex;
   justify-content: space-around;
-  margin-top: 20px;
+  background-color: #f9f9f9;
+  border-top: 1px solid #e0e0e0;
+  padding: 15px 0;
+  margin-top: auto; /* Push to the bottom */
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
 }
 
 .stat-box {
   text-align: center;
   padding: 10px;
-  background-color: #f4f4f4;
+  background-color: white;
   border-radius: 8px;
   flex: 1;
   margin: 0 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.stat-box:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+}
+
+.stat-box h3 {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  color: #666;
+  text-transform: uppercase;
+}
+
+.stat-box p {
+  margin: 0;
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+}
+
+.stat-box.total {
+  background-color: #f0f0f0;
+}
+
+.stat-box.total h3 {
+  color: #333;
 }
 
 .loading-container, 
@@ -112,31 +160,15 @@
     min-height: 60vh;
   }
 
-  .income-summary-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-
   .income-summary-header h1 {
     font-size: 1.5rem;
     margin-bottom: 10px;
   }
 
-  .filters {
+  .filter-container {
     flex-direction: column;
-    align-items: flex-start;
-    width: 100%;
+    align-items: stretch;
     gap: 10px;
-  }
-
-  .filters .year-selector,
-  .filters .period-selector {
-    width: 100%;
-  }
-
-  .filters select {
-    width: 100%;
   }
 
   .summary-stats {
@@ -145,5 +177,13 @@
 
   .stat-box {
     margin: 10px 0;
+  }
+
+  .stat-box h3 {
+    font-size: 12px;
+  }
+
+  .stat-box p {
+    font-size: 18px;
   }
 }
