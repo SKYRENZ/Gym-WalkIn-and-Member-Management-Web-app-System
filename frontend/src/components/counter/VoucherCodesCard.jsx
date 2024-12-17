@@ -2,7 +2,7 @@ import voucherIcon from '../../assets/voucher icon.svg';
 
 function VoucherCodesCard() {
     return (
-        <div className="card voucher-codes">
+        <div className="summary-card voucher-codes">
             <h3>Voucher Codes</h3>
             <p>Remaining Redeemable Vouchers</p>
             <div className="number">4</div>

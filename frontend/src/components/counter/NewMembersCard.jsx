@@ -36,7 +36,7 @@ function NewMembersCard() {
     }, []);
 
     return (
-        <div className="card new-members">
+        <div className="summary-card new-members">
             <h3>New Members</h3>
             <p>Recently Registered Members</p>
             <div className="number">{newMembersCount}</div>

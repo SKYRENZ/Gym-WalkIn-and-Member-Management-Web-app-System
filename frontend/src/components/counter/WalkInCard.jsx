@@ -27,7 +27,7 @@ function WalkedInCard() {
     }, []);
 
     return (
-        <div className="card walked-in">
+        <div className="summary-card walked-in">
             <h3>Walked In</h3>
             <p>Walk-in Entries</p>
             <div className="number">{walkInCount}</div>

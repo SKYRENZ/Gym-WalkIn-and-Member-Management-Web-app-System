@@ -38,7 +38,7 @@
     background-color: #e0e0e0; /* Darker shade on hover */
 }
 
-.input-container {
+.payment-method-container {
     width: 100%;
     max-width: 600px;
     margin: 20px 0;
@@ -157,5 +157,29 @@
     .radio-wrapper {
         flex-direction: column; /* Stack radio buttons vertically */
         align-items: flex-start; /* Align radio buttons to the start */
+    }
+
+    .details-columns {
+        flex-direction: column; /* Stack columns vertically */
+        padding: 0; /* Remove padding */
+    }
+
+    .details-column {
+        margin-right: 0; /* Remove margin between columns */
+        margin-bottom: 20px; /* Add space between stacked columns */
+    }
+
+    .payment-summary-section {
+        padding: 0; /* Remove padding */
+    }
+
+    .button-container {
+        flex-direction: column; /* Stack buttons vertically */
+        align-items: center; /* Center align buttons */
+    }
+
+    .continue-button {
+        width: 100%; /* Make button take full width */
+        margin-bottom: 10px; /* Add space below button */
     }
 }
