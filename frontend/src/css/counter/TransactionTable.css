@@ -7,13 +7,12 @@
     border-radius: 20px;
     height: 80vh; /* Full height of the viewport */
     box-sizing: border-box; /* Include padding and border in the element's total height and width */
-    overflow-y: auto; /* Ensure content is scrollable if it exceeds the height */
+    overflow: hidden; /* Hide overflow to ensure only the table body scrolls */
 }
 
 /* Table styling */
 .transactions-table {
     width: 100%;
-    padding: 20px;
     border-collapse: collapse;
 }
 
@@ -43,10 +42,39 @@
     background-color: #fafafa;
 }
 
+/* Make the table body scrollable */
+.transactions-table tbody {
+    display: block;
+    height: calc(80vh - 85px); /* Adjust height to fit within the container */
+    overflow-y: auto;
+    width: 100%;
+    box-sizing: border-box; /* Include padding and border in the element's total height and width */
+}
+
+/* Ensure table header and rows align correctly */
+.transactions-table thead, .transactions-table tbody tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+}
+
+/* Ensure the table header stays fixed */
+.transactions-table thead {
+    position: sticky;
+    top: 0;
+    background-color: #ffffff; /* Match the background color of the table */
+    z-index: 1;
+}
+
 @media (max-width: 768px) {
     .transactions-table-container {
         padding: 15px;
         height: 60vh; /* Adjust height for smaller screens */
+        overflow-x: auto; /* Allow horizontal scrolling */
+    }
+
+    .transactions-table {
+        min-width: 600px; /* Ensure the table maintains its size */
     }
 
     .transactions-table th, .transactions-table td {
@@ -56,5 +84,9 @@
 
     .transactions-table th {
         font-size: 14px;
+    }
+
+    .transactions-table tbody {
+        height: calc(60vh - 85px); /* Adjust height for smaller screens */
     }
 }
