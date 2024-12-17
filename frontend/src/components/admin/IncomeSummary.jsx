@@ -1,74 +1,92 @@
 import { useState } from 'react';
-import { Chart, registerables } from 'chart.js';
 import { useIncomeSummary } from '../../hooks/useIncomeSummary';
 import IncomeChart from './IncomeChart';
 import IncomeSummaryStats from './IncomeSummaryStats';
 import { Spinner, ErrorMessage } from './StatusComponents';
-import '../../css/admin/IncomeSummary.css';
-
-Chart.register(...registerables);
+import '../../css/admin/IncomeSummary.css'; // Ensure CSS is imported
 
 function IncomeSummary() {
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [selectedPeriod, setSelectedPeriod] = useState('monthly');
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+    const [selectedPeriod, setSelectedPeriod] = useState('monthly');
+    const [selectedDate, setSelectedDate] = useState(new Date());
 
-  const { walkInData, membershipData, isLoading, error } = useIncomeSummary(
-    selectedYear, 
-    selectedPeriod
-  );
+    const { incomeData, isLoading, error } = useIncomeSummary(
+        selectedYear, 
+        selectedPeriod, 
+        selectedPeriod === 'daily' ? selectedDate.toISOString().split('T')[0] : null
+    );
 
-  // Early returns for different states
-  if (isLoading) return <Spinner message="Loading income data..." />;
-  if (error) return <ErrorMessage message={error} />;
-  if (!walkInData.length && !membershipData.length) return <ErrorMessage message="No income data available" />;
+    if (isLoading) return <Spinner message="Loading income data..." />;
+    if (error) return <ErrorMessage message={error} />;
+    if (!incomeData) return <ErrorMessage message="No income data available" />;
 
-  return (
-    <div className="income-summary-container">
-      <div className="income-summary-header">
-        <h1>Income Summary</h1>
-        <div className="filters">
-          <div className="year-selector">
-            <label htmlFor="year-select">Select Year: </label>
-            <select 
-              id="year-select"
-              value={selectedYear} 
-              onChange={(e) => setSelectedYear(Number(e.target.value))}
-            >
-              {[new Date().getFullYear(), new Date().getFullYear() - 1, new Date().getFullYear() - 2].map(year => (
-                <option key={year} value={year}>{year}</option>
-              ))}
-            </select>
-          </div>
-          <div className="period-selector">
-            <label htmlFor="period-select">Select Period: </label>
-            <select 
-              id="period-select"
-              value={selectedPeriod} 
-              onChange={(e) => setSelectedPeriod(e.target.value)}
-            >
-              <option value="monthly">Monthly</option>
-              <option value="daily">Daily</option>
-            </select>
-          </div>
+    return (
+        <div className="income-summary-container">
+            <div className="income-summary-header">
+                <h1>Income Summary</h1>
+                <div className="filter-container">
+                    <div>
+                        <label>Select Year:</label>
+                        <select 
+                            value={selectedYear} 
+                            onChange={(e) => setSelectedYear(Number(e.target.value))}
+                            disabled={selectedPeriod === 'daily'}
+                        >
+                            {[2021, 2022, 2023, 2024].map(year => (
+                                <option key={year} value={year}>{year}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label>Select Period:</label>
+                        <select 
+                            value={selectedPeriod} 
+                            onChange={(e) => {
+                                setSelectedPeriod(e.target.value);
+                                // Reset to current year when switching to monthly
+                                if (e.target.value === 'monthly') {
+                                    setSelectedYear(new Date().getFullYear());
+                                }
+                            }}
+                        >
+                            <option value="monthly">Monthly</option>
+                            <option value="daily">Daily</option>
+                        </select>
+                    </div>
+                    {selectedPeriod === 'daily' && (
+                        <div>
+                            <label>Select Date:</label>
+                            <input 
+                                type="date" 
+                                value={selectedDate.toISOString().split('T')[0]}
+                                onChange={(e) => setSelectedDate(new Date(e.target.value))}
+                            />
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            <div className="income-summary-content">
+                <div className="chart-container">
+                    <IncomeChart 
+                        walkInIncomeData={incomeData.walkInIncomeByPeriod || {}}
+                        memberIncomeData={incomeData.memberIncomeByPeriod || {}}
+                        period={selectedPeriod}
+                    />
+                </div>
+            </div>
+
+            <div className="summary-stats">
+                <IncomeSummaryStats 
+                    totalWalkInIncome={incomeData.totalWalkInIncome}
+                    totalMemberIncome={incomeData.totalMemberIncome}
+                    totalIncome={incomeData.totalIncome}
+                    period={selectedPeriod}
+                    selectedDate={selectedPeriod === 'daily' ? selectedDate : null}
+                />
+            </div>
         </div>
-      </div>
-
-      <div className="chart-container">
-        <IncomeChart 
-          walkInData={walkInData}
-          membershipData={membershipData}
-          selectedYear={selectedYear}
-          selectedPeriod={selectedPeriod}
-        />
-      </div>
-
-      <IncomeSummaryStats 
-        walkInData={walkInData}
-        membershipData={membershipData}
-        selectedPeriod={selectedPeriod}
-      />
-    </div>
-  );
+    );
 }
 
 export default IncomeSummary;

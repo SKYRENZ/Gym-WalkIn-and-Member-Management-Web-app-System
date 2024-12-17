@@ -1,63 +1,102 @@
-import { useMemo } from 'react';
-import PropTypes from 'prop-types';
+import React, { useMemo } from 'react';
 import { Bar } from 'react-chartjs-2';
-import { getCurrentDayLabel } from '../../utils/dateUtils';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 
-function IncomeChart({ walkInData, membershipData, selectedYear, selectedPeriod }) {
-  const chartData = useMemo(() => {
-    const labels = selectedPeriod === 'daily' 
-      ? [getCurrentDayLabel()] 
-      : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-    return {
-      labels,
-      datasets: [
-        {
-          label: 'Walk-in Income',
-          data: selectedPeriod === 'daily' 
-            ? [walkInData.reduce((sum, entry) => sum + (entry.total_income || 0), 0)]
-            : walkInData.map(entry => entry.total_income || 0),
-          backgroundColor: 'rgba(255, 99, 132, 0.6)'
-        },
-        {
-          label: 'Membership Income',
-          data: selectedPeriod === 'daily'
-            ? [membershipData.reduce((sum, entry) => sum + (entry.total_income || 0), 0)]
-            : membershipData.map(entry => entry.total_income || 0),
-          backgroundColor: 'rgba(75, 192, 192, 0.6)'
+function IncomeChart({ walkInIncomeData, memberIncomeData, period }) {
+    const chartData = useMemo(() => {
+        // Ensure we have valid data objects
+        const walkInData = walkInIncomeData || {};
+        const memberData = memberIncomeData || {};
+
+        // Monthly labels
+        const monthLabels = [
+            'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+        ];
+
+        // Handle monthly data
+        if (period === 'monthly') {
+            return {
+                labels: monthLabels,
+                datasets: [
+                    {
+                        label: 'Walk-In Income',
+                        data: monthLabels.map((_, index) => walkInData[index + 1] || 0),
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Member Income',
+                        data: monthLabels.map((_, index) => memberData[index + 1] || 0),
+                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            };
         }
-      ]
+
+        // Handle daily data (single day)
+        return {
+            labels: ['Today'],
+            datasets: [
+                {
+                    label: 'Walk-In Income',
+                    data: [walkInData[Object.keys(walkInData)[0]] || 0],
+                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                },
+                {
+                    label: 'Member Income',
+                    data: [memberData[Object.keys(memberData)[0]] || 0],
+                    backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                }
+            ]
+        };
+    }, [walkInIncomeData, memberIncomeData, period]);
+
+    const options = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top',
+            },
+            title: {
+                display: true,
+                text: `Income ${period === 'monthly' ? 'Monthly' : 'Daily'} Breakdown`
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                title: {
+                    display: true,
+                    text: 'Income (₱)'
+                },
+                ticks: {
+                    // Add comma formatting to y-axis labels
+                    callback: function(value) {
+                        return '₱' + value.toLocaleString();
+                    }
+                }
+            },
+            x: {
+                title: {
+                    display: true,
+                    text: period === 'monthly' ? 'Months' : 'Date'
+                }
+            }
+        }
     };
-  }, [walkInData, membershipData, selectedPeriod]);
 
-  const chartOptions = useMemo(() => ({
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { position: 'top' },
-      title: {
-        display: true,
-        text: selectedPeriod === 'daily' 
-          ? `Daily Income for ${getCurrentDayLabel()} ${selectedYear}` 
-          : `Income Summary for ${selectedYear}`
-      }
-    },
-    scales: {
-      y: {
-        title: { display: true, text: 'Amount (₱)' },
-        beginAtZero: true
-      }
-    }
-  }), [selectedYear, selectedPeriod]);
-
-  return <Bar data={chartData} options={chartOptions} />;
+    return (
+        <div style={{ height: '400px', width: '100%' }}>
+            <Bar data={chartData} options={options} />
+        </div>
+    );
 }
-
-IncomeChart.propTypes = {
-  walkInData: PropTypes.array.isRequired,
-  membershipData: PropTypes.array.isRequired,
-  selectedYear: PropTypes.number.isRequired,
-  selectedPeriod: PropTypes.string.isRequired
-};
 
 export default IncomeChart;

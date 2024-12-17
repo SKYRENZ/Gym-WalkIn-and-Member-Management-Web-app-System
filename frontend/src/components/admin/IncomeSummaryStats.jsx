@@ -1,47 +1,48 @@
-import  { useMemo } from 'react';
-import PropTypes from 'prop-types';
+import React from 'react';
 
-function IncomeSummaryStats({ walkInData, membershipData, selectedPeriod }) {
-  const { walkInTotal, membershipTotal } = useMemo(() => {
-    const calculateTotal = (data) => {
-      const today = new Date();
-      const filteredData = selectedPeriod === 'daily'
-        ? data.filter(entry => new Date(entry.date).toDateString() === today.toDateString())
-        : data;
-
-      return filteredData.reduce((sum, entry) => sum + (entry.total_income || 0), 0);
+function IncomeSummaryStats({ 
+    totalWalkInIncome, 
+    totalMemberIncome, 
+    totalIncome, 
+    period, 
+    selectedDate 
+}) {
+    // Helper function to format date
+    const formatDate = (date) => {
+        if (!date) return '';
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
     };
 
-    return {
-      walkInTotal: calculateTotal(walkInData),
-      membershipTotal: calculateTotal(membershipData)
+    // Helper function to get period label
+    const getPeriodLabel = () => {
+        if (period === 'daily') {
+            return selectedDate 
+                ? `Income for ${formatDate(selectedDate)}` 
+                : 'Daily Income';
+        }
+        return 'Monthly Income';
     };
-  }, [walkInData, membershipData, selectedPeriod]);
 
-  const totalIncome = walkInTotal + membershipTotal;
-
-  return (
-    <div className="summary-stats">
-      <div className="stat-box">
-        <h3>Walk-in Income</h3>
-        <p>₱{walkInTotal.toFixed(2)}</p>
-      </div>
-      <div className="stat-box">
-        <h3>Membership Income</h3>
-        <p>₱{membershipTotal.toFixed(2)}</p>
-      </div>
-      <div className="stat-box">
-        <h3>Total Income</h3>
-        <p>₱{totalIncome.toFixed(2)}</p>
-      </div>
-    </div>
-  );
+    return (
+        <>
+            <div className="stat-box">
+                <h3>Walk-In Income</h3>
+                <p>₱{totalWalkInIncome.toLocaleString()}</p>
+            </div>
+            <div className="stat-box">
+                <h3>Member Income</h3>
+                <p>₱{totalMemberIncome.toLocaleString()}</p>
+            </div>
+            <div className="stat-box total">
+                <h3>{getPeriodLabel()}</h3>
+                <p>₱{totalIncome.toLocaleString()}</p>
+            </div>
+        </>
+    );
 }
-
-IncomeSummaryStats.propTypes = {
-  walkInData: PropTypes.array.isRequired,
-  membershipData: PropTypes.array.isRequired,
-  selectedPeriod: PropTypes.string.isRequired
-};
 
 export default IncomeSummaryStats;

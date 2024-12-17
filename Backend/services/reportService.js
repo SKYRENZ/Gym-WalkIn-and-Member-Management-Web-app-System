@@ -129,32 +129,86 @@ static async getCustomerTrackingData(date) {
   }
 
   // Income Summary Service Method
-  static async getIncomeSummaryData(year, period = 'monthly', type) {
-    const query = `
-      SELECT 
-        EXTRACT(MONTH FROM p.payment_date) AS month,
-        COUNT(p.payment_id) AS total_entries,
-        SUM(p.amount) AS total_income
-      FROM 
-        Payment p
-      JOIN 
-        Customer c ON p.customer_id = c.customer_id
-      WHERE 
-        c.membership_type = $1
-        AND EXTRACT(YEAR FROM p.payment_date) = $2
-      GROUP BY 
-        EXTRACT(MONTH FROM p.payment_date)
-      ORDER BY 
-        month;
-    `;
+  static async getIncomeSummaryData(year, period, date = null) {
+    const yearFilter = parseInt(year);
 
-    const result = await pool.query(query, [type, year]);
-    return result.rows.map(row => ({
-      month: row.month,
-      total_entries: parseInt(row.total_entries),
-      total_income: parseFloat(row.total_income)
-    }));
-  }
+    let paymentQuery;
+    let queryParams;
+
+    if (period === 'monthly') {
+        paymentQuery = `
+            SELECT 
+                EXTRACT(MONTH FROM payment_date) AS period,
+                SUM(CASE WHEN c.membership_type = 'Walk In' THEN amount ELSE 0 END) AS walk_in_income,
+                SUM(CASE WHEN c.membership_type = 'Member' THEN amount ELSE 0 END) AS member_income
+            FROM 
+                Payment p
+            JOIN 
+                Customer c ON p.customer_id = c.customer_id
+            WHERE 
+                EXTRACT(YEAR FROM payment_date) = $1
+            GROUP BY 
+                period
+            ORDER BY 
+                period
+        `;
+        queryParams = [yearFilter];
+    } else {
+        // Daily income for a specific date or current date
+        const targetDate = date ? new Date(date) : new Date();
+        paymentQuery = `
+            SELECT 
+                DATE(payment_date) AS period,
+                SUM(CASE WHEN c.membership_type = 'Walk In' THEN amount ELSE 0 END) AS walk_in_income,
+                SUM(CASE WHEN c.membership_type = 'Member' THEN amount ELSE 0 END) AS member_income
+            FROM 
+                Payment p
+            JOIN 
+                Customer c ON p.customer_id = c.customer_id
+            WHERE 
+                DATE(payment_date) = $1
+            GROUP BY 
+                period
+        `;
+        queryParams = [targetDate.toISOString().split('T')[0]];
+    }
+
+    const result = await pool.query(paymentQuery, queryParams);
+
+    // Process the result
+    const walkInIncomeByPeriod = period === 'monthly' 
+        ? Array(12).fill(0).reduce((acc, _, index) => {
+            acc[index + 1] = 0;
+            return acc;
+        }, {})
+        : {};
+
+    const memberIncomeByPeriod = period === 'monthly'
+        ? Array(12).fill(0).reduce((acc, _, index) => {
+            acc[index + 1] = 0;
+            return acc;
+        }, {})
+        : {};
+
+    let totalWalkInIncome = 0;
+    let totalMemberIncome = 0;
+
+    result.rows.forEach(row => {
+        const period = row.period;
+        walkInIncomeByPeriod[period] = parseFloat(row.walk_in_income);
+        memberIncomeByPeriod[period] = parseFloat(row.member_income);
+        totalWalkInIncome += parseFloat(row.walk_in_income);
+        totalMemberIncome += parseFloat(row.member_income);
+    });
+
+    return {
+        walkInIncomeByPeriod,
+        memberIncomeByPeriod,
+        totalWalkInIncome,
+        totalMemberIncome,
+        totalIncome: totalWalkInIncome + totalMemberIncome
+    };
+}
 
 // In reportService.js
 static async getWalkInCustomerRecords(year, period = 'monthly') {
