@@ -1,0 +1,78 @@
+.card-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.card {
+  background-color: #212121;
+  color: white;
+  width: 350px;
+  border-radius: 15px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  font-family: Arial, sans-serif;
+}
+
+.card-header {
+  background-color: #3c3c3c;
+  padding: 15px;
+  text-align: center;
+}
+
+.card-header h1 {
+  font-size: 22px;
+  margin: 0;
+}
+
+.card-header span {
+  display: block;
+  font-size: 14px;
+}
+
+.card-body {
+  display: flex;
+  padding: 20px;
+  justify-content: space-between;
+}
+
+.left-side {
+  flex: 1;
+  padding-right: 10px;
+}
+
+.left-side h2 {
+  font-size: 16px;
+  margin-bottom: 5px;
+}
+
+.left-side p {
+  font-size: 14px;
+  margin: 3px 0;
+}
+
+.right-side {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.qr-container {
+  text-align: center;
+}
+
+.qr-code {
+  width: 100px;
+  height: 100px;
+  margin-bottom: 10px;
+}
+
+.member-label {
+  background-color: #ff7b00;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 14px;
+  text-transform: uppercase;
+}
