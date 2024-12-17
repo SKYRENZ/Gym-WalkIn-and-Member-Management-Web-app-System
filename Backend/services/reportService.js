@@ -3,76 +3,74 @@ const pool = require('../db');
 
 class ReportService {
   // Customer Tracking Service Method
-// services/reportService.js
-static async getCustomerTrackingData(date) {
-  try {
-      console.log('Fetching tracking data for date:', date);
-
-      // Validate date input
-      if (!date) {
-          throw new Error('Date parameter is required');
-      }
-
-      const trackingQuery = `
-          SELECT 
-              c.name, 
-              ci.check_in_time AS timestamp, 
-              'Member' AS role, 
-              NULL AS payment
-          FROM 
-              Customer c 
-          JOIN 
-              Membership m ON c.customer_id = m.customer_id 
-          JOIN 
-              CheckIn ci ON m.membership_id = ci.membership_id 
-          WHERE 
-              DATE(ci.check_in_time AT TIME ZONE 'Asia/Manila') = DATE($1 AT TIME ZONE 'Asia/Manila')
-
-          UNION ALL
-
-          SELECT 
-              c.name, 
-              p.payment_date AS timestamp, 
-              'Walk In' AS role, 
-              p.amount AS payment
-          FROM 
-              Customer c 
-          JOIN 
-              Payment p ON c.customer_id = p.customer_id 
-          WHERE 
-              c.membership_type = 'Walk In' 
-              AND DATE(p.payment_date AT TIME ZONE 'Asia/Manila') = DATE($1 AT TIME ZONE 'Asia/Manila')
-          ORDER BY 
-              timestamp;
-      `;
-
-      const result = await pool.query(trackingQuery, [date]);
-
-      console.log('Raw tracking data:', result.rows);
-
-      const processedData = result.rows.map(row => ({
-          name: row.name,
-          timestamp: row.timestamp ? 
-              new Date(row.timestamp).toLocaleTimeString('en-PH', { 
-                  hour: '2-digit', 
-                  minute: '2-digit', 
-                  hour12: true, 
-                  timeZone: 'Asia/Manila' 
-              }) : 
-              null,
-          role: row.role,
-          payment: row.payment
-      }));
-
-      console.log('Processed tracking data:', processedData);
-
-      return processedData;
-  } catch (error) {
-      console.error('Error in getCustomerTrackingData:', error);
-      throw error;
+  static async getCustomerTrackingData(date) {
+    try {
+        console.log('Fetching tracking data for date:', date);
+  
+        // Validate date input
+        if (!date) {
+            throw new Error('Date parameter is required');
+        }
+  
+        const trackingQuery = `
+            SELECT 
+                c.name, 
+                ci.check_in_time AS timestamp, 
+                'Member' AS role, 
+                NULL AS payment
+            FROM 
+                Customer c 
+            JOIN 
+                Membership m ON c.customer_id = m.customer_id 
+            JOIN 
+                CheckIn ci ON m.membership_id = ci.membership_id 
+            WHERE 
+                DATE(ci.check_in_time AT TIME ZONE 'Asia/Manila') = DATE($1 AT TIME ZONE 'Asia/Manila')
+  
+            UNION ALL
+  
+            SELECT 
+                c.name, 
+                p.payment_date AS timestamp, 
+                'Walk In' AS role, 
+                p.amount AS payment
+            FROM 
+                Customer c 
+            JOIN 
+                Payment p ON c.customer_id = p.customer_id 
+            WHERE 
+                c.membership_type = 'Walk In' 
+                AND DATE(p.payment_date AT TIME ZONE 'Asia/Manila') = DATE($1 AT TIME ZONE 'Asia/Manila')
+            ORDER BY 
+                timestamp;
+        `;
+  
+        const result = await pool.query(trackingQuery, [date]);
+  
+        console.log('Raw tracking data:', result.rows);
+  
+        const processedData = result.rows.map(row => ({
+            name: row.name,
+            timestamp: row.timestamp ? 
+                new Date(row.timestamp).toLocaleTimeString('en-PH', { 
+                    hour: '2-digit', 
+                    minute: '2-digit', 
+                    hour12: true, 
+                    timeZone: 'Asia/Manila' 
+                }) : 
+                null,
+            role: row.role,
+            payment: row.payment
+        }));
+  
+        console.log('Processed tracking data:', processedData);
+  
+        return processedData;
+    } catch (error) {
+        console.error('Error in getCustomerTrackingData:', error);
+        throw error;
+    }
   }
-}
-
   // Member Counting Service Method
   static async getMemberCountData(year, period = 'monthly', type) {
     try {

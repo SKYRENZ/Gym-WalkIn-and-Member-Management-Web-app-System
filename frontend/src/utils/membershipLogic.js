@@ -1,3 +1,5 @@
+
+
 export const validateMembershipDetails = (details, step) => {
     switch(step) {
         case 1: // Customer Details
@@ -54,7 +56,7 @@ export const validateMembershipDetails = (details, step) => {
 
 export const submitMembershipTransaction = async (details) => {
     try {
-        const response = await fetch('http://localhost:3000/addMembershipTransaction', {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/addMembershipTransaction`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -64,22 +66,44 @@ export const submitMembershipTransaction = async (details) => {
                 email: details.email,
                 phone: details.phoneNumber,
                 paymentMethod: details.paymentMethod,
-                referenceNumber: details.referenceNumber || null
+                referenceNumber: details.referenceNumber || null,
+                // Add any additional fields you might need
+                receivedAmount: details.receivedAmount || null,
+                // Optional: add more details from the input
+                additionalDetails: {
+                    date: new Date().toISOString(),
+                    source: 'Frontend Membership Transaction'
+                }
             }),
         });
 
+        const responseData = await response.json();
+        
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Transaction submission failed');
+            console.error('Server Error Response:', responseData);
+            throw new Error(responseData.error || 'Transaction submission failed');
         }
 
-        const result = await response.json();
+        // Log the details for debugging or audit purposes
+        console.log('Membership Transaction Details:', {
+            name: details.name,
+            email: details.email,
+            paymentMethod: details.paymentMethod
+        });
+
         return { 
             success: true, 
-            data: result 
+            data: responseData 
         };
     } catch (error) {
-        console.error('Membership Transaction Error:', error);
+        console.error('Full Membership Transaction Error:', {
+            message: error.message,
+            details: {
+                name: details.name,
+                email: details.email
+            }
+        });
+
         return { 
             success: false, 
             error: error.message 
