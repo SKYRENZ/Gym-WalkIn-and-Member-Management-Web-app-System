@@ -1,7 +1,7 @@
 // src/components/counter/PaymentMethodForm.jsx
-import  { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { PRICES } from '/src/config';// Import prices from config
+import { PRICES } from '/src/config';
 
 const PAYMENT_METHODS = [
     'Cash',
@@ -9,20 +9,24 @@ const PAYMENT_METHODS = [
     'Paymaya'
 ];
 
-const PaymentMethodForm = ({ details, onChange }) => {
+const PaymentMethodForm = ({ details, onChange, transactionType }) => {
     const [change, setChange] = useState(0);
-    const walkInFee = PRICES.WALK_IN; // Get walk-in price from config
+    
+    // Determine the correct fee based on transaction type
+    const fee = transactionType === 'membership' 
+        ? PRICES.NEW_MEMBERSHIP 
+        : PRICES.WALK_IN;
 
     // Calculate change whenever received amount changes
     useEffect(() => {
         const receivedAmount = parseFloat(details.receivedAmount || 0);
-        const calculatedChange = receivedAmount > walkInFee 
-            ? (receivedAmount - walkInFee).toFixed(2)
+        const calculatedChange = receivedAmount > fee 
+            ? (receivedAmount - fee).toFixed(2)
             : 0;
         
         setChange(calculatedChange);
         onChange('change', calculatedChange);
-    }, [details.receivedAmount, walkInFee, onChange]);
+    }, [details.receivedAmount, fee, onChange]);
 
     return (
         <div className="input-container">
@@ -48,11 +52,13 @@ const PaymentMethodForm = ({ details, onChange }) => {
             {details.paymentMethod === 'Cash' && (
                 <>
                     <div className="input-wrapper">
-                        <label className="input-label">Walk-in Fee</label>
+                        <label className="input-label">
+                            {transactionType === 'membership' ? 'Membership Fee' : 'Walk-in Fee'}
+                        </label>
                         <input 
                             className="input-field"
                             type="text"
-                            value={`₱${walkInFee.toFixed(2)}`}
+                            value={`₱${fee.toFixed(2)}`}
                             readOnly
                         />
                     </div>
@@ -64,7 +70,7 @@ const PaymentMethodForm = ({ details, onChange }) => {
                             value={details.receivedAmount}
                             onChange={(e) => onChange('receivedAmount', e.target.value)}
                             placeholder="Enter Amount Received"
-                            min={walkInFee}
+                            min={fee}
                         />
                     </div>
                     <div className="input-wrapper">
@@ -82,11 +88,13 @@ const PaymentMethodForm = ({ details, onChange }) => {
             {(details.paymentMethod === 'Gcash' || details.paymentMethod === 'Paymaya') && (
                 <>
                     <div className="input-wrapper">
-                        <label className="input-label">Walk-in Fee</label>
+                        <label className="input-label">
+                            {transactionType === 'membership' ? 'Membership Fee' : 'Walk-in Fee'}
+                        </label>
                         <input 
                             className="input-field"
                             type="text"
-                            value={`₱${walkInFee.toFixed(2)}`}
+                            value={`₱${fee.toFixed(2)}`}
                             readOnly
                         />
                     </div>
@@ -112,7 +120,8 @@ PaymentMethodForm.propTypes = {
         receivedAmount: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
         referenceNumber: PropTypes.string
     }).isRequired,
-    onChange: PropTypes.func.isRequired
+    onChange: PropTypes.func.isRequired,
+    transactionType: PropTypes.oneOf(['walkIn', 'membership']).isRequired
 };
 
 export default PaymentMethodForm;

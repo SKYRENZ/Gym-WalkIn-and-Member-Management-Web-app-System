@@ -1,5 +1,4 @@
-// MembershipForm.jsx
-import React from 'react';
+
 
 const MembershipForm = ({ details, onChange }) => {
     return (
