@@ -3,8 +3,7 @@ import Modal from 'react-modal';
 import PropTypes from 'prop-types';
 import '../../../css/admin/InformationModal.css';
 import BackIcon from '../../../assets/Back.png';
-import api from '../../../api'; 
-import { FaEdit } from 'react-icons/fa'; 
+import api from '../../../api';
 
 Modal.setAppElement('#root');
 
@@ -126,38 +125,7 @@ const InformationModal = ({
           onChange={handleInputChange}
           disabled={!isEditing}
         />
-
-        <label htmlFor="gender">Gender:</label>
-        {isEditing ? (
-          <select
-            id="gender"
-            value={customerInfo.gender}
-            onChange={handleInputChange}
-          >
-            <option value="">Select Gender</option>
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-          </select>
-        ) : (
-          <input 
-            type="text" 
-            id="gender" 
-            placeholder="Gender" 
-            value={customerInfo.gender}
-            disabled
-          />
-        )}
-
-        <label htmlFor="birthday">Birthday:</label>
-        <input 
-          type="date" 
-          id="birthday" 
-          placeholder="Birthday" 
-          value={customerInfo.birthday}
-          onChange={handleInputChange}
-          disabled={!isEditing}
-        />
-
+        
         <label htmlFor="phone">Phone Number:</label>
         <input 
           type="text" 
@@ -185,7 +153,7 @@ const InformationModal = ({
               className="editInfoButton" 
               onClick={handleEditClick}
             >
-              <FaEdit />
+              Edit
             </button>
           </div>
         )}

@@ -15,9 +15,8 @@
 /* Modal Content */
 .informationModalContent {
   background: white;
-  padding: 20px;
+  padding: 20px 30px;
   border-radius: 8px;
-  color: #333;
   width: 700px;
   max-width: 90%;
   height: 650px; /* Fixed height */
@@ -25,7 +24,7 @@
   position: relative;
   font-family: 'Poppins', sans-serif;
   display: flex;
-  flex-direction: column; /* Stack elements vertically */ /* Stack elements vertically */
+  flex-direction: column; /* Stack elements vertically */
 }
 
 .informationForm {
@@ -33,13 +32,11 @@
   flex-direction: column;
   justify-content: flex-start;
   gap: 15px; /* Add space between form fields */
-  margin-top: 10px; /* Add space above the form */
+  margin-top: 30px; /* Add space above the form */
   padding: 25px 50px;
   color: #333;
   flex-grow: 1; /* Allow the form to grow and take available space */
   overflow-y: auto; /* Add scroll if content overflows */
-  position: relative;
-  padding-bottom: 60px;
 }
 
 .informationForm label {
@@ -61,40 +58,33 @@
   align-items: center;
   position: relative;
 }
+
 .edit-button-container {
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
-  z-index: 10;
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
 }
 
 .editInfoButton {
-  background: none;
+  padding: 10px 15px;
+  font-size: 1rem;
   border: none;
+  border-radius: 4px;
   cursor: pointer;
-  padding: 10px;
-  border-radius: 50%;
+  background-color: #4665aa;
+  color: white;
   transition: background-color 0.3s ease;
 }
 
 .editInfoButton:hover {
-  background-color: rgba(0, 0, 0, 0.1);
-}
-
-.editInfoButton svg {
-  width: 24px;
-  height: 24px;
-  color: #333;
+  background-color: #0056b3;
 }
 
 .edit-actions {
-  position: absolute;
-  bottom: 10px;
-  left: 0;
-  right: 0;
   display: flex;
   justify-content: space-between;
   padding: 0 10px;
+  margin-top: 20px;
 }
 
 .cancel-edit-btn,
@@ -119,46 +109,6 @@
 .save-edit-btn:disabled {
   background-color: #cccccc;
   cursor: not-allowed;
-}
-
-.form-group {
-  margin-bottom: 15px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 5px;
-}
-
-.form-group input,
-.form-group select {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 20px;
-}
-
-.modal-actions button {
-  padding: 10px 15px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.cancel-btn {
-  background-color: #f0f0f0;
-  color: #333;
-}
-
-.save-btn {
-  background-color: #4665aa;
-  color: white;
 }
 
 .error-message {
