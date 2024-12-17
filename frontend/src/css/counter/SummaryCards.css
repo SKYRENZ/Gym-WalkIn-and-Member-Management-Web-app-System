@@ -1,5 +1,5 @@
 /* General container styling for the cards */
-.card-container {
+.summary-card-container {
     display: flex;
     flex-wrap: wrap; /* Allow cards to wrap on smaller screens */
     justify-content: space-around;
@@ -8,7 +8,7 @@
 }
 
 /* Individual card styling */
-.card {
+.summary-card {
     flex: 1 1 calc(33.333% - 2rem); /* Cards take equal width with margin */
     max-width: 300px; /* Optional: Max width for each card */
     padding: 1rem;
@@ -23,38 +23,38 @@
 }
 
 /* Specific colors for cards */
-.card.checked-in {
+.summary-card.checked-in {
     background-color: #e9f8ed; /* Light green */
 }
 
-.card.walked-in {
+.summary-card.walked-in {
     background-color: #eaf4ff; /* Light blue */
 }
 
-.card.new-members {
+.summary-card.new-members {
     background-color: #eaf4ff; /* Light blue */
 }
 
-.card.voucher-codes {
+.summary-card.voucher-codes {
     background-color: #fdecef; /* Light red/pink */
 }
 
 /* Card header styling */
-.card h3 {
+.summary-card h3 {
     margin: 0;
     font-size: 20px;
     font-weight: 600;
     color: #333;
 }
 
-.card p {
+.summary-card p {
     margin: 0.5rem 0 0;
     font-size: 12px;
     color: #666;
 }
 
 /* Number styling */
-.card .number {
+.summary-card .number {
     font-size: 2rem;
     font-weight: bold;
     color: #000;
@@ -64,7 +64,7 @@
 }
 
 /* Icon styling */
-.card .icon {
+.summary-card .icon {
     background-color: #000;
     color: #fff;
     border-radius: 50%;
@@ -78,7 +78,7 @@
     right: 1rem; /* Bottom-right alignment */
 }
 
-.card .icon img {
+.summary-card .icon img {
     width: 100%; /* Icon will fit the container */
     height: 100%; /* Icon will fit the container */
     object-fit: contain; /* Maintain aspect ratio */
@@ -86,28 +86,28 @@
 }
 
 /* Optional: Align icon to the left of the number */
-.card .number .icon {
+.summary-card .number .icon {
     position: static; /* Reset positioning */
     margin-right: 0.5rem; /* Space between icon and number */
 }
 
 /* Media query for smaller screens */
 @media (max-width: 768px) {
-    .card-container {
+    .summary-card-container {
         justify-content: center; /* Center align cards on smaller screens */
     }
 
-    .card {
+    .summary-card {
         flex: 1 1 calc(100% - 2rem); /* Make each card take full width with margin */
         max-width: 100%; /* Ensure the card is fully responsive */
         margin: 1rem; /* Space between stacked cards */
     }
 
-    .card .number {
+    .summary-card .number {
         font-size: 1.5rem; /* Slightly smaller number on mobile */
     }
 
-    .card .icon {
+    .summary-card .icon {
         width: 24px; /* Smaller icon on mobile */
         height: 24px;
     }

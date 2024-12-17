@@ -1,4 +1,3 @@
-// src/components/counter/PaymentMethodForm.jsx
 import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { PRICES } from '/src/config';
@@ -29,7 +28,7 @@ const PaymentMethodForm = ({ details, onChange, transactionType }) => {
     }, [details.receivedAmount, fee, onChange]);
 
     return (
-        <div className="input-container">
+        <div className="payment-method-container">
             <div className="input-wrapper">
                 <label className="input-label">Payment Method</label>
                 <div className="radio-wrapper">

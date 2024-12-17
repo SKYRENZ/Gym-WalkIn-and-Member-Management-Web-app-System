@@ -40,7 +40,6 @@ const TransactionTypeSelection = ({ onSelect }) => {
         setTransactionType('');
     };
 
-
     const handleClosePopup = () => {
         setShowPopup(false);
         resetState();
@@ -65,6 +64,7 @@ const TransactionTypeSelection = ({ onSelect }) => {
         setShowPopup(true);
         setTransactionType('membership');
     };
+
     const handleRenewalClick = () => {
         resetState();
         setShowPopup(true);
@@ -118,6 +118,14 @@ const TransactionTypeSelection = ({ onSelect }) => {
         }
     };
 
+    const handleBack = () => {
+        if (step > 1) {
+            setStep(step - 1);
+        } else {
+            handleClosePopup();
+        }
+    };
+
     const renderFormByStep = () => {
         switch(transactionType) {
             case 'walkIn':
@@ -129,87 +137,88 @@ const TransactionTypeSelection = ({ onSelect }) => {
                                 onChange={handleDetailsChange} 
                             />
                         );
-                        case 2:
-                            return (
-                                <PaymentMethodForm 
-                                    details={details} 
-                                    onChange={handleDetailsChange} 
-                                />
-                            );
-                        case 3:
-                            return (
-                                <div className="confirmation">
-                                    <h3>Confirm Walk-In Transaction Details</h3>
-                                    <div>
-                                        <p><strong>Name:</strong> {details.name}</p>
-                                        <p><strong>Phone:</strong> {details.phoneNumber}</p>
-                                        <p><strong>Email:</strong> {details.email || 'N/A'}</p>
-                                        <p><strong>Payment Method:</strong> {details.paymentMethod}</p>
-                                        <p><strong>Walk-in Fee:</strong> ₱{PRICES.WALK_IN.toFixed(2)}</p>
-                                        {details.paymentMethod === 'Cash' && (
-                                            <>
-                                                <p><strong>Amount Received:</strong> {details.receivedAmount}</p>
-                                                <p><strong>Change:</strong> ₱{details.change}</p>
-                                            </>
-                                        )}
-                                        {details.referenceNumber && (
-                                            <p><strong>Reference Number:</strong> {details.referenceNumber}</p>
-                                        )}
-                                    </div>
+                    case 2:
+                        return (
+                            <PaymentMethodForm 
+                                details={details} 
+                                onChange={handleDetailsChange} 
+                            />
+                        );
+                    case 3:
+                        return (
+                            <div className="confirmation">
+                                <h3>Confirm Walk-In Transaction Details</h3>
+                                <div>
+                                    <p><strong>Name:</strong> {details.name}</p>
+                                    <p><strong>Phone:</strong> {details.phoneNumber}</p>
+                                    <p><strong>Email:</strong> {details.email || 'N/A'}</p>
+                                    <p><strong>Payment Method:</strong> {details.paymentMethod}</p>
+                                    <p><strong>Walk-in Fee:</strong> ₱{PRICES.WALK_IN.toFixed(2)}</p>
+                                    {details.paymentMethod === 'Cash' && (
+                                        <>
+                                            <p><strong>Amount Received:</strong> {details.receivedAmount}</p>
+                                            <p><strong>Change:</strong> ₱{details.change}</p>
+                                        </>
+                                    )}
+                                    {details.referenceNumber && (
+                                        <p><strong>Reference Number:</strong> {details.referenceNumber}</p>
+                                    )}
                                 </div>
-                            );
-                        default:
-                            return null;
-                    }
-                case 'membership':
-                    switch(step) {
-                        case 1:
-                            return (
-                                <MembershipForm 
-                                    details={details} 
-                                    onChange={handleDetailsChange} 
-                                />
-                            );
-                        case 2:
-                            return (
-                                <PaymentMethodForm 
-                                    details={details} 
-                                    onChange={handleDetailsChange} 
-                                    transactionType="membership"
-                                />
-                            );
-                        case 3:
-                            return (
-                                <div className="confirmation">
-                                    <h3>Confirm Membership Transaction Details</h3>
-                                    <div>
-                                        <p><strong>Name:</strong> {details.name}</p>
-                                        <p><strong>Phone:</strong> {details.phoneNumber}</p>
-                                        <p><strong>Email:</strong> {details.email}</p>
-                                        <p><strong>Payment Method:</strong> {details.paymentMethod}</p>
-                                        <p><strong>Membership Fee:</strong> ₱{PRICES.NEW_MEMBERSHIP.toFixed(2)}</p>
-                                        {details.paymentMethod === 'Cash' && (
-                                            <>
-                                                <p><strong>Amount Received:</strong> {details.receivedAmount}</p>
-                                                <p><strong>Change:</strong> ₱{details.change}</p>
-                                            </>
-                                        )}
-                                        {details.referenceNumber && (
-                                            <p><strong>Reference Number:</strong> {details.referenceNumber}</p>
-                                        )}
-                                    </div>
+                            </div>
+                        );
+                    default:
+                        return null;
+                }
+            case 'membership':
+                switch(step) {
+                    case 1:
+                        return (
+                            <MembershipForm 
+                                details={details} 
+                                onChange={handleDetailsChange} 
+                            />
+                        );
+                    case 2:
+                        return (
+                            <PaymentMethodForm 
+                                details={details} 
+                                onChange={handleDetailsChange} 
+                                transactionType="membership"
+                            />
+                        );
+                    case 3:
+                        return (
+                            <div className="confirmation">
+                                <h3>Confirm Membership Transaction Details</h3>
+                                <div>
+                                    <p><strong>Name:</strong> {details.name}</p>
+                                    <p><strong>Phone:</strong> {details.phoneNumber}</p>
+                                    <p><strong>Email:</strong> {details.email}</p>
+                                    <p><strong>Payment Method:</strong> {details.paymentMethod}</p>
+                                    <p><strong>Membership Fee:</strong> ₱{PRICES.NEW_MEMBERSHIP.toFixed(2)}</p>
+                                    {details.paymentMethod === 'Cash' && (
+                                        <>
+                                            <p><strong>Amount Received:</strong> {details.receivedAmount}</p>
+                                            <p><strong>Change:</strong> ₱{details.change}</p>
+                                        </>
+                                    )}
+                                    {details.referenceNumber && (
+                                        <p><strong>Reference Number:</strong> {details.referenceNumber}</p>
+                                    )}
                                 </div>
-                            );
-                        default:
-                            return null;
-                    }
-                default:
-                    return null;
-            }
-        };
-    
-        return (
-            <div className="transaction-type-selection">
+                            </div>
+                        );
+                    default:
+                        return null;
+                }
+            default:
+                return null;
+        }
+    };
+
+    return (
+        <div className="transaction-type-selection">
+            {!showPopup && (
                 <div className="button-grid-container">
                     <div className="button-grid">
                         <button 
@@ -238,12 +247,15 @@ const TransactionTypeSelection = ({ onSelect }) => {
                         </button>
                     </div>
                 </div>
-    
+            )}
+
+            {showPopup && (
                 <GenericPopup 
                     isOpen={showPopup} 
                     onClose={handleClosePopup} 
                     title={`${transactionType === 'walkIn' ? 'Walk-In' : 'Membership'} Transaction`} 
                     step={step}
+                    onBack={handleBack}
                 >
                     {renderFormByStep()}
                     
@@ -253,16 +265,18 @@ const TransactionTypeSelection = ({ onSelect }) => {
                         </button>
                     </div>
                 </GenericPopup>
-            </div>
-        );
-    };
-    
-    TransactionTypeSelection.propTypes = {
-        onSelect: PropTypes.func
-    };
-    
-    // Provide a default no-op function
-    TransactionTypeSelection.defaultProps = {
-        onSelect: () => {} // Empty function as default
-    };
-    export default TransactionTypeSelection;
+            )}
+        </div>
+    );
+};
+
+TransactionTypeSelection.propTypes = {
+    onSelect: PropTypes.func
+};
+
+// Provide a default no-op function
+TransactionTypeSelection.defaultProps = {
+    onSelect: () => {} // Empty function as default
+};
+
+export default TransactionTypeSelection;
