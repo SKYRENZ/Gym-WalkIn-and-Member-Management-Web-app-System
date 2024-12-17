@@ -174,9 +174,28 @@
   width: 48%;
 }
 
+.qr-preview-container {
+  width: 48%;
+}
+
+.preview-area {
+  border: 1px solid #ccc;
+  width: 400px; /* Match the width of the card */
+  height: 255px; /* Set the height to match the card */
+  overflow: hidden; /* Ensure content fits within the box */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .qr-member-print .preview-area {
   border: 1px solid #ccc;
-  height: 200px;
+  width: 400px; /* Match the width of the card */
+  height: 255px; /* Set the height to match the card */
+  overflow: hidden; /* Ensure content fits within the box */
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 /* Media Queries for Responsiveness */

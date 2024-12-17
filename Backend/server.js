@@ -1516,3 +1516,5 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
+// Serve static files from the frontend/public directory
+app.use('/images/qrcodes', express.static(path.join(__dirname, '../frontend/public/images/qrcodes')));

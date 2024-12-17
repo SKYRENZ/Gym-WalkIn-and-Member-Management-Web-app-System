@@ -1,16 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import Modal from 'react-modal';
 import useMembers from '../../../hooks/useMembers';
 import '../../../css/admin/qrMembershipPrintModal.css';
 import backIcon from '../../../assets/Back.png'; // Import the back icon
 import searchIcon from '../../../assets/Search.png'; // Import the search icon
+import MembershipCard from './membershipCard'; // Import the MembershipCard component
+import html2pdf from 'html2pdf.js';
 
 // Set the app element for accessibility
 Modal.setAppElement('#root');
 
 const QrMembershipPrintModal = ({ isOpen, onClose }) => {
   const [searchText, setSearchText] = useState('');
+  const [selectedMember, setSelectedMember] = useState(null);
   const { members, loading, error } = useMembers();
+  const cardRef = useRef();
 
   console.log('Members:', members);
   console.log('Loading:', loading);
@@ -22,7 +26,19 @@ const QrMembershipPrintModal = ({ isOpen, onClose }) => {
 
   const handleItemClick = (member) => {
     console.log('Clicked member:', member);
-    // Add your click handling logic here
+    setSelectedMember(member);
+  };
+
+  const handlePrint = () => {
+    const element = cardRef.current;
+    const opt = {
+      margin: 1,
+      filename: 'membership_card.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2 },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+    html2pdf().from(element).set(opt).save();
   };
 
   const filteredMembers = members.filter(member =>
@@ -85,7 +101,16 @@ const QrMembershipPrintModal = ({ isOpen, onClose }) => {
         {/* Right Section */}
         <div className="qr-preview-container">
           <h3>Preview:</h3>
-          <div className="preview-area"></div>
+          <div className="preview-area">
+            {selectedMember && (
+              <MembershipCard
+                ref={cardRef}
+                member={selectedMember}
+                qrCodePath={`/images/qrcodes/${selectedMember.membership_id}.png`}
+              />
+            )}
+          </div>
+          <button onClick={handlePrint}>Print</button> {/* Add print button */}
         </div>
       </div>
     </Modal>
