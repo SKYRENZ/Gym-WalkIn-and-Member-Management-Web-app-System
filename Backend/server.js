@@ -88,6 +88,7 @@ app.get('/memberships', async (req, res) => {
 
   });
   //counter
+  //transaction log
   app.get('/getTransactionLogs', async (req, res) => {
     try {
       const transactionLogs = await ReportService.getTransactionLogs();
@@ -103,6 +104,32 @@ app.get('/memberships', async (req, res) => {
       });
     }
   });
+  //walkincard
+  // In your server.js or a separate route file
+app.get('/today-walkin-count', async (req, res) => {
+  try {
+      const query = `
+          SELECT COUNT(DISTINCT c.name) AS count
+          FROM Payment p
+          JOIN Customer c ON p.customer_id = c.customer_id
+          WHERE 
+              c.membership_type = 'Walk In' 
+              AND DATE(p.payment_date AT TIME ZONE 'Asia/Manila') = CURRENT_DATE;
+      `;
+
+      const result = await pool.query(query);
+      
+      res.status(200).json({
+          count: parseInt(result.rows[0].count) || 0
+      });
+  } catch (error) {
+      console.error('Error fetching today\'s walk-in count:', error);
+      res.status(500).json({ 
+          count: 0,
+          error: 'Failed to fetch walk-in count' 
+      });
+  }
+});
 
 //admin
 //customer Tracking

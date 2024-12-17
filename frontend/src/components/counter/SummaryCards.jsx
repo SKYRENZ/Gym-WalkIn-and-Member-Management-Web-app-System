@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import '../../css/counter/SummaryCards.css';
 import CheckedInCard from './CheckinCard.jsx';
 import WalkedInCard from './WalkInCard.jsx';
