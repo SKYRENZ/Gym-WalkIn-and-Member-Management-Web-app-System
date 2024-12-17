@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Modal from 'react-modal';
+import useMembers from '../../../hooks/useMembers';
 import '../../../css/admin/qrMembershipPrintModal.css';
 import backIcon from '../../../assets/Back.png'; // Import the back icon
 import searchIcon from '../../../assets/Search.png'; // Import the search icon
@@ -9,9 +10,35 @@ Modal.setAppElement('#root');
 
 const QrMembershipPrintModal = ({ isOpen, onClose }) => {
   const [searchText, setSearchText] = useState('');
+  const { members, loading, error } = useMembers();
+
+  console.log('Members:', members);
+  console.log('Loading:', loading);
+  console.log('Error:', error);
 
   const handleSearchChange = (event) => {
     setSearchText(event.target.value);
+  };
+
+  const handleItemClick = (member) => {
+    console.log('Clicked member:', member);
+    // Add your click handling logic here
+  };
+
+  const filteredMembers = members.filter(member =>
+    member.name.toLowerCase().includes(searchText.toLowerCase())
+  );
+
+  const renderListItems = () => {
+    if (loading) return <li>Loading...</li>;
+    if (error) return <li>{error}</li>;
+    if (!filteredMembers.length) return <li>No records found</li>;
+
+    return filteredMembers.map((member) => (
+      <li key={member.membership_id} onClick={() => handleItemClick(member)} className="clickable">
+        {member.name}
+      </li>
+    ));
   };
 
   return (
@@ -29,36 +56,34 @@ const QrMembershipPrintModal = ({ isOpen, onClose }) => {
       </div>
 
       {/* Main Content */}
-      <div className="group-4">
+      <div className="qr-modal-body">
         {/* Left Section */}
-        <div className="group-5">
-          <div className="transaction-search">
-            <div className="search-container">
-              <img className="vector" src={searchIcon} alt="Search" />
-              <input
-                type="text"
-                className="search-input"
-                placeholder="Search"
-                value={searchText}
-                onChange={handleSearchChange}
-              />
+        <div className="left-section">
+          <div className="transaction-search-container">
+            <div className="transaction-search">
+              <div className="search-container">
+                <img className="vector" src={searchIcon} alt="Search" />
+                <input
+                  type="text"
+                  className="search-input"
+                  placeholder="Search"
+                  value={searchText}
+                  onChange={handleSearchChange}
+                />
+              </div>
             </div>
           </div>
-          <div className="group-627">
+          <div className="members-list">
             <h2>Members</h2>
+            <hr className="members-divider" />
             <ul>
-              <li>Juan Dela Cruz</li>
-              <li>Maria Santos</li>
-              <li>Carlos Reyes</li>
-              <li>Ana Mendoza</li>
-              <li>Luis Aquino</li>
-              <li>Gary Vasquez</li>
+              {renderListItems()}
             </ul>
           </div>
         </div>
 
         {/* Right Section */}
-        <div className="group-629">
+        <div className="qr-preview-container">
           <h3>Preview:</h3>
           <div className="preview-area"></div>
         </div>

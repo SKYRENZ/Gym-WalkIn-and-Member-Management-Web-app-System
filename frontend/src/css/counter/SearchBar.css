@@ -17,6 +17,7 @@
     width: auto; /* Default width for normal screens */
     box-sizing: border-box;
     background-color: white;
+    pointer-events: auto;
 }
 
 /* Search button styling */
@@ -32,6 +33,10 @@
     align-items: center;
     justify-content: center;
     height: 100%;
+}
+
+.search-button:focus {
+    outline: none;
 }
 
 /* Search button image styling */

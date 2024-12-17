@@ -42,13 +42,16 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-right: 20px;
+  gap: 20px;
+}
+
+.search-container {
+  flex: 0; /* Prevent the search bar from growing */
 }
 
 .view-buttons {
   display: flex;
   gap: 10px;
-  margin-left: auto;
 }
 
 /* Button Styles */
@@ -146,14 +149,33 @@
 .table-section {
   flex-grow: 1;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%; /* Ensure it takes the full height of the container */
+  overflow-y: hidden;
 }
 
 .customer-table {
   width: 100%;
+  height: 100%; /* Ensure it takes the full height of the container */
   border-collapse: collapse;
   margin-top: 10px;
   font-size: 16px;
   table-layout: fixed;
+}
+
+.customer-table thead {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.customer-table tbody {
+  display: block;
+  height: calc(100% - 40px); /* Adjust height to account for thead */
+  overflow-y: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .customer-table th, .customer-table td {
@@ -191,7 +213,7 @@
 
 .customer-table tbody {
   display: block;
-  max-height: 320px; /* Adjust as needed */
+  height: 100%; /* Adjust as needed */
   overflow-y: auto;
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -340,6 +362,10 @@
     width: 30px;
     height: 30px;
   }
+  .search-button-container {
+    flex-direction: column; /* Stack elements vertically */
+    align-items: center;
+  }
 
   .button-container {
     flex-direction: column;
@@ -349,12 +375,12 @@
 
   .search-container {
     width: 100%;
-    text-align: center;
   }
 
   .view-buttons {
     width: 100%;
     justify-content: center;
+    flex-direction: row;
   }
 
   .action-buttons {
@@ -379,8 +405,8 @@
   }
 
   .customer-table tbody {
-    max-height: 200px; /* Adjust as needed */
-  }
+    height: calc(100% - 40px); /* Adjust height to account for thead */
+  } 
 }
 
 @media (max-width: 480px) {
@@ -413,6 +439,6 @@
   }
 
   .customer-table tbody {
-    max-height: 150px; /* Adjust as needed */
+    height: calc(100% - 40px); /* Adjust height to account for thead */
   }
 }
