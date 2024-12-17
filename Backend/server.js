@@ -1,7 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const path = require('path');
-const fs = require('fs'); // Import the fs module
 const {
     updateMembershipStatus,
     checkInMember,
@@ -15,6 +13,9 @@ const PORT = process.env.PORT || 3000;
 const { PRICES } = require('./config');
 const corsConfig = require('./Middleware/corsConfig'); 
 const ReportService = require('./services/reportService');
+const QRCode = require('qrcode');
+const path = require('path');
+const fs = require('fs');
 
 
 // Apply CORS middleware
@@ -162,31 +163,32 @@ app.get('/getNewMembers', async (req, res) => {
 //customer Tracking
 app.get('/customerTracking', async (req, res) => {
   const { date } = req.query;
-  
-  console.log('Received Date:', date); // Add this line for debugging
+
+  console.log('Received Date (Raw):', date);
+  console.log('Received Date (Parsed):', new Date(date));
 
   try {
-    if (!date) {
+    if (!date) { 
       return res.status(400).json({ 
         success: false, 
         error: 'Date is required' 
-      });
-    }
+      }); 
+    } 
 
     const trackingData = await ReportService.getCustomerTrackingData(date);
 
-    res.status(200).json({
-      success: true,
-      data: trackingData
-    });
-  } catch (error) {
-    console.error('Full Customer Tracking Error:', error);
+    res.status(200).json({ 
+      success: true, 
+      data: trackingData 
+    }); 
+  } catch (error) { 
+    console.error('Full Customer Tracking Error:', error); 
     res.status(500).json({ 
-      success: false,
+      success: false, 
       error: 'Error fetching customer tracking data', 
       details: error.message 
-    });
-  }
+    }); 
+  } 
 });
 
 //member counting
@@ -699,82 +701,127 @@ app.post('/addWalkInTransaction', async (req, res) => {
 });
 
 app.post('/addMembershipTransaction', async (req, res) => {
-    const { name, email, phone, paymentMethod } = req.body;
-    const amount = PRICES.NEW_MEMBERSHIP; // Use the global price
+  const { name, email, phone, paymentMethod } = req.body;
+  const amount = PRICES.NEW_MEMBERSHIP; // Use the global price 
 
-    // Validate input
-    if (!name || !email || !paymentMethod) {
-        return res.status(400).json({ error: 'Name, email, and payment method are required' });
-    }
+  // Validate input 
+  if (!name || !email || !paymentMethod) { 
+      return res.status(400).json({ error: 'Name, email, and payment method are required' }); 
+  } 
 
-    const customerQuery = `
-        INSERT INTO Customer (name, email, membership_type, contact_info)
-        VALUES ($1, $2, 'Member', $3) RETURNING customer_id;
-    `;
+  const customerQuery = ` 
+      INSERT INTO Customer (name, email, membership_type, contact_info) 
+      VALUES ($1, $2, 'Member', $3) RETURNING customer_id; 
+  `; 
 
-    const membershipQuery = `
-        INSERT INTO Membership (customer_id, start_date, end_date, status)
-        VALUES ($1, $2, $3, $4) RETURNING membership_id;
-    `;
+  const membershipQuery = ` 
+      INSERT INTO Membership (customer_id, start_date, end_date, status, qr_code_path) 
+      VALUES ($1, $2, $3, $4, $5) RETURNING membership_id; 
+  `; 
 
-    const paymentQuery = `
-        INSERT INTO Payment (amount, method, status, payment_date, customer_id)
-        VALUES ($1, $2, $3, $4, $5) RETURNING payment_id;
-    `;
+  const paymentQuery = ` 
+      INSERT INTO Payment (amount, method, status, payment_date, customer_id, membership_id) 
+      VALUES ($1, $2, $3, $4, $5, $6) RETURNING payment_id; 
+  `; 
 
-    let client;
+  let client; 
 
-    try {
-        client = await pool.connect();
-        await client.query('BEGIN');
+  try { 
+      client = await pool.connect(); 
+      await client.query('BEGIN'); 
 
-        // Insert customer
-        const customerResult = await client.query(customerQuery, [name, email, phone || null]);
-        const customerId = customerResult.rows[0].customer_id;
+      // Insert customer 
+      const customerResult = await client.query(customerQuery, [name, email, phone || null]); 
+      const customerId = customerResult.rows[0].customer_id; 
 
-        // Define start and end dates for the membership
-        const startDate = new Date();
-        const endDate = new Date();
-        endDate.setFullYear(endDate.getFullYear() + 1); // Set end date to one year from now
+      // Define start and end dates for the membership 
+      const startDate = new Date(); 
+      const endDate = new Date(); 
+      endDate.setMonth(endDate.getMonth() + 1); // Set end date to 1 month from now
 
-        // Insert membership and capture membershipId
-        const membershipResult = await client.query(membershipQuery, [customerId, startDate, endDate, 'Active']);
-        const membershipId = membershipResult.rows[0].membership_id; // Ensure this is defined
+      // Prepare QR code directories
+      const backendQRCodeDir = path.join(__dirname, 'qrcodes');
+      const frontendQRCodeDir = path.join(__dirname, '..', 'frontend', 'public', 'images', 'qrcodes');
 
-        // Insert payment
-        const paymentStatus = 'Completed'; // Example status
-        const paymentDate = new Date().toISOString(); // Current timestamp
+      // Ensure directories exist
+      [backendQRCodeDir, frontendQRCodeDir].forEach(dir => {
+          if (!fs.existsSync(dir)) {
+              fs.mkdirSync(dir, { recursive: true });
+          }
+      });
 
-        const paymentResult = await client.query(paymentQuery, [
-            amount,
-            paymentMethod,
-            paymentStatus,
-            paymentDate,
-            customerId
-        ]);
+      // Generate QR code
+      const generateQRCode = async (membershipId) => {
+          const backendQRCodePath = path.join(backendQRCodeDir, `${membershipId}.png`);
+          const frontendQRCodePath = path.join(frontendQRCodeDir, `${membershipId}.png`);
 
-        // Commit the transaction
-        await client.query('COMMIT');
+          try {
+              // Generate QR code for both backend and frontend
+              await QRCode.toFile(backendQRCodePath, membershipId.toString());
+              await QRCode.toFile(frontendQRCodePath, membershipId.toString());
+              return backendQRCodePath;
+          } catch (error) {
+              console.error('Error generating QR code:', error);
+              throw error;
+          }
+      };
 
-        res.status(201).json({
-            customerId: customerId,
-            membershipId: membershipId, // Return the membershipId
-            paymentId: paymentResult.rows[0].payment_id
-        });
-    } catch (error) {
-        console.error('Error adding membership transaction:', error);
-        if (client) {
-            await client.query('ROLLBACK');
-        }
-        res.status(500).json({
-            error: 'An error occurred while adding the membership transaction',
-            details: error.message
-        });
-    } finally {
-        if (client) {
-            client.release();
-        }
-    }
+      // Insert membership and capture membershipId 
+      const membershipResult = await client.query(membershipQuery, [
+          customerId, 
+          startDate, 
+          endDate, 
+          'Active',
+          null // Placeholder for QR code path
+      ]); 
+      const membershipId = membershipResult.rows[0].membership_id;
+
+      // Generate QR code and update membership with QR code path
+      const qrCodePath = await generateQRCode(membershipId);
+
+      // Update membership with QR code path
+      await client.query(`
+          UPDATE Membership 
+          SET qr_code_path = $1 
+          WHERE membership_id = $2
+      `, [qrCodePath, membershipId]);
+
+      // Insert payment 
+      const paymentStatus = 'Completed'; 
+      const paymentDate = new Date().toISOString(); 
+
+      const paymentResult = await client.query(paymentQuery, [ 
+          amount, 
+          paymentMethod, 
+          paymentStatus, 
+          paymentDate, 
+          customerId, 
+          membershipId 
+      ]); 
+
+      // Commit the transaction 
+      await client.query('COMMIT'); 
+
+      res.status(201).json({ 
+          customerId: customerId, 
+          membershipId: membershipId, 
+          paymentId: paymentResult.rows[0].payment_id,
+          qrCodePath: `/images/qrcodes/${membershipId}.png` // Frontend-relative path
+      }); 
+  } catch (error) { 
+      console.error('Error adding membership transaction:', error); 
+      if (client) { 
+          await client.query('ROLLBACK'); 
+      } 
+      res.status(500).json({ 
+          error: 'An error occurred while adding the membership transaction', 
+          details: error.message 
+      }); 
+  } finally { 
+      if (client) { 
+          client.release(); 
+      } 
+  } 
 });
 
 app.post('/renewMembership', async (req, res) => {
@@ -891,7 +938,7 @@ app.post('/generateQRCodesForExistingMembers', async (req, res) => {
     }
 });
 
-const QRCode = require('qrcode'); // Ensure you have this package installed
+
 
 app.post('/checkIn', async (req, res) => {
     const { membershipId } = req.body; // Accept membership ID
