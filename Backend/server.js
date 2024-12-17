@@ -89,9 +89,7 @@ app.get('/memberships', async (req, res) => {
   });
 
 //admin
-
 //customer Tracking
-
 app.get('/customerTracking', async (req, res) => {
   const { date } = req.query;
   
