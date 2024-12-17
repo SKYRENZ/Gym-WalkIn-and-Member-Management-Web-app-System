@@ -50,6 +50,7 @@
   border-radius: 5px;
   background-color: white;
   color: #333;
+  pointer-events: auto; /* Enable pointer events */
 }
 
 .VoucherHeader {
@@ -66,43 +67,55 @@
 }
 
 .editInfoButton {
-  padding: 10px 15px;
+  padding: 10px 50px;
   font-size: 1rem;
   border: none;
-  border-radius: 4px;
+  border-radius: 25px;
   cursor: pointer;
-  background-color: #4665aa;
+  background-color: #333;
+  margin-top: 30px;
   color: white;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
-.editInfoButton:hover {
-  background-color: #0056b3;
+.editInfoButton:hover,  .cancel-edit-btn:hover, .save-edit-btn:hover {
+  background-color: #0056b3; /* Match hover color with AccountModal buttons */
+  color: white;
+  transform: translateY(-2px);
+  opacity: 0.9;
 }
 
 .edit-actions {
   display: flex;
   justify-content: space-between;
   padding: 0 10px;
-  margin-top: 20px;
+  margin-top: 50px;
 }
 
 .cancel-edit-btn,
 .save-edit-btn {
-  padding: 10px 15px;
+  padding: 10px 30px;
+  font-size: 1rem;
   border: none;
-  border-radius: 4px;
+  border-radius: 25px;
   cursor: pointer;
+  background-color: #333;
+  margin-top: 30px;
+  color: white;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  cursor: pointer;
+  flex: 1; /* Make buttons take equal space */
+  margin: 0 5px; /* Add space between buttons */
+  max-width: 200px; /* Set a maximum width for the buttons */
+}
+
+.editInfoButton:focus, .cancel-edit-btn:focus, .save-edit-btn:focus {
+  outline: none;
 }
 
 .cancel-edit-btn {
   background-color: #f0f0f0;
   color: #333;
-}
-
-.save-edit-btn {
-  background-color: #4665aa;
-  color: white;
 }
 
 .cancel-edit-btn:disabled,
@@ -132,6 +145,7 @@
     width: 30px;
     height: 30px;
   }
+  
 }
 
 @media (max-width: 480px) {

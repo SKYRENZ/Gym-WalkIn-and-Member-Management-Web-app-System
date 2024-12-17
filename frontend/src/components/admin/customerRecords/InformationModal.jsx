@@ -53,6 +53,13 @@ const InformationModal = ({
     fetchCustomerInfo();
   }, [isOpen, customerName]);
 
+  // Cleanup effect to reset state when modal is closed
+  useEffect(() => {
+    if (!isOpen) {
+      setIsEditing(false);
+    }
+  }, [isOpen]);
+
   // Handle input changes during editing
   const handleInputChange = (e) => {
     const { id, value } = e.target;
@@ -146,8 +153,10 @@ const InformationModal = ({
           disabled={!isEditing}
         />
 
-        {/* Edit Button */}
-        {!isEditing && (
+      </div>
+
+      {/* Edit Button */}
+      {!isEditing && (
           <div className="edit-button-container">
             <button 
               className="editInfoButton" 
@@ -177,7 +186,6 @@ const InformationModal = ({
             </button>
           </div>
         )}
-      </div>
     </Modal>
   );
 };

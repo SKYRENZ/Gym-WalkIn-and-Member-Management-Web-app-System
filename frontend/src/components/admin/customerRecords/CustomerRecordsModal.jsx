@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Modal from 'react-modal';
 import { useCustomerRecords } from '../../../hooks/useCustomerRecords';
 import InformationModal from './InformationModal';
@@ -27,6 +27,12 @@ const CustomerRecordsModal = ({ isOpen, onClose }) => {
     loading, 
     error 
   } = useCustomerRecords(currentYear, view === "WalkIn" ? "Walk In" : "Member");
+
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedCustomer(null);
+    }
+  }, [isOpen]);
 
   const handleViewChange = (viewName) => {
     setView(viewName);
