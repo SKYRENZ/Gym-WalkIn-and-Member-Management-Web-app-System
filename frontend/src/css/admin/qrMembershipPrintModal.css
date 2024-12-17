@@ -57,15 +57,26 @@
 }
 
 /* Main Content */
-.qr-member-print .group-4 {
+.qr-member-print .qr-modal-body {
   display: flex;
   justify-content: space-between;
-  column-gap: 100px;
+  column-gap: 20px;
 }
 
-.qr-member-print .group-5,
-.qr-member-print .group-629 {
+.qr-member-print .left-section {
+  display: flex;
+  flex-direction: column;
   width: 48%;
+  height: 565px;
+}
+
+.qr-member-print .transaction-search-container,
+.qr-member-print .members-list {
+  width: 100%;
+}
+
+.qr-member-print .transaction-search-container {
+  margin-bottom: 20px; /* Add margin to separate from the members list */
 }
 
 .qr-member-print .transaction-search .search-container {
@@ -81,8 +92,8 @@
 
 .qr-member-print .transaction-search .vector {
   margin-right: 5px; /* Adjust margin to fit within the container */
-  width: 20px; /* Set the width to 15px */
-  height: 20px; /* Set the height to 15px */
+  width: 20px; /* Set the width to 20px */
+  height: 20px; /* Set the height to 20px */
 }
 
 .qr-member-print .transaction-search .search-input {
@@ -101,19 +112,58 @@
   font-family: 'Poppins', sans-serif; /* Use Poppins font */
 }
 
-.qr-member-print .group-627 h2 {
-  font-size: 25px; /* Set the font size to 16px */
-  font-weight: bold;
-  margin: 10px 0;
+.qr-member-print .members-list {
+  background-color: #F2F3F6;
+  width: 100%;
+  height: 100%;
+  margin-bottom: 15px;
+  border-radius: 5px;
 }
 
-.qr-member-print .group-627 ul {
+.qr-member-print .members-list h2 {
+  font-size: 25px; /* Set the font size to 25px */
+  font-weight: bold;
+  margin: 10px 0;
+  text-align: center;
+}
+
+.qr-member-print .members-list .members-divider {
+  border: none;
+  border-top: 1px solid #9F9F9F;
+  margin: 10px 0;
+  margin-left: 10px; /* Add margin to the left */
+  margin-right: 10px; /* Add margin to the right */
+}
+
+.members-list ul {
   list-style: none;
   padding: 0;
 }
 
-.qr-member-print .group-627 li {
-  margin: 5px 0;
+.members-list li {
+  padding: 10px;
+  cursor: pointer;
+  position: relative; /* Required for the pseudo-element */
+  transition: background-color 0.3s;
+  color: black; /* Set the text color to black */
+  display: block; /* Ensure the li is block to maintain vertical layout */
+}
+
+.members-list li:hover {
+  background-color: #D7E5FB; /* Set the background color on hover */
+}
+
+
+.members-list li:hover::after {
+  width: 100%; /* Full width underline on hover */
+}
+
+.members-list li.clickable {
+  cursor: pointer;
+}
+
+.qr-member-print .qr-preview-container {
+  width: 48%;
 }
 
 .qr-member-print .preview-area {
@@ -139,13 +189,14 @@
       height: 30px;
   }
 
-  .qr-member-print .group-4 {
+  .qr-member-print .qr-modal-body {
       flex-direction: column;
       align-items: center;
   }
 
-  .qr-member-print .group-5,
-  .qr-member-print .group-629 {
+  .qr-member-print .transaction-search-container,
+  .qr-member-print .members-list,
+  .qr-member-print .qr-preview-container {
       width: 100%;
   }
 }
@@ -166,7 +217,7 @@
       height: 25px;
   }
 
-  .qr-member-print .group-627 li {
+  .qr-member-print .members-list li {
       font-size: 0.9rem;
   }
 
