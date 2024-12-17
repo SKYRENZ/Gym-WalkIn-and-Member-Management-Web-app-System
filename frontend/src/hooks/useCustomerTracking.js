@@ -7,22 +7,42 @@ export const useCustomerTracking = (initialDate = null) => {
   const [error, setError] = useState(null);
 
   const fetchCustomerData = useCallback(async (date) => {
-    const formattedDate = new Date(date).toISOString().split('T')[0];
+    // Create a new date object in local timezone
+    const localDate = new Date(
+      date.getFullYear(), 
+      date.getMonth(), 
+      date.getDate(), 
+      0, 0, 0  // Set to midnight
+    );
+
+    // Use toLocaleDateString to get the correct date string
+    const formattedDate = localDate.toLocaleDateString('en-CA', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).replace(/\//g, '-');
+
+    console.log('Selected Date Object:', localDate);
+    console.log('Formatted Date:', formattedDate);
 
     try {
       setIsLoading(true);
       setError(null);
-      const response = await axios.get('http://localhost:3000/customerTracking', {
+      
+      const { data } = await axios.get('http://localhost:3000/customerTracking', {
         params: { date: formattedDate }
       });
 
-      if (response.data && response.data.success && response.data.data) {
-        setCustomerData(response.data.data);
+      console.log('Raw response:', data);
+
+      if (data && data.success && data.data) {
+        setCustomerData(data.data);
       } else {
         setCustomerData([]);
       }
-    } catch (err) {
-      setError('Failed to fetch customer data');
+    } catch (error) {
+      console.error('Error fetching customer data:', error);
+      setError(error.response?.data?.error || 'Failed to fetch customer data');
       setCustomerData([]);
     } finally {
       setIsLoading(false);

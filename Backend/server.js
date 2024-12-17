@@ -168,27 +168,27 @@ app.get('/customerTracking', async (req, res) => {
   console.log('Received Date (Parsed):', new Date(date));
 
   try {
-    if (!date) { 
+    if (!date) {
       return res.status(400).json({ 
         success: false, 
         error: 'Date is required' 
-      }); 
-    } 
+      });
+    }
 
     const trackingData = await ReportService.getCustomerTrackingData(date);
 
     res.status(200).json({ 
       success: true, 
       data: trackingData 
-    }); 
-  } catch (error) { 
-    console.error('Full Customer Tracking Error:', error); 
+    });
+  } catch (error) {
+    console.error('Full Customer Tracking Error:', error);
     res.status(500).json({ 
       success: false, 
       error: 'Error fetching customer tracking data', 
       details: error.message 
-    }); 
-  } 
+    });
+  }
 });
 
 //member counting
