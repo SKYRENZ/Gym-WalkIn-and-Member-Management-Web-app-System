@@ -313,6 +313,54 @@ static async getMemberCustomerRecords(year, period = 'monthly') {
     throw err;
   }
 }
+
+// In reportService.js or server.js
+static async getTransactionLogs() {
+  try {
+    const query = `
+      SELECT 
+        c.name,
+        CASE 
+          WHEN c.membership_type = 'Walk In' THEN 'Walk-In Transaction'
+          WHEN c.membership_type = 'Member' THEN 
+            CASE 
+              WHEN m.start_date IS NOT NULL THEN 'New Membership'
+              ELSE 'Membership Renewal'
+            END
+        END AS transaction_type,
+        p.method AS payment_method,
+        p.payment_date AS transaction_date,
+        p.amount
+      FROM 
+        Payment p
+      JOIN 
+        Customer c ON p.customer_id = c.customer_id
+      LEFT JOIN 
+        Membership m ON c.customer_id = m.customer_id AND m.start_date = p.payment_date
+      ORDER BY 
+        p.payment_date DESC
+      LIMIT 100;
+    `;
+
+    const result = await pool.query(query);
+
+    return result.rows.map(row => ({
+      name: row.name,
+      transaction_type: row.transaction_type,
+      payment_method: row.payment_method,
+      transaction_date: new Date(row.transaction_date).toLocaleString('en-PH', {
+        dateStyle: 'short',
+        timeStyle: 'short',
+        timeZone: 'Asia/Manila'
+      }),
+      amount: parseFloat(row.amount).toFixed(2)
+    }));
+  } catch (error) {
+    console.error('Error fetching transaction logs:', error);
+    throw error;
+  }
 }
+}
+
 
 module.exports = ReportService;

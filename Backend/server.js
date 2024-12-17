@@ -87,6 +87,22 @@ app.get('/memberships', async (req, res) => {
     }
 
   });
+  //counter
+  app.get('/getTransactionLogs', async (req, res) => {
+    try {
+      const transactionLogs = await ReportService.getTransactionLogs();
+      res.status(200).json({
+        success: true,
+        data: transactionLogs
+      });
+    } catch (error) {
+      console.error('Error in /getTransactionLogs:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch transaction logs'
+      });
+    }
+  });
 
 //admin
 //customer Tracking
@@ -1250,9 +1266,7 @@ app.put('/reactivateStaff/:staffId', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+
 
 /* ----------------- Function to insert check-in data(With Restrictions) ----------------- */
 app.use(cors(corsConfig));
@@ -1381,4 +1395,7 @@ app.get('/checkin-count', async (req, res) => {
         console.error('Error fetching check-in count:', error);
         res.status(500).json({ error: 'Error fetching check-in count' });
     }
+});
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
