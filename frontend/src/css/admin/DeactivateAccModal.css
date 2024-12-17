@@ -4,7 +4,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: rgba(0, 0, 0, 0.75); /* Darkened background */
+    background-color: rgba(0, 0, 0, 0.5); /* Darkened background */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -14,7 +14,7 @@
 .deactivateAccountModalContent {
     background: white;
     color: #333;
-    padding: 30px;
+    padding: 20px 30px; /* Match padding with AccountModal */
     border-radius: 8px;
     width: 400px;
     max-width: 90%;
@@ -24,6 +24,7 @@
 }
 
 .deactivateAccountModalContent h2 {
+    text-align: center;
     margin-bottom: 20px;
     color: #dc3545;
 }
@@ -36,17 +37,19 @@
 .deactivateAccountButtons {
     display: flex;
     justify-content: space-between;
-    gap: 15px;
+    gap: 10px; /* Match gap with AccountModal */
 }
 
 .deactivateAccountButtons button {
     flex: 1;
-    padding: 12px 20px;
+    padding: 5px 10px; /* Match padding with AccountModal buttons */
+    font-size: 1rem; /* Match font size with AccountModal buttons */
     border: none;
-    border-radius: 5px;
+    border-radius: 25px; /* Match border-radius with AccountModal buttons */
     cursor: pointer;
+    background-color: #333;
+    color: white;
     transition: background-color 0.3s ease, transform 0.2s ease;
-    font-weight: 500;
 }
 
 .deactivateAccountButtons button:first-child {
@@ -60,15 +63,10 @@
 }
 
 .deactivateAccountButtons button:hover {
+    background-color: #0056b3; /* Match hover color with AccountModal buttons */
+    color: white;
     transform: translateY(-2px);
     opacity: 0.9;
-}
-
-.deactivateAccountButtons button:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
-    transform: none;
-    opacity: 1;
 }
 
 .error-message {

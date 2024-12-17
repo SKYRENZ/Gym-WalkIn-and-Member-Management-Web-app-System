@@ -32,12 +32,13 @@
     flex-direction: column;
     justify-content: flex-start;
     gap: 15px; /* Add space between form fields */
-    margin-top: 50px; /* Add space above the form */
+    margin-top: 30px; /* Add space above the form */
     padding: 0px 50px;
     color: #333;
     flex-grow: 1; /* Allow the form to grow and take available space */
     overflow-y: auto; /* Add scroll if content overflows */
 }
+
 .error-message {
     color: red;
     margin-bottom: 10px;
@@ -60,6 +61,7 @@
     border-radius: 5px;
     background-color: white;
     color: #333;
+    pointer-events: auto;
 }
 
 .saveBtn {
@@ -71,8 +73,8 @@
     cursor: pointer;
     transition: background-color 0.3s ease;
     align-self: center; /* Align the button to the bottom */
-    margin-top: 40px; /* Push the button to the bottom */
-    margin-bottom: 50px; /* Push the button to the bottom */
+    margin-top: 20px; /* Push the button to the bottom */
+    margin-bottom: 20px; /* Push the button to the bottom */
 }
 
 .saveBtn:hover {

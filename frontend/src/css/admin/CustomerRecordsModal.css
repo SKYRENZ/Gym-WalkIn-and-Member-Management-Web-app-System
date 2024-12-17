@@ -7,11 +7,6 @@
   background-color: #f9f9f9;
 }
 
-.table-row.selected {
-  background-color: #007bff;
-  color: #fff;
-}
-
 /* Darkened Background Overlay */
 .customerRecordsModalOverlay {
   background-color: rgba(0, 0, 0, 0.75);
@@ -29,7 +24,7 @@
 /* Modal Content */
 .customerRecordsModalContent {
   background: white;
-  padding: 20px;
+  padding: 20px 30px;
   border-radius: 8px;
   color: #333;
   width: 90%;
@@ -38,42 +33,37 @@
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
   position: relative;
   font-family: 'Poppins', sans-serif;
-    display: flex;
-    flex-direction: column;
-    height: 650px; /* Adjust as needed */
-}
-
-/* Button Container */
-.button-container {
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  width: 100%;
-  padding: 0px 10px;
-  box-sizing: border-box;
-  justify-content: space-between;
+  flex-direction: column;
+  height: 650px; /* Adjust as needed */
 }
 
-.search-container {
-  width: auto;
+.search-button-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-right: 20px;
 }
 
 .view-buttons {
   display: flex;
   gap: 10px;
+  margin-left: auto;
 }
 
-/* Button Styles */
 /* Button Styles */
 .btn,
 .active-btn,
 .deactivated-btn {
-  padding: 10px 20px;
-  border: none; /* Remove borders */
-  border-radius: 25px;
-  font-weight: bold;
+  padding: 5px 20px; /* Match padding with AccountModal buttons */
+  font-size: 1rem;
+  border: none;
+  border-radius: 25px; /* Match border-radius with AccountModal buttons */
   cursor: pointer;
-  transition: all 0.3s ease;
+  background-color: #333;
+  color: white;
+  flex: 1; /* Ensure buttons take equal space */
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .btn {
@@ -81,7 +71,6 @@
   color: white;
 }
 
-/* Button Styles */
 .btn:disabled {
   background-color: #cccccc; /* Match disabled background */
   color: #aaa; /* Keep color consistent */
@@ -117,7 +106,7 @@
 }
 
 .deactbtn {
-  padding: 10px 20px;
+  padding: 5px 10px; /* Match padding with AccountModal buttons */
   border: none; /* Remove borders */
   background-color: #d15757;
   border-radius: 25px;
@@ -156,10 +145,8 @@
 /* Table Section */
 .table-section {
   flex-grow: 1;
-  overflow: auto;
   position: relative;
 }
-
 
 .customer-table {
   width: 100%;
@@ -201,35 +188,92 @@
   font-size: 18px;
   color: #888;
 }
+
+.customer-table tbody {
+  display: block;
+  max-height: 320px; /* Adjust as needed */
+  overflow-y: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.customer-table thead, .customer-table tbody tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
 .member-action-buttons {
   display: flex;
-  justify-content: center;
-  gap: 10px;
+  justify-content: space-between; /* Distribute buttons evenly */
+  gap: 10px; /* Add space between the buttons */
   padding: 10px 0;
   background-color: white;
   border-top: 1px solid #ddd;
 }
 
 .info-btn,
-.total-records-btn {
-  padding: 8px 16px;
-  background-color: #4665aa;
-  color: white;
+.total-records-btn,
+.deactivate-btn {
+  padding: 5px 10px; /* Match padding with AccountModal buttons */
+  font-size: 1rem;
   border: none;
-  border-radius: 5px;
+  border-radius: 25px; /* Match border-radius with AccountModal buttons */
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  background-color: #333;
+  color: white;
+  flex: 1; /* Ensure buttons take equal space */
+  transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .info-btn:disabled,
-.total-records-btn:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
+.total-records-btn:disabled,
+.deactivate-btn:disabled {
+  background-color: #cccccc; /* Change background for disabled button */
+  cursor: not-allowed; /* Change cursor for disabled button */
 }
 
 .info-btn:hover:not(:disabled),
-.total-records-btn:hover:not(:disabled) {
-  background-color: #3a528e;
+.total-records-btn:hover:not(:disabled),
+.deactivate-btn:hover:not(:disabled) {
+  background-color: #0056b3; /* Match hover color with AccountModal buttons */
+  color: white;
+  transform: translateY(-2px);
+  opacity: 0.9;
+}
+
+.info-btn:focus,
+.total-records-btn:focus,
+.deactivate-btn:focus {
+  outline: none;
+}
+
+.deactivated-accounts-button {
+  display: flex;
+  justify-content: center;
+}
+
+.deactivated-btn {
+  padding: 5px 10px; /* Match padding with AccountModal buttons */
+  font-size: 1rem;
+  border: none;
+  border-radius: 25px; /* Match border-radius with AccountModal buttons */
+  cursor: pointer;
+  background-color: #333;
+  color: white;
+  flex: 1; /* Ensure buttons take equal space */
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.deactivated-btn:hover {
+  background-color: #0056b3; /* Match hover color with AccountModal buttons */
+  color: white;
+  transform: translateY(-2px);
+  opacity: 0.9;
+}
+
+.deactivated-btn:focus {
+  outline: none;
 }
 
 /* Action Buttons */
@@ -240,12 +284,20 @@
 }
 
 .action-btn {
-  padding: 8px 16px;
-  background-color: #4665aa;
+  padding: 5px 10px; /* Match padding with AccountModal buttons */
+  background-color: #333;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 25px; /* Match border-radius with AccountModal buttons */
   cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.action-btn:hover {
+  background-color: #0056b3; /* Match hover color with AccountModal buttons */
+  color: white;
+  transform: translateY(-2px);
+  opacity: 0.9;
 }
 
 .member-row {
@@ -261,6 +313,7 @@
   display: flex;
   gap: 10px;
 }
+
 .member-clickable-row {
   cursor: pointer;
   transition: background-color 0.3s ease;
@@ -319,6 +372,15 @@
     max-width: none;
     width: 100%;
   }
+
+  .customer-table th, .customer-table td {
+    padding: 5px;
+    font-size: 14px;
+  }
+
+  .customer-table tbody {
+    max-height: 200px; /* Adjust as needed */
+  }
 }
 
 @media (max-width: 480px) {
@@ -344,5 +406,13 @@
 
   .customer-table {
     font-size: 12px;
+  }
+
+  .customer-table th, .customer-table td {
+    padding: 4px;
+  }
+
+  .customer-table tbody {
+    max-height: 150px; /* Adjust as needed */
   }
 }

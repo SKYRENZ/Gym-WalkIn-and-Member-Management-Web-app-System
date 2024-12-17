@@ -80,7 +80,7 @@
     align-items: flex-start;
     padding: 10px 15px; /* Reduce padding */
     margin-bottom: 10px; /* Reduce space between items */
-    font-size: 1rem; /* Adjust font size */
+    font-size: 0.9rem; /* Adjust font size */
     color: #333;
     background-color: #efefef; /* Add background color */
     border-radius: 5px; /* Add border radius */
@@ -106,14 +106,20 @@
 
 .accountModalButtons {
     display: flex;
-    flex-direction: row;
-    justify-content: center;
+    flex-direction: column; /* Stack the main button container vertically */
+    gap: 10px; /* Add space between the button rows */
+    margin-top: 10px; /* Push buttons to the bottom */
+    width: 100%; /* Ensure the container takes full width */
+}
+
+.accountModalButtons .main-buttons {
+    display: flex;
+    justify-content: space-between; /* Distribute buttons evenly */
     gap: 10px; /* Add space between the buttons */
-    margin-top: 20px; /* Push buttons to the bottom */
 }
 
 .accountModalButtons button {
-    padding: 10px;
+    padding: 5px 10px; /* Reduce padding for smaller height */
     font-size: 1rem;
     border: none;
     border-radius: 25px;
@@ -121,8 +127,9 @@
     background-color: #333;
     color: white;
     transition: background-color 0.3s ease;
-    flex: 1; /* Make buttons the same size */
-    max-width: 150px; /* Optional: Set a max width for the buttons */
+    width: 100%; /* Make buttons take full width */
+    flex: 1; /* Ensure buttons take equal space */
+    transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .accountModalButtons button:disabled {
@@ -131,11 +138,18 @@
 }
 
 .accountModalButtons button:hover:not(:disabled) {
-    background-color: #0056b3;
+    background-color: #0056b3; /* Match hover color with AccountModal buttons */
+    color: white;
+    transform: translateY(-2px);
+    opacity: 0.9;
 }
 
 .accountModalButtons button:focus {
     outline: none;
+}
+
+.accountModalButtons .deactivated-button {
+    background-color: #333; /* Different background color for deactivated button */
 }
 
 /* Media Queries for Responsiveness */

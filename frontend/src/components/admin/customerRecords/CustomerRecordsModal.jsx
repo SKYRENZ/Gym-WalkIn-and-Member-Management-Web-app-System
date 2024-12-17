@@ -3,16 +3,22 @@ import Modal from 'react-modal';
 import { useCustomerRecords } from '../../../hooks/useCustomerRecords';
 import InformationModal from './InformationModal';
 import TotalRecordsModal from './TotalRecordsModal';
+import ReasonModal from './ReasonModal';
+import ExpiredAccModal from './ExpiredAccModal';
 import "../../../css/admin/CustomerRecordsModal.css";
 import BackIcon from '../../../assets/Back.png';
 import SearchBar from '../../counter/SearchBar.jsx';
 import PropTypes from 'prop-types';
+
 const CustomerRecordsModal = ({ isOpen, onClose }) => {
   const [view, setView] = useState("WalkIn");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [isTotalRecordsModalOpen, setIsTotalRecordsModalOpen] = useState(false);
+  const [isReasonModalOpen, setIsReasonModalOpen] = useState(false);
+  const [isExpiredAccModalOpen, setIsExpiredAccModalOpen] = useState(false);
+  const [deactivationReason, setDeactivationReason] = useState("");
   const currentYear = new Date().getFullYear();
 
   // Fetch records for both Walk-In and Member
@@ -65,10 +71,18 @@ const CustomerRecordsModal = ({ isOpen, onClose }) => {
     ));
   };
 
+  const handleDeactivate = () => {
+    // Add your deactivation logic here
+    console.log(`Deactivating account for ${selectedCustomer} with reason: ${deactivationReason}`);
+    setIsReasonModalOpen(false);
+    setSelectedCustomer(null);
+    setDeactivationReason("");
+  };
+
   return (
     <>
       <Modal
-        isOpen={isOpen}
+        isOpen={isOpen && !isInfoModalOpen && !isTotalRecordsModalOpen && !isExpiredAccModalOpen}
         onRequestClose={onClose}
         className="customerRecordsModalContent"
         overlayClassName="customerRecordsModalOverlay"
@@ -80,23 +94,26 @@ const CustomerRecordsModal = ({ isOpen, onClose }) => {
           <h2>Customer Records</h2>
         </div>
         
-        <div className="button-container">
-          <div className="view-buttons">
-            <button
-              className={view === "WalkIn" ? "active-btn" : "btn"}
-              onClick={() => handleViewChange("WalkIn")}
-            >
-              Walk In
-            </button>
-            <button
-              className={view === "Member" ? "active-btn" : "btn"}
-              onClick={() => handleViewChange("Member")}
-            >
-              Member
-            </button>
+        <div className="search-button-container">
+          <div className="search-container">
+            <SearchBar/>
           </div>
-        </div>
-
+            <div className="view-buttons">
+              <button
+                className={view === "WalkIn" ? "active-btn" : "btn"}
+                onClick={() => handleViewChange("WalkIn")}
+              >
+                Walk In
+              </button>
+              <button
+                className={view === "Member" ? "active-btn" : "btn"}
+                onClick={() => handleViewChange("Member")}
+              >
+                Member
+              </button>
+            </div>
+          </div>
+  
         <div className="table-section">
           <table className="customer-table">
             <thead>
@@ -111,38 +128,69 @@ const CustomerRecordsModal = ({ isOpen, onClose }) => {
             </tbody>
           </table>
         </div>
-
+  
         {view === "Member" && (
-          <div className="member-action-buttons">
-            <button 
-              className="info-btn"
-              disabled={!selectedCustomer}
-              onClick={() => setIsInfoModalOpen(true)}
-            >
-              Information
-            </button>
-            <button 
-              className="total-records-btn"
-              disabled={!selectedCustomer}
-              onClick={() => setIsTotalRecordsModalOpen(true)}
-            >
-              Total Records
-            </button>
-          </div>
+          <>
+            <div className="member-action-buttons">
+              <button 
+                className="info-btn"
+                disabled={!selectedCustomer}
+                onClick={() => setIsInfoModalOpen(true)}
+              >
+                Information
+              </button>
+              <button 
+                className="total-records-btn"
+                disabled={!selectedCustomer}
+                onClick={() => setIsTotalRecordsModalOpen(true)}
+              >
+                Total Records
+              </button>
+              <button 
+                className="deactivate-btn"
+                disabled={!selectedCustomer}
+                onClick={() => setIsReasonModalOpen(true)}
+              >
+                Deactivate
+              </button>
+            </div>
+            <div className="deactivated-accounts-button">
+              <button 
+                className="deactivated-btn"
+                onClick={() => setIsExpiredAccModalOpen(true)}
+              >
+                Deactivated Accounts
+              </button>
+            </div>
+          </>
         )}
       </Modal>
-
+  
       {/* Modals */}
       <InformationModal
         isOpen={isInfoModalOpen}
         onClose={() => setIsInfoModalOpen(false)}
         customerName={selectedCustomer}
       />
-
+  
       <TotalRecordsModal
         isOpen={isTotalRecordsModalOpen}
         onClose={() => setIsTotalRecordsModalOpen(false)}
         customerName={selectedCustomer}
+      />
+  
+      <ReasonModal
+        isOpen={isReasonModalOpen}
+        onClose={() => setIsReasonModalOpen(false)}
+        selectedRow={selectedCustomer}
+        deactivationReason={deactivationReason}
+        setDeactivationReason={setDeactivationReason}
+        handleDeactivate={handleDeactivate}
+      />
+  
+      <ExpiredAccModal
+        isOpen={isExpiredAccModalOpen}
+        onClose={() => setIsExpiredAccModalOpen(false)}
       />
     </>
   );

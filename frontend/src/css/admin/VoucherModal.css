@@ -29,7 +29,7 @@
 .VoucherHeader {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: flex-start !important;
     flex-direction: row;
     margin-bottom: 20px; /* Add some space below the header */
     border-bottom: 2px solid #333;
@@ -103,15 +103,15 @@
 }
 
 .moreInfoBtn {
-    padding: 10px 50px;
+    padding: 5px 50px;
     font-size: 1rem;
     border-radius: 25px;
     background-color: #333;
     color: white;
     cursor: pointer;
-    transition: background-color 0.3s ease;
     align-self: center; /* Align the button to the center */
     margin-top: auto; /* Push the button to the bottom */
+    transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
 .moreInfoBtn:disabled {
@@ -125,8 +125,10 @@
 }
 
 .moreInfoBtn:hover:not(:disabled) {
-    background-color: #0056b3;
-    border: none;
+    background-color: #0056b3; /* Match hover color with AccountModal buttons */
+    color: white;
+    transform: translateY(-2px);
+    opacity: 0.9;
 }
 
 /* Media Queries for Responsiveness */

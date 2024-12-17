@@ -46,7 +46,7 @@ function DeactivateAccModal({ isOpen, onClose, account }) {
         >
             <div>
                 <h2>Deactivate Account</h2>
-                <p>Are you sure you want to deactivate the account for {account.name}?</p>
+                <p>Are you sure you want to deactivate the account for <strong>{account.name}?</strong></p>
                 
                 {error && <div className="error-message">{error}</div>}
 
