@@ -105,7 +105,7 @@ app.get('/memberships', async (req, res) => {
     }
   });
   //walkincard
-  // In your server.js or a separate route file
+
 app.get('/today-walkin-count', async (req, res) => {
   try {
       const query = `
@@ -127,6 +127,33 @@ app.get('/today-walkin-count', async (req, res) => {
       res.status(500).json({ 
           count: 0,
           error: 'Failed to fetch walk-in count' 
+      });
+  }
+});
+//membercard
+app.get('/getNewMembers', async (req, res) => {
+  const { startDate } = req.query;
+
+  try {
+      const query = `
+          SELECT COUNT(DISTINCT c.customer_id) AS count
+          FROM Customer c
+          JOIN Membership m ON c.customer_id = m.customer_id
+          WHERE 
+              c.membership_type = 'Member'
+              AND m.start_date >= $1;
+      `;
+
+      const result = await pool.query(query, [startDate]);
+
+      res.status(200).json({
+          count: parseInt(result.rows[0].count) || 0
+      });
+  } catch (error) {
+      console.error('Error fetching new members:', error);
+      res.status(500).json({
+          count: 0,
+          error: 'Failed to fetch new members'
       });
   }
 });

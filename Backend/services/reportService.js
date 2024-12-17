@@ -360,6 +360,7 @@ static async getTransactionLogs() {
     throw error;
   }
 }
+
 }
 
 
