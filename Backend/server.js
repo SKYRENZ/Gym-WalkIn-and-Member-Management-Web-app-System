@@ -1451,7 +1451,7 @@ app.get('/checkin-count', async (req, res) => {
     }
 });
 
-/// Endpoint to fetch members
+// Endpoint to fetch members
 app.get('/members', async (req, res) => {
   try {
       const result = await pool.query(`

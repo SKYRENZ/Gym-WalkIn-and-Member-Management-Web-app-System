@@ -61,13 +61,15 @@
   display: flex;
   justify-content: space-between;
   column-gap: 20px;
+  flex-grow: 1; /* Allow the body to grow and fill the available space */
+  overflow: hidden; /* Hide overflow to prevent scrollbar */
 }
 
 .qr-member-print .left-section {
   display: flex;
   flex-direction: column;
   width: 48%;
-  height: 565px;
+  height: 100%;
 }
 
 .qr-member-print .transaction-search-container,
@@ -115,10 +117,11 @@
 .qr-member-print .members-list {
   background-color: #F2F3F6;
   width: 100%;
-  height: 100%;
-  margin-bottom: 15px;
+  flex-grow: 1; /* Allow the members list to grow and fill the available space */
   border-radius: 5px;
+  overflow: hidden; /* Hide overflow to prevent scrollbar */
 }
+
 
 .qr-member-print .members-list h2 {
   font-size: 25px; /* Set the font size to 25px */
@@ -135,12 +138,17 @@
   margin-right: 10px; /* Add margin to the right */
 }
 
-.members-list ul {
+.qr-member-print .members-list ul {
   list-style: none;
   padding: 0;
+  margin: 0;
+  height: calc(100% - 69px); /* Adjust height to fit within the modal */
+  overflow-y: auto; /* Enable vertical scrolling */
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
 }
 
-.members-list li {
+.qr-member-print .members-list li {
   padding: 10px;
   cursor: pointer;
   position: relative; /* Required for the pseudo-element */
