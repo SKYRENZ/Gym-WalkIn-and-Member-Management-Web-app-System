@@ -1144,3 +1144,18 @@ app.get('/checkin-count', async (req, res) => {
         res.status(500).json({ error: 'Error fetching check-in count' });
     }
 });
+
+app.get('/api/members', async (req, res) => {
+    try {
+        const membersQuery = `
+            SELECT c.name
+            FROM Membership m
+            JOIN Customer c ON m.customer_id = c.customer_id
+        `;
+        const result = await pool.query(membersQuery);
+        res.status(200).json(result.rows);
+    } catch (error) {
+        console.error('Error fetching members:', error);
+        res.status(500).json({ error: 'An error occurred while fetching members' });
+    }
+});
