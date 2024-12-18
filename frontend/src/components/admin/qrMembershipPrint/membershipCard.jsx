@@ -13,10 +13,12 @@ const MembershipCard = forwardRef(({ qrCodePath, member }, ref) => {
   };
 
   return (
-    <div className="membership-card">
+    <div ref={ref} className="membership-card">
       <div className="card-header">
         <div className="header-left">
-          <img src="/src/assets/Gym Icon.svg" alt="Gym Icon" className="gym-icon" style={{ width: '40px', height: '40px' }} />
+          <img src="/src/assets/Gym Icon.svg" alt="Gym Icon" className="gym-icon" 
+          style={{ width: '40px', height: '40px' }}
+          />
         </div>
         <div className="header-right">
           <h1>CAVIN FITNESS GYM</h1>
