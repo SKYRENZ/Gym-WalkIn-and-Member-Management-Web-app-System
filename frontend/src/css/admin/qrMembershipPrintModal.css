@@ -186,6 +186,22 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  position: relative;
+}
+
+.preview-area .membership-card {
+  margin-top: 270px;
+  display: block;
+  width: 100%;
+  /* Add any additional styling for the membership card */
+}
+
+.preview-area .membership-card-back {
+  position: relative;
+  bottom: 0;
+  width: 100%;
+  display: block;
+  /* Add any additional styling for the membership card back */
 }
 
 .qr-member-print .preview-area {
@@ -225,6 +241,11 @@
   .qr-member-print .members-list,
   .qr-member-print .qr-preview-container {
       width: 100%;
+  }
+
+  .qr-member-print .qr-preview-container {
+      order: -1; /* Ensure the preview container is displayed first */
+      margin-bottom: 20px; /* Add margin to separate from other elements */
   }
 }
 
