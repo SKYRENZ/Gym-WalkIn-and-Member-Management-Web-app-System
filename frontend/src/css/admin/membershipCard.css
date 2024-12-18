@@ -1,6 +1,10 @@
 /* Import Tilt Warp and Poppins fonts from Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Tilt+Warp&display=swap');
 
+.membership-card-container {
+  position: relative;
+}
+
 .membership-card {
   background-color: #1E1E1E;
   color: white;
@@ -22,7 +26,6 @@
   border-top-left-radius: 15px;
   border-top-right-radius: 15px;
   padding-left: 20px;
-  width: 250px;
 }
 
 .header-left {
@@ -35,14 +38,14 @@
   text-align: left;
 }
 
-.header-right h1{
+.header-right h1 {
   flex: 1;
   color: #935D13;
   font-family: 'Tilt Warp', sans-serif;
   font-size: 15px;
 }
 
-.header-right span{
+.header-right span {
   flex: 1;
   color: #8D8D8D;
   font-family: 'Tilt Warp', sans-serif;
@@ -134,4 +137,16 @@
   text-transform: uppercase;
   font-family: 'Tilt Warp', sans-serif;
   text-align: center;
+}
+
+/* Backside of the membership card */
+.membership-card-back {
+  background-color: #1E1E1E;
+  width: 450px;
+  height: 250px;
+  border-radius: 15px;
+  margin: 20px auto 0; /* Add some space between the front and back sides */
+  display: block; /* Hide the back side in the preview */
+  background-image: url('/src/assets/Card-back-bg.svg');
+  background-size: cover;
 }
