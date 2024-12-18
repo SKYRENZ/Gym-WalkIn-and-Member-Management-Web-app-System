@@ -23,6 +23,8 @@
   color: #333; /* Ensure text is dark */
 }
 
+
+
 @media (max-width: 768px) {
   .date-input {
     font-size: 14px;
@@ -36,3 +38,4 @@
     padding: 6px;
   }
 }
+

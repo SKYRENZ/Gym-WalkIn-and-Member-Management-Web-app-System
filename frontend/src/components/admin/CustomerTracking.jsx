@@ -48,7 +48,7 @@ function CustomerTracking() {
     <div className="member-tracking">
       <div className="member-tracking-header">
         <h1>Customer Tracking</h1>
-        <div className="date-section" style={{ position: 'relative' }}>
+        <div className="date-section">
           <button onClick={toggleDatePicker}>
             {selectedDate.toLocaleDateString('en-US', {
               year: 'numeric',
@@ -57,19 +57,18 @@ function CustomerTracking() {
             })}
           </button>
           {isDatePickerOpen && (
-            <div className="date-picker-overlay">
-              <DatePicker
-                selected={selectedDate}
-                onChange={handleDateChange}
-                inline
-                onClickOutside={() => setIsDatePickerOpen(false)}
-                maxDate={new Date()}
-              />
-            </div>
-          )}
+          <div className="date-picker-overlay">
+            <DatePicker
+              selected={selectedDate}
+              onChange={handleDateChange}
+              inline
+              onClickOutside={() => setIsDatePickerOpen(false)}
+              maxDate={new Date()}
+            />
+          </div>
+        )}
         </div>
       </div>
-
 
       {/* Loading State */}
       {isLoading && <div className="loading-container">Loading customer data...</div>}

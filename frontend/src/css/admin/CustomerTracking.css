@@ -19,6 +19,19 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  position: relative; /* Ensures the overlay is positioned relative to this container */
+}
+
+.date-picker-overlay {
+  position: absolute;
+  top: 100%; /* Default placement: below the button */
+  left: -90%; /* Default alignment with the button's left edge */
+  z-index: 10000; /* Ensure it appears above other elements */
+  background-color: white; /* Calendar's background color */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Drop shadow for the overlay */
+  border-radius: 5px; /* Smooth edges */
+  padding: 10px; /* Add some spacing inside the calendar */
+  transition: all 0.3s ease-in-out; /* Smooth transition for position changes */
 }
 
 
@@ -27,6 +40,7 @@
   font-size: 14px;
   white-space: nowrap;
 }
+
 .member-tracking-header {
   display: flex;
   justify-content: space-between;
@@ -34,7 +48,7 @@
   width: 100%;
   margin-bottom: 10px;
   white-space: nowrap; /* Prevent wrapping */
-  overflow: hidden; /* Hide overflow */
+  overflow: visible; /* Hide overflow */
   text-overflow: ellipsis; /* Add ellipsis if text is too long */
 }
 
@@ -102,6 +116,13 @@
   .member-tracking-table {
     font-size: 13px;
   }
+
+  .date-picker-overlay {
+    left: 20%; /* Position to the right of the button */
+    top: -570%; 
+    transform: translateX(10px); /* Add a small gap */
+    max-width: 300px; /* Optional: limit the width */
+  }
 }
 
 @media (max-width: 480px) {
@@ -116,5 +137,12 @@
 
   .member-tracking-table {
     font-size: 12px;
+  }
+
+  .date-picker-overlay {
+    left: 20%; /* Position to the right of the button */
+    top: -570%; 
+    transform: translateX(10px); /* Add a small gap */
+    max-width: 280px; /* Reduce width further for very small screens */
   }
 }
