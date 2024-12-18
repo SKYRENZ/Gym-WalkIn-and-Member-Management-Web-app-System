@@ -11,19 +11,18 @@ const InformationModal = ({
   isOpen, 
   onClose, 
   customerName,
-  onUpdateSuccess // Add this prop to notify parent component of successful update
+  onUpdateSuccess
 }) => {
-  // State to manage customer information
   const [customerInfo, setCustomerInfo] = useState({
     name: '',
     email: '',
     phone: '',
-    birthday: '' // Assuming this is the membership end date
+    birthday: '' // Membership end date
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [originalInfo, setOriginalInfo] = useState({}); // Store original info to revert changes
+  const [originalInfo, setOriginalInfo] = useState({});
 
   // Fetch customer information when modal opens
   useEffect(() => {
@@ -34,16 +33,15 @@ const InformationModal = ({
         try {
           const response = await api.get(`/getCustomerMember_info/${customerName}`);
           
-          // Update state with fetched information
           const fetchedInfo = {
             name: response.data.name || customerName,
             email: response.data.email || '',
             phone: response.data.phone || '',
-            birthday: response.data.end_date || '' // Using end_date as birthday/membership end date
+            birthday: response.data.end_date || ''
           };
 
           setCustomerInfo(fetchedInfo);
-          setOriginalInfo(fetchedInfo); // Store original info
+          setOriginalInfo(fetchedInfo);
         } catch (err) {
           console.error('Error fetching customer information:', err);
           setError('Failed to fetch customer information');
@@ -101,7 +99,7 @@ const InformationModal = ({
         name: customerInfo.name,
         email: customerInfo.email,
         phone: customerInfo.phone,
-        membership_end_date: customerInfo.birthday
+        // Remove membership_end_date from update
       });
 
       if (response.data) {
@@ -124,6 +122,16 @@ const InformationModal = ({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
   };
 
   return (
@@ -175,16 +183,12 @@ const InformationModal = ({
           disabled={!isEditing}
         />
 
-        <label htmlFor="birthday">Membership End Date:</label>
+        <label>Membership End Date:</label>
         <input 
-          type="date" 
-          id="birthday" 
-          value={customerInfo.birthday ? 
-            new Date(customerInfo.birthday).toISOString().split('T')[0] : 
-            ''
-          }
-          onChange={handleInputChange}
-          disabled={!isEditing}
+          type="text" 
+          value={formatDate(customerInfo.birthday)}
+          readOnly
+          className="readonly-input"
         />
       </div>
 
