@@ -76,7 +76,7 @@ static async getCustomerTrackingData(date) {
   }
 }
   // Member Counting Service Method
-  static async getMemberCountData(year, period = 'monthly', type) {
+static async getMemberCountData(year, period = 'monthly', type) {
     try {
       let query;
       
@@ -433,14 +433,7 @@ static async getTransactionLogs() {
     const query = `
       SELECT 
         c.name,
-        CASE 
-          WHEN c.membership_type = 'Walk In' THEN 'Walk-In Transaction'
-          WHEN c.membership_type = 'Member' THEN 
-            CASE 
-              WHEN m.start_date IS NOT NULL THEN 'New Membership'
-              ELSE 'Membership Renewal'
-            END
-        END AS transaction_type,
+        p.transaction_type,
         p.method AS payment_method,
         p.payment_date AS transaction_date,
         p.amount
@@ -448,8 +441,6 @@ static async getTransactionLogs() {
         Payment p
       JOIN 
         Customer c ON p.customer_id = c.customer_id
-      LEFT JOIN 
-        Membership m ON c.customer_id = m.customer_id AND m.start_date = p.payment_date
       ORDER BY 
         p.payment_date DESC
       LIMIT 100;

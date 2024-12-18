@@ -833,6 +833,7 @@ app.get('/qrcodes/:membershipId', (req, res) => {
 app.post('/addWalkInTransaction', async (req, res) => {
   const { name, phone, paymentMethod, referenceNumber } = req.body;
   const amount = PRICES.WALK_IN;
+  const transactionType = 'Walk-In Transaction';
 
   // Validate input 
   if (!name || !paymentMethod) { 
@@ -846,8 +847,17 @@ app.post('/addWalkInTransaction', async (req, res) => {
   `; 
 
   const paymentQuery = ` 
-    INSERT INTO Payment (amount, method, status, payment_date, customer_id, gcash_refNum, maya_refNum) 
-    VALUES ($1, $2, $3, CURRENT_TIMESTAMP, $4, $5, $6) 
+    INSERT INTO Payment (
+      amount, 
+      method, 
+      status, 
+      payment_date, 
+      customer_id, 
+      gcash_refNum, 
+      maya_refNum,
+      transaction_type
+    ) 
+    VALUES ($1, $2, $3, CURRENT_TIMESTAMP, $4, $5, $6, $7) 
     RETURNING payment_id; 
   `; 
 
@@ -883,7 +893,8 @@ app.post('/addWalkInTransaction', async (req, res) => {
       paymentStatus, 
       customerId, 
       gcashRefNum, 
-      mayaRefNum 
+      mayaRefNum,
+      transactionType
     ]); 
 
     await client.query('COMMIT'); 
@@ -907,233 +918,235 @@ app.post('/addWalkInTransaction', async (req, res) => {
 });
 
 app.post('/addMembershipTransaction', async (req, res) => {
-  const { name, email, phone, paymentMethod } = req.body;
-  const amount = PRICES.NEW_MEMBERSHIP; // Use the global price 
+  const { name, email, phone, paymentMethod, referenceNumber } = req.body;
 
-  // Validate input 
-  if (!name || !email || !paymentMethod) { 
-      return res.status(400).json({ error: 'Name, email, and payment method are required' }); 
-  } 
+  // Enhanced logging
+  console.log('Received Membership Transaction Request:', {
+    name,
+    email,
+    phone,
+    paymentMethod,
+    referenceNumber
+  });
 
-  const customerQuery = ` 
-      INSERT INTO Customer (name, email, membership_type, contact_info) 
-      VALUES ($1, $2, 'Member', $3) RETURNING customer_id; 
-  `; 
+  // Validate input with more detailed checks
+  const validationErrors = [];
+  if (!name) validationErrors.push('Name is required');
+  if (!email) validationErrors.push('Email is required');
+  if (!paymentMethod) validationErrors.push('Payment Method is required');
 
-  const membershipQuery = ` 
-      INSERT INTO Membership (customer_id, start_date, end_date, status, qr_code_path) 
-      VALUES ($1, $2, $3, $4, $5) RETURNING membership_id; 
-  `; 
+  if (validationErrors.length > 0) {
+    return res.status(400).json({ 
+      error: 'Validation Failed', 
+      details: validationErrors 
+    });
+  }
 
-  const paymentQuery = ` 
-      INSERT INTO Payment (amount, method, status, payment_date, customer_id, membership_id) 
-      VALUES ($1, $2, $3, $4, $5, $6) RETURNING payment_id; 
-  `; 
+  const amount = PRICES.NEW_MEMBERSHIP;
+  const transactionType = 'New Membership';
 
-  let client; 
+  let client;
+  try {
+    client = await pool.connect();
+    await client.query('BEGIN');
 
-  try { 
-      client = await pool.connect(); 
-      await client.query('BEGIN'); 
+    // Log each step of the transaction
+    console.log('Starting Membership Transaction');
 
-      // Insert customer 
-      const customerResult = await client.query(customerQuery, [name, email, phone || null]); 
-      const customerId = customerResult.rows[0].customer_id; 
-
-      // Define start and end dates for the membership 
-      const startDate = new Date(); 
-      const endDate = new Date(); 
-      endDate.setMonth(endDate.getMonth() + 1); // Set end date to 1 month from now
-
-      // Prepare QR code directories
-      const backendQRCodeDir = path.join(__dirname, 'qrcodes');
-      const frontendQRCodeDir = path.join(__dirname, '..', 'frontend', 'public', 'images', 'qrcodes');
-
-      // Ensure directories exist
-      [backendQRCodeDir, frontendQRCodeDir].forEach(dir => {
-          if (!fs.existsSync(dir)) {
-              fs.mkdirSync(dir, { recursive: true });
-          }
-      });
-
-      // Generate QR code
-      const generateQRCode = async (membershipId) => {
-          const backendQRCodePath = path.join(backendQRCodeDir, `${membershipId}.png`);
-          const frontendQRCodePath = path.join(frontendQRCodeDir, `${membershipId}.png`);
-
-          try {
-              // Generate QR code for both backend and frontend
-              await QRCode.toFile(backendQRCodePath, membershipId.toString());
-              await QRCode.toFile(frontendQRCodePath, membershipId.toString());
-              return backendQRCodePath;
-          } catch (error) {
-              console.error('Error generating QR code:', error);
-              throw error;
-          }
-      };
-
-      // Insert membership and capture membershipId 
-      const membershipResult = await client.query(membershipQuery, [
-          customerId, 
-          startDate, 
-          endDate, 
-          'Active',
-          null // Placeholder for QR code path
-      ]); 
-      const membershipId = membershipResult.rows[0].membership_id;
-
-      // Generate QR code and update membership with QR code path
-      const qrCodePath = await generateQRCode(membershipId);
-
-      // Update membership with QR code path
-      await client.query(`
-          UPDATE Membership 
-          SET qr_code_path = $1 
-          WHERE membership_id = $2
-      `, [qrCodePath, membershipId]);
-
-      // Insert payment 
-      const paymentStatus = 'Completed'; 
-      const paymentDate = new Date().toISOString(); 
-
-      const paymentResult = await client.query(paymentQuery, [ 
-          amount, 
-          paymentMethod, 
-          paymentStatus, 
-          paymentDate, 
-          customerId, 
-          membershipId 
-      ]); 
-
-      // Commit the transaction 
-      await client.query('COMMIT'); 
-
-      res.status(201).json({ 
-          customerId: customerId, 
-          membershipId: membershipId, 
-          paymentId: paymentResult.rows[0].payment_id,
-          qrCodePath: `/images/qrcodes/${membershipId}.png` // Frontend-relative path
-      }); 
-  } catch (error) { 
-      console.error('Error adding membership transaction:', error); 
-      if (client) { 
-          await client.query('ROLLBACK'); 
-      } 
-      res.status(500).json({ 
-          error: 'An error occurred while adding the membership transaction', 
-          details: error.message 
-      }); 
-  } finally { 
-      if (client) { 
-          client.release(); 
-      } 
-  } 
-});
-
-app.post('/renewMembership', async (req, res) => {
-    const { name, paymentMethod, referenceNumber } = req.body;
-    const amount = PRICES.MEMBERSHIP; // Use global membership renewal price
-
-    // Validate input
-    if (!name || !paymentMethod) {
-        return res.status(400).json({ error: 'Name and payment method are required' });
-    }
-
-    // Check if payment method requires a reference number
-    if ((paymentMethod === 'Gcash' || paymentMethod === 'Paymaya') && !referenceNumber) {
-        return res.status(400).json({ error: 'Reference number is required for Gcash and Paymaya' });
-    }
-
+    // Insert customer
     const customerQuery = `
-        SELECT customer_id FROM Customer WHERE name = $1;
+      INSERT INTO Customer (name, email, contact_info, membership_type)
+      VALUES ($1, $2, $3, 'Member')
+      RETURNING customer_id;
     `;
+    const customerResult = await client.query(customerQuery, [
+      name,
+      email,
+      phone || null
+    ]);
+    const customerId = customerResult.rows[0].customer_id;
+    console.log('Customer Inserted:', { customerId });
 
+    // Insert membership with status
     const membershipQuery = `
-        SELECT membership_id, end_date FROM Membership WHERE customer_id = $1;
+      INSERT INTO Membership (customer_id, start_date, end_date, status)
+      VALUES ($1, CURRENT_DATE, CURRENT_DATE + INTERVAL '1 year', 'Active')  -- Set status to 'Active'
+      RETURNING membership_id;
     `;
+    const membershipResult = await client.query(membershipQuery, [customerId]);
+    const membershipId = membershipResult.rows[0].membership_id;
+    console.log('Membership Inserted:', { membershipId });
 
-    try {
-        const client = await pool.connect();
+    const paymentStatus = 'Completed';
 
-        // Start a transaction
-        await client.query('BEGIN');
+    // Determine reference number based on payment method
+    let gcashRefNum = null;
+    let mayaRefNum = null;
 
-        // Check if customer exists
-        const customerResult = await client.query(customerQuery, [name]);
-        if (customerResult.rows.length === 0) {
-            return res.status(404).json({ error: 'Customer not found' });
-        }
-
-        const customerId = customerResult.rows[0].customer_id;
-
-        // Get membership details
-        const membershipResult = await client.query(membershipQuery, [customerId]);
-        if (membershipResult.rows.length === 0) {
-            return res.status(404).json({ error: 'Membership not found' });
-        }
-
-        const membershipId = membershipResult.rows[0].membership_id;
-        const currentEndDate = new Date(membershipResult.rows[0].end_date);
-
-        // Extend the membership by one month
-        currentEndDate.setMonth(currentEndDate.getMonth() + 1);
-
-        const updateMembershipQuery = `
-            UPDATE Membership SET end_date = $1 WHERE membership_id = $2;
-        `;
-
-        // Update the membership end date
-        await client.query(updateMembershipQuery, [currentEndDate, membershipId]);
-
-        // Determine reference number based on payment method
-        let gcashRefNum = null;
-        let mayaRefNum = null;
-
-        if (paymentMethod === 'Gcash') {
-            gcashRefNum = referenceNumber;
-        } else if (paymentMethod === 'Paymaya') {
-            mayaRefNum = referenceNumber;
-        }
-
-        const paymentQuery = `
-            INSERT INTO Payment (amount, method, status, payment_date, customer_id, membership_id, gcash_refNum, maya_refNum)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING payment_id;
-        `;
-
-        const paymentDate = new Date().toISOString().split('T')[0];
-        const paymentStatus = 'Completed';
-
-        // Insert payment record
-        const paymentResult = await client.query(paymentQuery, [
-            amount,
-            paymentMethod,
-            paymentStatus,
-            paymentDate,
-            customerId,
-            membershipId,
-            gcashRefNum,
-            mayaRefNum
-        ]);
-
-        // Commit the transaction
-        await client.query('COMMIT');
-
-        // Release the client
-        client.release();
-
-        res.status(200).json({
-            message: 'Membership renewed successfully',
-            membershipId: membershipId,
-            newEndDate: currentEndDate,
-            paymentId: paymentResult.rows[0].payment_id
-        });
-    } catch (err) {
-        console.error('Error renewing membership:', err);
-        await client.query('ROLLBACK');
-        res.status(500).json({ error: 'Error renewing membership' });
+    if (paymentMethod === 'Gcash') {
+      gcashRefNum = referenceNumber;
+    } else if (paymentMethod === 'Paymaya') {
+      mayaRefNum = referenceNumber;
     }
-});
 
+    // Insert payment
+    const paymentQuery = `
+      INSERT INTO Payment (
+        amount, 
+        method, 
+        status, 
+        payment_date, 
+        customer_id, 
+        gcash_refNum, 
+        maya_refNum,
+        transaction_type
+      )
+      VALUES ($1, $2, $3, CURRENT_TIMESTAMP, $4, $5, $6, $7)
+      RETURNING payment_id;
+    `;
+    const paymentResult = await client.query(paymentQuery, [
+      amount,
+      paymentMethod,
+      paymentStatus,
+      customerId,
+      gcashRefNum,
+      mayaRefNum,
+      transactionType
+    ]);
+    const paymentId = paymentResult.rows[0].payment_id;
+    console.log('Payment Inserted:', { paymentId });
+
+    await client.query('COMMIT');
+
+    res.status(201).json({
+      customerId: customerId,
+      membershipId: membershipId,
+      paymentId: paymentId,
+      message: 'Membership transaction added successfully'
+    });
+  } catch (err) {
+    // Rollback the transaction
+    if (client) await client.query('ROLLBACK');
+
+    // Log the full error details
+    console.error('Detailed Membership Transaction Error:', {
+      message: err.message,
+      name: err.name,
+      code: err.code,
+      detail: err.detail,
+      stack: err.stack
+    });
+
+    // Send a more informative error response
+    res.status(500).json({
+      error: 'Error adding membership transaction',
+      details: err.message,
+      fullError: process.env.NODE_ENV === 'development' ? err : undefined
+    });
+  } finally {
+    if (client) client.release();
+  }
+});
+app.post('/renewMembership', async (req, res) => {
+  const { name, membershipId, paymentMethod, referenceNumber } = req.body;
+  const amount = PRICES.MEMBERSHIP;
+  const transactionType = 'Membership Renewal';
+
+  // Validate input
+  if (!name || !membershipId || !paymentMethod) {
+    return res.status(400).json({ error: 'Name, membership ID, and payment method are required' });
+  }
+
+  const customerQuery = `
+    SELECT customer_id, name, contact_info 
+    FROM Customer 
+    WHERE customer_id IN (
+      SELECT customer_id 
+      FROM Membership 
+      WHERE membership_id = $1
+    )
+  `;
+
+  const membershipUpdateQuery = `
+    UPDATE Membership
+    SET end_date = end_date + INTERVAL '1 year'
+    WHERE membership_id = $1
+    RETURNING customer_id, start_date, end_date;
+  `;
+
+  const paymentQuery = `
+    INSERT INTO Payment (
+      amount, 
+      method, 
+      status, 
+      payment_date, 
+      customer_id, 
+      gcash_refNum, 
+      maya_refNum,
+      transaction_type
+    )
+    VALUES ($1, $2, $3, CURRENT_TIMESTAMP, $4, $5, $6, $7)
+    RETURNING payment_id;
+  `;
+
+  let client;
+
+  try {
+    client = await pool.connect();
+    await client.query('BEGIN');
+
+    // Fetch customer details
+    const customerResult = await client.query(customerQuery, [membershipId]);
+    if (customerResult.rows.length === 0) {
+      throw new Error('Membership not found');
+    }
+    const { customer_id: customerId, name: customerName } = customerResult.rows[0];
+
+    // Update membership end date
+    const membershipResult = await client.query(membershipUpdateQuery, [membershipId]);
+
+    const paymentStatus = 'Completed';
+
+    // Determine reference number based on payment method
+    let gcashRefNum = null;
+    let mayaRefNum = null;
+
+    if (paymentMethod === 'Gcash') {
+      gcashRefNum = referenceNumber;
+    } else if (paymentMethod === 'Paymaya') {
+      mayaRefNum = referenceNumber;
+    }
+
+    // Insert payment
+    const paymentResult = await client.query(paymentQuery, [
+      amount,
+      paymentMethod,
+      paymentStatus,
+      customerId,
+      gcashRefNum,
+      mayaRefNum,
+      transactionType
+    ]);
+
+    await client.query('COMMIT');
+
+    res.status(201).json({
+      customerId: customerId,
+      paymentId: paymentResult.rows[0].payment_id,
+      message: 'Membership renewal successful'
+    });
+  } catch (err) {
+    if (client) await client.query('ROLLBACK');
+
+    console.error('Error renewing membership:', err);
+    res.status(500).json({
+      error: 'Error renewing membership',
+      details: err.message
+    });
+  } finally {
+    if (client) client.release();
+  }
+});
 app.post('/generateQRCodesForExistingMembers', async (req, res) => {
     try {
         await generateQRCodesForExistingMembers(); // Call the function to generate QR codes

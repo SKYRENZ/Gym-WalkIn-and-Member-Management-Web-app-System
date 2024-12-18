@@ -67,13 +67,6 @@ export const submitMembershipTransaction = async (details) => {
                 phone: details.phoneNumber,
                 paymentMethod: details.paymentMethod,
                 referenceNumber: details.referenceNumber || null,
-                // Add any additional fields you might need
-                receivedAmount: details.receivedAmount || null,
-                // Optional: add more details from the input
-                additionalDetails: {
-                    date: new Date().toISOString(),
-                    source: 'Frontend Membership Transaction'
-                }
             }),
         });
 
