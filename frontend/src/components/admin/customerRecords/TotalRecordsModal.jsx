@@ -1,4 +1,4 @@
-import  { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Modal from 'react-modal';
 import '../../../css/admin/TotalRecordsModal.css';
 import BackIcon from '../../../assets/Back.png';
@@ -82,27 +82,27 @@ const TotalRecordsModal = ({ isOpen, onClose, customerName }) => {
         <h2>{customerName}</h2>
       </div>
       
-      <div className="records-table">
-        <table className="customer-table">
+      <div className="table-container">
+        <table className="records-table">
           <thead>
             <tr>
-              <th>Payment Amount</th>
-              <th>Payment Method</th>
-              <th>Date of Payments</th>
+              <th className="records-table-header">Payment Amount</th>
+              <th className="records-table-header">Payment Method</th>
+              <th className="records-table-header">Date of Payments</th>
             </tr>
           </thead>
           <tbody>
             {paymentRecords.length > 0 ? (
               paymentRecords.map((record, index) => (
-                <tr key={index} className="table-row">
-                  <td>₱{parseFloat(record.amount).toFixed(2)}</td>
-                  <td>{record.method}</td>
-                  <td>{new Date(record.payment_date).toLocaleDateString('en-PH')}</td>
+                <tr key={index} className="records-table-row">
+                  <td className="records-table-cell">₱{parseFloat(record.amount).toFixed(2)}</td>
+                  <td className="records-table-cell">{record.method}</td>
+                  <td className="records-table-cell">{new Date(record.payment_date).toLocaleDateString('en-PH')}</td>
                 </tr>
               ))
             ) : (
-              <tr>
-                <td colSpan="3">No payment records found</td>
+              <tr className="records-table-row">
+                <td className="records-table-cell" colSpan="3">No payment records found</td>
               </tr>
             )}
           </tbody>
@@ -110,12 +110,12 @@ const TotalRecordsModal = ({ isOpen, onClose, customerName }) => {
       </div>
       
       <div className="total-info">
-        <div>
-          <p>Total Check-ins: <span>{totalRecords?.total_checkins || 0}</span></p>
-          <p>Total Payments: <span>{totalRecords?.total_payments || 0}</span></p>
+        <div className='total-info-left'>
+          <p><strong>Total Check-ins: </strong><span>{totalRecords?.total_checkins || 0}</span></p>
+          <p><strong>Total Payments: </strong><span>{totalRecords?.total_payments || 0}</span></p>
         </div>
         <div>
-          <p>Total Payment Amount: <span>₱{parseFloat(totalRecords?.total_payment || 0).toFixed(2)}</span></p>
+          <p><strong>Total Payment Amount: </strong><span>₱{parseFloat(totalRecords?.total_payment || 0).toFixed(2)}</span></p>
         </div>
       </div>
     </Modal>

@@ -12,7 +12,7 @@ const ReasonModal = ({ isOpen, onClose, selectedRow, deactivationReason, setDeac
       overlayClassName="reasonModalOverlay"
     >
       <h2>Deactivate Account</h2>
-      <p>Are you sure you want to deactivate the account for <strong>{selectedRow !== null ? `Person ${selectedRow}` : ""}</strong>?</p>
+      <p>Are you sure you want to deactivate the account for <strong>{selectedRow !== null ? `${selectedRow}` : ""}</strong>?</p>
       <textarea
         placeholder="Reason for deactivation"
         value={deactivationReason}

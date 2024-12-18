@@ -28,7 +28,9 @@
   }
   
   .reasonModalContent h2 {
+    text-align: center;
     margin-bottom: 20px;
+    color: #dc3545;
   }
   
   .reasonModalContent p {
@@ -44,41 +46,45 @@
     margin-bottom: 20px;
     font-family: 'Poppins', sans-serif;
     box-sizing: border-box; /* Ensure padding is included in width */
+    background-color: #fff;
+    color: #333;
   }
   
   .reasonModalButtons {
     display: flex;
     justify-content: space-between;
+    gap: 10px; /* Match gap with AccountModal */
   }
-  
-  .Cancelbtn {
-    padding: 10px 20px;
+
+  .reasonModalButtons button {
+    flex: 1;
+    padding: 5px 10px; /* Match padding with AccountModal buttons */
+    font-size: 1rem; /* Match font size with AccountModal buttons */
+    border: none;
+    border-radius: 25px; /* Match border-radius with AccountModal buttons */
+    cursor: pointer;
     background-color: #333;
     color: white;
-    border: none;
-    border-radius: 25px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease, transform 0.2s ease;
   }
 
-  .Confirmbtn {
-    padding: 10px 20px;
-    background-color: #333;
+  .reasonModalButtons button:first-child {
+    background-color: #f4f4f4;
+    color: #333;
+  }
+
+  .reasonModalButtons button.Confirmbtn {
+    background-color: #dc3545;
     color: white;
-    border: none;
-    border-radius: 25px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
   }
 
-  .Cancelbtn:hover {
-    background-color: #0056b3;
+  .reasonModalButtons button:focus {
+    outline: none;
   }
 
-  .Confirmbtn:hover {
-    background-color: #0056b3;
-  }
-  
-  .reasonModalButtons .btn:hover {
-    background-color: #555;
+  .reasonModalButtons button:hover {
+    background-color: #0056b3; /* Match hover color with AccountModal buttons */
+    color: white;
+    transform: translateY(-2px);
+    opacity: 0.9;
   }

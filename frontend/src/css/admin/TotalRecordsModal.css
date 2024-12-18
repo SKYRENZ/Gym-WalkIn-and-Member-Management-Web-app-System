@@ -44,58 +44,81 @@
   justify-content: center;
 }
 
-.records-table {
+.customer-name h2 {
+  display: flex;
+  margin: 0;
+  text-align: center;
+}
+
+/* Table Container */
+.table-container {
   flex-grow: 1;
   width: 100%;
   margin-top: 10px;
-  text-align: center;
-  overflow-y: auto; /* Make the table scrollable */
   padding: 0 20px; /* Add left and right padding */
   box-sizing: border-box; /* Ensures even spacing */
+  overflow-x: auto; /* Enable horizontal scrolling */
 }
 
-.records-table th, .records-table td {
-  padding: 8px;
+/* Table styling */
+.records-table {
+  width: 100%;
+  border-collapse: collapse; /* Ensure borders are collapsed */
+}
+
+/* Header styling */
+.records-table-header {
+  padding: 12px;
+  font-size: 16px;
   text-align: left;
-}
-
-.records-table th {
   font-weight: 600;
-  border-bottom: 1px solid #ddd; /* Changed to a lighter border */
+  border-bottom: 3px solid #ddd;
 }
 
-.records-table td {
-  font-weight: 400;
-}
-
-.records-table th, .records-table td {
-  word-wrap: break-word; /* Ensure long words break to fit within the cell */
-}
-
-/* Adjust column widths */
-.records-table th:nth-child(1), .records-table td:nth-child(1) {
-  width: 35%; /* Payment Amount */
-}
-
-.records-table th:nth-child(2), .records-table td:nth-child(2) {
-  width: 25%; /* Payment Method */
-}
-
-.records-table th:nth-child(3), .records-table td:nth-child(3) {
-  width: 40%; /* Date of Payments */
-}
-
-.table-row {
+/* Table row styling */
+.records-table-row {
   transition: background-color 0.3s ease;
 }
 
-.table-row:hover {
-  background-color: #f9f9f9;
+.records-table-row:hover {
+  background-color: #f1f1f1;
 }
 
-.table-row.selected {
+.records-table-row.selected {
   background-color: #333;
   color: #fff;
+}
+
+/* Table cell styling */
+.records-table-cell {
+  padding: 12px;
+  font-size: 14px;
+  text-align: left;
+  word-wrap: break-word; /* Ensure long words break to fit within the cell */
+}
+
+/* Make the table body scrollable */
+.records-table tbody {
+  display: block;
+  max-height: 300px; /* Adjust as needed */
+  overflow-y: auto;
+  width: 100%;
+  box-sizing: border-box; /* Include padding and border in the element's total height and width */
+}
+
+/* Ensure table header and rows align correctly */
+.records-table thead, .records-table tbody tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+/* Ensure the table header stays fixed */
+.records-table thead {
+  position: sticky;
+  top: 0;
+  background-color: #ffffff; /* Match the background color of the table */
+  z-index: 1;
 }
 
 .separator-line {
@@ -143,7 +166,15 @@
   .total-info {
     flex-direction: column; /* Stack total info vertically */
     align-items: flex-start; /* Align items to the start */
-    gap: 10px; /* Add space between elements */
+  }
+
+  .table-container {
+    overflow-x: auto; /* Enable horizontal scrolling */
+    overflow-y: auto; /* Enable vertical scrolling */
+  }
+
+  .records-table tbody {
+    height: auto; /* Adjust height for smaller screens */
   }
 }
 
@@ -176,5 +207,14 @@
   .total-info {
     font-size: 16px; /* Adjust font size for very small screens */
     align-items: center; /* Align items to the center */
+  }
+
+  .table-container {
+    overflow-x: auto; /* Enable horizontal scrolling */
+    overflow-y: auto; /* Enable vertical scrolling */
+  }
+
+  .records-table tbody {
+    height: auto; /* Adjust height for smaller screens */
   }
 }
