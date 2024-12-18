@@ -15,15 +15,26 @@ const MembershipCard = forwardRef(({ qrCodePath, member }, ref) => {
   return (
     <div ref={ref} className="membership-card">
       <div className="card-header">
-        <h1>CAVIN FITNESS GYM</h1>
-        <span>MEMBER CARD</span>
+        <div className="header-left">
+          <img src="/src/assets/Gym Icon.svg" alt="Gym Icon" className="gym-icon" 
+          style={{ width: '40px', height: '40px' }}
+          />
+        </div>
+        <div className="header-right">
+          <h1>CAVIN FITNESS GYM</h1>
+          <span>MEMBER CARD</span>
+        </div>
       </div>
       <div className="card-body">
         <div className="left-side">
-          <h2>Member Name</h2>
-          <p>{member.name}</p>
-          <p>📞 0995 922 6260</p>
-          <p>📧 alvinagas73@gmail.com</p>
+          <p className="member-title">Member Name</p>
+          <p className="member-name">{member.name}</p>
+          <p>
+            <img src="/src/assets/Phone.svg" alt="Phone Icon" style={{ width: '20px', height: '20px' }} /> 0995 922 6260
+          </p>
+          <p>
+            <img src="/src/assets/Letter.svg" alt="Letter Icon" style={{ width: '20px', height: '20px' }} /> alvinagas73@gmail.com
+          </p>
         </div>
         <div className="right-side">
           <div className="qr-container">
@@ -33,7 +44,6 @@ const MembershipCard = forwardRef(({ qrCodePath, member }, ref) => {
               className="qr-code"
               onError={handleImageError}
               onLoad={handleImageLoad}
-              style={{ width: '100px', height: '100px' }} // Limit size to 50px by 50px
             />
             <span className="member-label">GYM MEMBER</span>
           </div>

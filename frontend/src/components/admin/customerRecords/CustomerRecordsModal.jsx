@@ -20,13 +20,22 @@ const CustomerRecordsModal = ({ isOpen, onClose }) => {
   const [isExpiredAccModalOpen, setIsExpiredAccModalOpen] = useState(false);
   const [deactivationReason, setDeactivationReason] = useState("");
   const currentYear = new Date().getFullYear();
+  const [localData, setLocalData] = useState([]); 
 
   // Fetch records for both Walk-In and Member
   const { 
     data = [], 
     loading, 
-    error 
+    error,
   } = useCustomerRecords(currentYear, view === "WalkIn" ? "Walk In" : "Member");
+  useEffect(() => {
+    setLocalData(data);
+  }, [data]);
+
+  // Implement handleSearchChange
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value);
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -60,7 +69,9 @@ const CustomerRecordsModal = ({ isOpen, onClose }) => {
     if (error) return <tr><td colSpan="3">Error: {error}</td></tr>;
     if (!filteredData.length) return <tr><td colSpan="3">No records found</td></tr>;
 
-    return filteredData.map((record, index) => (
+    return localData.filter(record => 
+      record && record.names && record.names.toLowerCase().includes(searchTerm.toLowerCase())
+    ).map((record, index) => (
       <tr 
         key={index} 
         onClick={() => handleRowClick(record.names)}
@@ -104,21 +115,21 @@ const CustomerRecordsModal = ({ isOpen, onClose }) => {
           <div className="search-container">
             <SearchBar onSearch={handleSearch} />
           </div>
-            <div className="view-buttons">
-              <button
-                className={view === "WalkIn" ? "active-btn" : "btn"}
-                onClick={() => handleViewChange("WalkIn")}
-              >
-                Walk In
-              </button>
-              <button
-                className={view === "Member" ? "active-btn" : "btn"}
-                onClick={() => handleViewChange("Member")}
-              >
-                Member
-              </button>
-            </div>
+          <div className="view-buttons">
+            <button
+              className={view === "WalkIn" ? "active-btn" : "btn"}
+              onClick={() => handleViewChange("WalkIn")}
+            >
+              Walk In
+            </button>
+            <button
+              className={view === "Member" ? "active-btn" : "btn"}
+              onClick={() => handleViewChange("Member")}
+            >
+              Member
+            </button>
           </div>
+        </div>
   
         <div className="table-section">
           <table className="customer-table">
@@ -177,6 +188,16 @@ const CustomerRecordsModal = ({ isOpen, onClose }) => {
         isOpen={isInfoModalOpen}
         onClose={() => setIsInfoModalOpen(false)}
         customerName={selectedCustomer}
+        onUpdateSuccess={(updatedInfo) => {
+          // Update local data directly
+          setLocalData(prevData => 
+            prevData.map(record => 
+              record.names === updatedInfo.oldName 
+                ? { ...record, names: updatedInfo.newName } 
+                : record
+            )
+          );
+        }}
       />
   
       <TotalRecordsModal
