@@ -40,8 +40,8 @@ const CustomerRecordsModal = ({ isOpen, onClose }) => {
     setSelectedCustomer(null);
   };
 
-  const handleSearchChange = (event) => {
-    setSearchTerm(event.target.value);
+  const handleSearch = (term) => {
+    setSearchTerm(term);
   };
 
   // Safely filter the data
@@ -102,7 +102,7 @@ const CustomerRecordsModal = ({ isOpen, onClose }) => {
         
         <div className="search-button-container">
           <div className="search-container">
-            <SearchBar/>
+            <SearchBar onSearch={handleSearch} />
           </div>
             <div className="view-buttons">
               <button

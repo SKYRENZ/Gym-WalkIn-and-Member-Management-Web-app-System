@@ -44,6 +44,10 @@ const ExpiredAccModal = ({ isOpen, onClose }) => {
     setSelectedRow(null); // Reset selected row after activation
   };
 
+  const handleSearch = (term) => {
+    setSearchTerm(term);
+  };
+
   return (
     <>
       <Modal
@@ -62,7 +66,7 @@ const ExpiredAccModal = ({ isOpen, onClose }) => {
         
         <div className="expired-button-container">
           <div className="expired-search-container">
-            <SearchBar />
+            <SearchBar onSearch={handleSearch}/>
           </div>
           <div className="expired-view-buttons">
             <button
