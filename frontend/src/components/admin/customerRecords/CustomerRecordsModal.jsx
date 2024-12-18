@@ -59,6 +59,46 @@ const CustomerRecordsModal = ({ isOpen, onClose }) => {
       setSelectedCustomer(customerName === selectedCustomer ? null : customerName);
     }
   };
+  const handleDeactivate = async () => {
+    if (!selectedCustomer || !deactivationReason.trim()) {
+      alert('Please provide a reason for deactivation');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/deactivateCustomerMembership`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          customerName: selectedCustomer,
+          reason: deactivationReason
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Refresh the data
+        refetch(); // Assuming your hook has a refetch method
+        
+        // Close modals and reset state
+        setIsReasonModalOpen(false);
+        setSelectedCustomer(null);
+        setDeactivationReason("");
+        
+        // Optional: Show success message
+        alert('Customer membership deactivated successfully');
+      } else {
+        // Handle error response
+        alert(data.error || 'Failed to deactivate customer membership');
+      }
+    } catch (error) {
+      console.error('Error deactivating customer membership:', error);
+      alert('An error occurred while deactivating the membership');
+    }
+  };
 
   const renderTableRows = () => {
     if (loading) return <tr><td colSpan="3">Loading...</td></tr>;
@@ -82,14 +122,6 @@ const CustomerRecordsModal = ({ isOpen, onClose }) => {
         <td>{record.last_payment_date}</td>
       </tr>
     ));
-  };
-
-  const handleDeactivate = () => {
-    // Add your deactivation logic here
-    console.log(`Deactivating account for ${selectedCustomer} with reason: ${deactivationReason}`);
-    setIsReasonModalOpen(false);
-    setSelectedCustomer(null);
-    setDeactivationReason("");
   };
 
   return (
@@ -205,9 +237,12 @@ const CustomerRecordsModal = ({ isOpen, onClose }) => {
         customerName={selectedCustomer}
       />
   
-      <ReasonModal
+  <ReasonModal
         isOpen={isReasonModalOpen}
-        onClose={() => setIsReasonModalOpen(false)}
+        onClose={() => {
+          setIsReasonModalOpen(false);
+          setDeactivationReason("");
+        }}
         selectedRow={selectedCustomer}
         deactivationReason={deactivationReason}
         setDeactivationReason={setDeactivationReason}

@@ -593,6 +593,109 @@ app.put('/updateCustomerInfo/:name', async (req, res) => {
         }
     }
 });
+// Endpoint to deactivate a customer membership
+app.put('/deactivateCustomerMembership', async (req, res) => {
+  const { customerName, reason } = req.body;
+
+  let client;
+  try {
+      client = await pool.connect();
+
+      // Begin transaction
+      await client.query('BEGIN');
+
+      // Find the customer and membership details
+      const customerQuery = `
+          SELECT c.customer_id, m.membership_id 
+          FROM Customer c
+          JOIN Membership m ON c.customer_id = m.customer_id
+          WHERE c.name = $1 AND m.status = 'Active'
+      `;
+      const customerResult = await client.query(customerQuery, [customerName]);
+
+      if (customerResult.rows.length === 0) {
+          return res.status(404).json({ error: 'Active membership not found for this customer' });
+      }
+
+      const { customer_id, membership_id } = customerResult.rows[0];
+
+      // Update Customer table to mark as inactive
+      const updateCustomerQuery = `
+          UPDATE Customer 
+          SET is_active = FALSE 
+          WHERE customer_id = $1
+      `;
+      await client.query(updateCustomerQuery, [customer_id]);
+
+      // Update Membership table to mark as inactive
+      const updateMembershipQuery = `
+          UPDATE Membership 
+          SET status = 'Inactive' 
+          WHERE membership_id = $1
+      `;
+      await client.query(updateMembershipQuery, [membership_id]);
+
+      // Insert into deactivated_members table
+      const insertDeactivationQuery = `
+          INSERT INTO deactivated_members 
+          (customer_id, membership_id, name, deactivation_reason) 
+          VALUES ($1, $2, $3, $4)
+      `;
+      await client.query(insertDeactivationQuery, [
+          customer_id, 
+          membership_id, 
+          customerName, 
+          reason
+      ]);
+
+      // Commit transaction
+      await client.query('COMMIT');
+
+      res.status(200).json({ 
+          message: 'Customer membership deactivated successfully',
+          customerName 
+      });
+
+  } catch (error) {
+      // Rollback transaction in case of error
+      if (client) {
+          await client.query('ROLLBACK');
+      }
+      console.error('Error deactivating customer membership:', error);
+      res.status(500).json({ 
+          error: 'Error deactivating customer membership', 
+          details: error.message 
+      });
+  } finally {
+      if (client) {
+          client.release();
+      }
+  }
+});
+
+// Endpoint to fetch deactivated members
+app.get('/getDeactivatedMembers', async (req, res) => {
+  try {
+      const query = `
+          SELECT 
+              dm.id,
+              dm.name,
+              dm.deactivation_reason,
+              dm.deactivated_at,
+              dm.status
+          FROM deactivated_members dm
+          ORDER BY dm.deactivated_at DESC
+      `;
+      const result = await pool.query(query);
+      res.status(200).json(result.rows);
+  } catch (error) {
+      console.error('Error fetching deactivated members:', error);
+      res.status(500).json({ 
+          error: 'Error retrieving deactivated members', 
+          details: error.message 
+      });
+  }
+});
 
 //income summary
 app.get('/getIncomeSummary', async (req, res) => {
