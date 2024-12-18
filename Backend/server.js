@@ -922,11 +922,11 @@ app.post('/addMembershipTransaction', async (req, res) => {
 
   // Enhanced logging
   console.log('Received Membership Transaction Request:', {
-    name,
-    email,
-    phone,
-    paymentMethod,
-    referenceNumber
+      name,
+      email,
+      phone,
+      paymentMethod,
+      referenceNumber
   });
 
   // Validate input with more detailed checks
@@ -936,115 +936,146 @@ app.post('/addMembershipTransaction', async (req, res) => {
   if (!paymentMethod) validationErrors.push('Payment Method is required');
 
   if (validationErrors.length > 0) {
-    return res.status(400).json({ 
-      error: 'Validation Failed', 
-      details: validationErrors 
-    });
+      return res.status(400).json({ 
+          error: 'Validation Failed', 
+          details: validationErrors 
+      });
   }
 
   const amount = PRICES.NEW_MEMBERSHIP;
   const transactionType = 'New Membership';
 
+  // Prepare QR code directories
+  const backendQRCodeDir = path.join(__dirname, 'qrcodes');
+  const frontendQRCodeDir = path.join(__dirname, '..', 'frontend', 'public', 'images', 'qrcodes');
+
+  // Ensure directories exist
+  [backendQRCodeDir, frontendQRCodeDir].forEach(dir => {
+      if (!fs.existsSync(dir)) {
+          fs.mkdirSync(dir, { recursive: true });
+      }
+  });
+
+  // Generate QR code function
+  const generateQRCode = async (membershipId) => {
+      const backendQRCodePath = path.join(backendQRCodeDir, `${membershipId}.png`);
+      const frontendQRCodePath = path.join(frontendQRCodeDir, `${membershipId}.png`);
+
+      try {
+          // Generate QR code for both backend and frontend
+          await QRCode.toFile(backendQRCodePath, membershipId.toString());
+          await QRCode.toFile(frontendQRCodePath, membershipId.toString());
+          return backendQRCodePath;
+      } catch (error) {
+          console.error('Error generating QR code:', error);
+          throw error;
+      }
+  };
+
   let client;
   try {
-    client = await pool.connect();
-    await client.query('BEGIN');
+      client = await pool.connect();
+      await client.query('BEGIN');
 
-    // Log each step of the transaction
-    console.log('Starting Membership Transaction');
+      // Log each step of the transaction
+      console.log('Starting Membership Transaction');
 
-    // Insert customer
-    const customerQuery = `
-      INSERT INTO Customer (name, email, contact_info, membership_type)
-      VALUES ($1, $2, $3, 'Member')
-      RETURNING customer_id;
-    `;
-    const customerResult = await client.query(customerQuery, [
-      name,
-      email,
-      phone || null
-    ]);
-    const customerId = customerResult.rows[0].customer_id;
-    console.log('Customer Inserted:', { customerId });
+      // Insert customer
+      const customerQuery = `
+          INSERT INTO Customer (name, email, contact_info, membership_type)
+          VALUES ($1, $2, $3, 'Member')
+          RETURNING customer_id;
+      `;
+      const customerResult = await client.query(customerQuery, [
+          name,
+          email,
+          phone || null
+      ]);
+      const customerId = customerResult.rows[0].customer_id;
+      console.log('Customer Inserted:', { customerId });
 
-    // Insert membership with status
-    const membershipQuery = `
-      INSERT INTO Membership (customer_id, start_date, end_date, status)
-      VALUES ($1, CURRENT_DATE, CURRENT_DATE + INTERVAL '1 year', 'Active')  -- Set status to 'Active'
-      RETURNING membership_id;
-    `;
-    const membershipResult = await client.query(membershipQuery, [customerId]);
-    const membershipId = membershipResult.rows[0].membership_id;
-    console.log('Membership Inserted:', { membershipId });
+      // Insert membership with status
+      const membershipQuery = `
+          INSERT INTO Membership (customer_id, start_date, end_date, status)
+          VALUES ($1, CURRENT_DATE, CURRENT_DATE + INTERVAL '1 year', 'Active')
+          RETURNING membership_id;
+      `;
+      const membershipResult = await client.query(membershipQuery, [customerId]);
+      const membershipId = membershipResult.rows[0].membership_id;
+      console.log('Membership Inserted:', { membershipId });
 
-    const paymentStatus = 'Completed';
+      // Generate QR code
+      const qrCodePath = await generateQRCode(membershipId);
 
-    // Determine reference number based on payment method
-    let gcashRefNum = null;
-    let mayaRefNum = null;
+      const paymentStatus = 'Completed';
 
-    if (paymentMethod === 'Gcash') {
-      gcashRefNum = referenceNumber;
-    } else if (paymentMethod === 'Paymaya') {
-      mayaRefNum = referenceNumber;
-    }
+      // Determine reference number based on payment method
+      let gcashRefNum = null;
+      let mayaRefNum = null;
 
-    // Insert payment
-    const paymentQuery = `
-      INSERT INTO Payment (
-        amount, 
-        method, 
-        status, 
-        payment_date, 
-        customer_id, 
-        gcash_refNum, 
-        maya_refNum,
-        transaction_type
-      )
-      VALUES ($1, $2, $3, CURRENT_TIMESTAMP, $4, $5, $6, $7)
-      RETURNING payment_id;
-    `;
-    const paymentResult = await client.query(paymentQuery, [
-      amount,
-      paymentMethod,
-      paymentStatus,
-      customerId,
-      gcashRefNum,
-      mayaRefNum,
-      transactionType
-    ]);
-    const paymentId = paymentResult.rows[0].payment_id;
-    console.log('Payment Inserted:', { paymentId });
+      if (paymentMethod === 'Gcash') {
+          gcashRefNum = referenceNumber;
+      } else if (paymentMethod === 'Paymaya') {
+          mayaRefNum = referenceNumber;
+      }
 
-    await client.query('COMMIT');
+      // Insert payment
+      const paymentQuery = `
+          INSERT INTO Payment (
+              amount, 
+              method, 
+              status, 
+              payment_date, 
+              customer_id, 
+              gcash_refNum, 
+              maya_refNum,
+              transaction_type
+          )
+          VALUES ($1, $2, $3, CURRENT_TIMESTAMP, $4, $5, $6, $7)
+          RETURNING payment_id;
+      `;
+      const paymentResult = await client.query(paymentQuery, [
+          amount,
+          paymentMethod,
+          paymentStatus,
+          customerId,
+          gcashRefNum,
+          mayaRefNum,
+          transactionType
+      ]);
+      const paymentId = paymentResult.rows[0].payment_id;
+      console.log('Payment Inserted:', { paymentId });
 
-    res.status(201).json({
-      customerId: customerId,
-      membershipId: membershipId,
-      paymentId: paymentId,
-      message: 'Membership transaction added successfully'
-    });
+      await client.query('COMMIT');
+
+      res.status(201).json({
+          customerId: customerId,
+          membershipId: membershipId,
+          paymentId: paymentId,
+          qrCodePath: `/images/qrcodes/${membershipId}.png`, // Frontend-relative path
+          message: 'Membership transaction added successfully'
+      });
   } catch (err) {
-    // Rollback the transaction
-    if (client) await client.query('ROLLBACK');
+      // Rollback the transaction
+      if (client) await client.query('ROLLBACK');
 
-    // Log the full error details
-    console.error('Detailed Membership Transaction Error:', {
-      message: err.message,
-      name: err.name,
-      code: err.code,
-      detail: err.detail,
-      stack: err.stack
-    });
+      // Log the full error details
+      console.error('Detailed Membership Transaction Error:', {
+          message: err.message,
+          name: err.name,
+          code: err.code,
+          detail: err.detail,
+          stack: err.stack
+      });
 
-    // Send a more informative error response
-    res.status(500).json({
-      error: 'Error adding membership transaction',
-      details: err.message,
-      fullError: process.env.NODE_ENV === 'development' ? err : undefined
-    });
+      // Send a more informative error response
+      res.status(500).json({
+          error: 'Error adding membership transaction',
+          details: err.message,
+          fullError: process.env.NODE_ENV === 'development' ? err : undefined
+      });
   } finally {
-    if (client) client.release();
+      if (client) client.release();
   }
 });
 app.post('/renewMembership', async (req, res) => {
@@ -1731,6 +1762,7 @@ app.get('/members', async (req, res) => {
       res.status(500).json({ error: 'Error fetching members' });
   }
 });
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
