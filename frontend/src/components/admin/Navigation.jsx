@@ -57,10 +57,6 @@ function Navigation() {
                 <img src={qrMembershipPrint} alt="Qr Membership Print" />
                 <span>Qr Membership Print</span>
             </button>
-            <button onClick={openVoucherModal}>
-                <img src={voucher} alt="Voucher" />
-                <span>Voucher</span>
-            </button>
             <button onClick={openAccountModal}>
                 <img src={accounts} alt="Accounts" />
                 <span>Accounts</span>

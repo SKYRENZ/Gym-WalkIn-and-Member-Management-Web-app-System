@@ -29,7 +29,7 @@ const FilterModal = ({ isOpen, onClose, onApply }) => {
                     <option value="">All</option>
                     <option value="new membership">New Membership</option>
                     <option value="membership renewal">Membership Renewal</option>
-                    <option value="walkin">Walk-in</option>
+                    <option value="walkin">Walk-In Transaction</option>
                 </select>
             </div>
             <div className="filter-group">
@@ -42,7 +42,7 @@ const FilterModal = ({ isOpen, onClose, onApply }) => {
                     <option value="">All</option>
                     <option value="gcash">Gcash</option>
                     <option value="cash">Cash</option>
-                    <option value="maya">Maya</option>
+                    <option value="paymaya">Paymaya</option>
                 </select>
             </div>
             <button onClick={handleApply} className="apply-button">Apply</button>

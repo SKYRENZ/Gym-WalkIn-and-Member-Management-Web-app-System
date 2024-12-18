@@ -29,20 +29,30 @@ function TransactionsTable({ searchTerm, filterOptions }) {
         fetchTransactionLogs();
     }, []);
 
+    const typeMapping = {
+        "walkin": "Walk-In Transaction",
+        "new membership": "New Membership",
+        "membership renewal": "Membership Renewal",
+    };
+    
     const filteredTransactions = transactions
         .filter(transaction =>
-            transaction.name.toLowerCase().includes(searchTerm.toLowerCase())
+            transaction.name?.toLowerCase().includes(searchTerm.toLowerCase())
         )
+        .filter(transaction => {
+            if (!filterOptions.transactionType) return true;
+
+            // Get the mapped type
+            const targetType = typeMapping[filterOptions.transactionType.toLowerCase()];
+
+            // Compare with the transaction type
+            return transaction.transaction_type === targetType;
+        })
         .filter(transaction =>
-            filterOptions.transactionType 
-                ? transaction.transaction_type.toLowerCase() === filterOptions.transactionType.toLowerCase()
-                : true
-        )
-        .filter(transaction =>
-            filterOptions.paymentMethod 
+            filterOptions.paymentMethod
                 ? transaction.payment_method.toLowerCase() === filterOptions.paymentMethod.toLowerCase()
                 : true
-        )
+        );
 
     if (isLoading) {
         return (

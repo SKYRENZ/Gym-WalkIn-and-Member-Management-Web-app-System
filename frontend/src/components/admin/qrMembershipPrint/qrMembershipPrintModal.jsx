@@ -67,8 +67,10 @@ const QrMembershipPrintModal = ({ isOpen, onClose }) => {
     >
       {/* Header */}
       <div className="modal-header">
-        <img className="left" src={backIcon} alt="Back" onClick={onClose} />
-        <div className="text-wrapper-9">Qr Membership Print</div>
+        <button className="back-button" onClick={onClose}>
+          <img src={backIcon} alt="Back Icon" />
+        </button>
+        <h2>Qr Membership Print</h2>
       </div>
 
       {/* Main Content */}
