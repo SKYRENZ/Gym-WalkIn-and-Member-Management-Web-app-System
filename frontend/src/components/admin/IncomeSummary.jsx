@@ -1,19 +1,32 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useIncomeSummary } from '../../hooks/useIncomeSummary';
 import IncomeChart from './IncomeChart';
 import IncomeSummaryStats from './IncomeSummaryStats';
 import { Spinner, ErrorMessage } from './StatusComponents';
-import '../../css/admin/IncomeSummary.css'; // Ensure CSS is imported
+import '../../css/admin/IncomeSummary.css';
+import { getCurrentDayLabel } from '../../utils/dateUtils';
 
 function IncomeSummary() {
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [selectedPeriod, setSelectedPeriod] = useState('monthly');
-    const [selectedDate, setSelectedDate] = useState(new Date());
+    const [currentDate, setCurrentDate] = useState(new Date());
+    const [currentDayLabel, setCurrentDayLabel] = useState(getCurrentDayLabel());
+
+    // Update current date and day label in real-time
+    useEffect(() => {
+        const timer = setInterval(() => {
+            const newDate = new Date();
+            setCurrentDate(newDate);
+            setCurrentDayLabel(getCurrentDayLabel());
+        }, 100000); 
+
+        return () => clearInterval(timer);
+    }, []);
 
     const { incomeData, isLoading, error } = useIncomeSummary(
         selectedYear, 
         selectedPeriod, 
-        selectedPeriod === 'daily' ? selectedDate.toISOString().split('T')[0] : null
+        selectedPeriod === 'daily' ? currentDate : null
     );
 
     if (isLoading) return <Spinner message="Loading income data..." />;
@@ -54,13 +67,8 @@ function IncomeSummary() {
                         </select>
                     </div>
                     {selectedPeriod === 'daily' && (
-                        <div>
-                            <label>Select Date:</label>
-                            <input 
-                                type="date" 
-                                value={selectedDate.toISOString().split('T')[0]}
-                                onChange={(e) => setSelectedDate(new Date(e.target.value))}
-                            />
+                        <div style={{ marginTop: '10px' }}>
+                            Current Date: {currentDayLabel}
                         </div>
                     )}
                 </div>
@@ -68,11 +76,11 @@ function IncomeSummary() {
 
             <div className="income-summary-content">
                 <div className="chart-container">
-                    <IncomeChart 
-                        walkInIncomeData={incomeData.walkInIncomeByPeriod || {}}
-                        memberIncomeData={incomeData.memberIncomeByPeriod || {}}
-                        period={selectedPeriod}
-                    />
+                <IncomeChart 
+    walkInIncomeData={incomeData.walkInIncomeByPeriod || {}}
+    memberIncomeData={incomeData.memberIncomeByPeriod || {}}
+    period={selectedPeriod}
+/>
                 </div>
             </div>
 
@@ -82,7 +90,7 @@ function IncomeSummary() {
                     totalMemberIncome={incomeData.totalMemberIncome}
                     totalIncome={incomeData.totalIncome}
                     period={selectedPeriod}
-                    selectedDate={selectedPeriod === 'daily' ? selectedDate : null}
+                    selectedDate={selectedPeriod === 'daily' ? currentDate : null}
                 />
             </div>
         </div>
