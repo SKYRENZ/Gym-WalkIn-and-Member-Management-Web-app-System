@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import  { useState, useEffect } from "react";
 import Modal from 'react-modal';
 import api from '../../../api'; // Assuming you have an api utility
 import "../../../css/admin/ExpiredAccModal.css";
