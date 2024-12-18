@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../api'; // Ensure you have an api utility
 import '../../css/counter/TransactionTable.css';
 
-function TransactionsTable({ searchTerm }) {
+function TransactionsTable({ searchTerm, filterOptions }) {
     const [transactions, setTransactions] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -29,9 +29,20 @@ function TransactionsTable({ searchTerm }) {
         fetchTransactionLogs();
     }, []);
 
-    const filteredTransactions = transactions.filter(transaction =>
-        transaction.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredTransactions = transactions
+        .filter(transaction =>
+            transaction.name.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+        .filter(transaction =>
+            filterOptions.transactionType 
+                ? transaction.transaction_type.toLowerCase() === filterOptions.transactionType.toLowerCase()
+                : true
+        )
+        .filter(transaction =>
+            filterOptions.paymentMethod 
+                ? transaction.payment_method.toLowerCase() === filterOptions.paymentMethod.toLowerCase()
+                : true
+        )
 
     if (isLoading) {
         return (
