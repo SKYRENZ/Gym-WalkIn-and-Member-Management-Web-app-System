@@ -116,7 +116,7 @@ function IncomeChart({ walkInIncomeData, memberIncomeData, period }) {
     };
 
     return (
-        <div style={{ height: '400px', width: '100%' }}>
+        <div style={{ height: '100%', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
             <Bar data={chartData} options={options} />
         </div>
     );

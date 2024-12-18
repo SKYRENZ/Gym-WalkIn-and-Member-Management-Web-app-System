@@ -17,7 +17,7 @@
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
-  gap: 20px;
+  gap: 10px;
   padding: 0px;
   margin-bottom: 20px;
 }
@@ -52,6 +52,11 @@
   border-radius: 4px;
 }
 
+.current-date {
+  margin-top: 10px;
+  font-weight: bold;
+}
+
 .income-summary-content {
   display: flex;
   flex-direction: column;
@@ -63,6 +68,9 @@
   flex-grow: 1;
   min-height: 0;
   position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .chart-container canvas {
@@ -76,7 +84,6 @@
   background-color: #f9f9f9;
   border-top: 1px solid #e0e0e0;
   padding: 15px 0;
-  margin-top: auto; /* Push to the bottom */
   border-bottom-left-radius: 10px;
   border-bottom-right-radius: 10px;
 }
