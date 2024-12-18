@@ -134,13 +134,22 @@ static async getCustomerTrackingData(date) {
   static async getIncomeSummaryData(year, period, date = null) {
     const yearFilter = parseInt(year);
 
+    console.log('Income Summary Data Parameters:', {
+        year,
+        yearFilter,
+        period,
+        date,
+        dateType: typeof date
+    });
+
     let paymentQuery;
     let queryParams;
 
     if (period === 'monthly') {
+        // Monthly query remains EXACTLY the same
         paymentQuery = `
             SELECT 
-                EXTRACT(MONTH FROM payment_date) AS period,
+                EXTRACT(MONTH FROM payment_date AT TIME ZONE 'Asia/Manila') AS period,
                 SUM(CASE WHEN c.membership_type = 'Walk In' THEN amount ELSE 0 END) AS walk_in_income,
                 SUM(CASE WHEN c.membership_type = 'Member' THEN amount ELSE 0 END) AS member_income
             FROM 
@@ -148,7 +157,7 @@ static async getCustomerTrackingData(date) {
             JOIN 
                 Customer c ON p.customer_id = c.customer_id
             WHERE 
-                EXTRACT(YEAR FROM payment_date) = $1
+                EXTRACT(YEAR FROM payment_date AT TIME ZONE 'Asia/Manila') = $1
             GROUP BY 
                 period
             ORDER BY 
@@ -156,11 +165,36 @@ static async getCustomerTrackingData(date) {
         `;
         queryParams = [yearFilter];
     } else {
-        // Daily income for a specific date or current date
-        const targetDate = date ? new Date(date) : new Date();
+        // Daily income with explicit timezone handling
+        console.log('Daily Income - Raw Date Input:', date);
+
+        // Create a date in Manila timezone
+        let targetDate;
+        if (date) {
+            // Parse the input date 
+            targetDate = new Date(date);
+        } else {
+            // Use current date in Manila timezone
+            targetDate = new Date();
+        }
+
+        // Convert to Manila timezone
+        const manilaDateString = targetDate.toLocaleString('en-US', { 
+            timeZone: 'Asia/Manila', 
+            year: 'numeric', 
+            month: '2-digit', 
+            day: '2-digit' 
+        }).split(',')[0].replace(/\//g, '-');
+
+        console.log('Processed Date Details:', {
+            originalInput: date,
+            inputDate: targetDate,
+            manilaDateString: manilaDateString
+        });
+
         paymentQuery = `
             SELECT 
-                DATE(payment_date) AS period,
+                DATE(payment_date AT TIME ZONE 'Asia/Manila') AS period,
                 SUM(CASE WHEN c.membership_type = 'Walk In' THEN amount ELSE 0 END) AS walk_in_income,
                 SUM(CASE WHEN c.membership_type = 'Member' THEN amount ELSE 0 END) AS member_income
             FROM 
@@ -168,48 +202,80 @@ static async getCustomerTrackingData(date) {
             JOIN 
                 Customer c ON p.customer_id = c.customer_id
             WHERE 
-                DATE(payment_date) = $1
+                DATE(payment_date AT TIME ZONE 'Asia/Manila') = $1
             GROUP BY 
                 period
         `;
-        queryParams = [targetDate.toISOString().split('T')[0]];
+        
+        // Use the Manila timezone formatted date
+        queryParams = [manilaDateString];
     }
 
-    const result = await pool.query(paymentQuery, queryParams);
+    try {
+        console.log('Executing Query:', {
+            query: paymentQuery,
+            params: queryParams
+        });
 
-    // Process the result
-    const walkInIncomeByPeriod = period === 'monthly' 
-        ? Array(12).fill(0).reduce((acc, _, index) => {
-            acc[index + 1] = 0;
-            return acc;
-        }, {})
-        : {};
+        const result = await pool.query(paymentQuery, queryParams);
 
-    const memberIncomeByPeriod = period === 'monthly'
-        ? Array(12).fill(0).reduce((acc, _, index) => {
-            acc[index + 1] = 0;
-            return acc;
-        }, {})
-        : {};
+        console.log('Query Result:', {
+            rowCount: result.rows.length,
+            rows: result.rows
+        });
 
-    let totalWalkInIncome = 0;
-    let totalMemberIncome = 0;
+        // Process the result
+        const walkInIncomeByPeriod = period === 'monthly' 
+            ? Array(12).fill(0).reduce((acc, _, index) => {
+                acc[index + 1] = 0;
+                return acc;
+            }, {})
+            : {};
 
-    result.rows.forEach(row => {
-        const period = row.period;
-        walkInIncomeByPeriod[period] = parseFloat(row.walk_in_income);
-        memberIncomeByPeriod[period] = parseFloat(row.member_income);
-        totalWalkInIncome += parseFloat(row.walk_in_income);
-        totalMemberIncome += parseFloat(row.member_income);
-    });
+        const memberIncomeByPeriod = period === 'monthly'
+            ? Array(12).fill(0).reduce((acc, _, index) => {
+                acc[index + 1] = 0;
+                return acc;
+            }, {})
+            : {};
 
-    return {
-        walkInIncomeByPeriod,
-        memberIncomeByPeriod,
-        totalWalkInIncome,
-        totalMemberIncome,
-        totalIncome: totalWalkInIncome + totalMemberIncome
-    };
+        let totalWalkInIncome = 0;
+        let totalMemberIncome = 0;
+
+        result.rows.forEach(row => {
+            console.log('Processing Row:', row);
+
+            const period = row.period;
+            const walkInIncome = parseFloat(row.walk_in_income || 0);
+            const memberIncome = parseFloat(row.member_income || 0);
+
+            // For daily, use the date as the key
+            walkInIncomeByPeriod[period] = walkInIncome;
+            memberIncomeByPeriod[period] = memberIncome;
+            
+            totalWalkInIncome += walkInIncome;
+            totalMemberIncome += memberIncome;
+        });
+
+        const resultData = {
+            walkInIncomeByPeriod,
+            memberIncomeByPeriod,
+            totalWalkInIncome,
+            totalMemberIncome,
+            totalIncome: totalWalkInIncome + totalMemberIncome
+        };
+
+        console.log('Final Result Data:', resultData);
+
+        return resultData;
+    } catch (error) {
+        console.error('Error in getIncomeSummaryData:', {
+            message: error.message,
+            stack: error.stack,
+            originalError: error
+        });
+        throw error;
+    }
 }
 
 // In reportService.js

@@ -1,36 +1,51 @@
-import React, { useMemo } from 'react';
+import React from 'react';
+import PropTypes from 'prop-types';
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 function IncomeChart({ walkInIncomeData, memberIncomeData, period }) {
-    const chartData = useMemo(() => {
-        // Ensure we have valid data objects
-        const walkInData = walkInIncomeData || {};
-        const memberData = memberIncomeData || {};
+    const chartData = React.useMemo(() => {
+        // Enhanced logging
+        console.log('Income Chart Debug:', {
+            walkInIncomeData,
+            memberIncomeData,
+            period
+        });
 
-        // Monthly labels
-        const monthLabels = [
-            'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-        ];
+        // Handle daily data
+        if (period === 'daily') {
+            // Get the first (and likely only) date key
+            const dailyDate = Object.keys(walkInIncomeData)[0];
+            
+            // Convert date object to a readable label
+            const dateLabel = dailyDate instanceof Date 
+                ? dailyDate.toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    year: 'numeric' 
+                }) 
+                : 'Today';
 
-        // Handle monthly data
-        if (period === 'monthly') {
+            console.log('Daily Date:', dailyDate);
+            console.log('Date Label:', dateLabel);
+            console.log('Walk-In Income:', walkInIncomeData[dailyDate]);
+            console.log('Member Income:', memberIncomeData[dailyDate]);
+
             return {
-                labels: monthLabels,
+                labels: [dateLabel],
                 datasets: [
                     {
                         label: 'Walk-In Income',
-                        data: monthLabels.map((_, index) => walkInData[index + 1] || 0),
+                        data: [walkInIncomeData[dailyDate] || 0],
                         backgroundColor: 'rgba(75, 192, 192, 0.6)',
                         borderColor: 'rgba(75, 192, 192, 1)',
                         borderWidth: 1
                     },
                     {
                         label: 'Member Income',
-                        data: monthLabels.map((_, index) => memberData[index + 1] || 0),
+                        data: [memberIncomeData[dailyDate] || 0],
                         backgroundColor: 'rgba(255, 99, 132, 0.6)',
                         borderColor: 'rgba(255, 99, 132, 1)',
                         borderWidth: 1
@@ -39,19 +54,28 @@ function IncomeChart({ walkInIncomeData, memberIncomeData, period }) {
             };
         }
 
-        // Handle daily data (single day)
+        // Existing monthly logic remains the same
+        const monthLabels = [
+            'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+        ];
+
         return {
-            labels: ['Today'],
+            labels: monthLabels,
             datasets: [
                 {
                     label: 'Walk-In Income',
-                    data: [walkInData[Object.keys(walkInData)[0]] || 0],
+                    data: monthLabels.map((_, index) => walkInIncomeData[index + 1] || 0),
                     backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
                 },
                 {
                     label: 'Member Income',
-                    data: [memberData[Object.keys(memberData)[0]] || 0],
+                    data: monthLabels.map((_, index) => memberIncomeData[index + 1] || 0),
                     backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
                 }
             ]
         };
@@ -77,7 +101,6 @@ function IncomeChart({ walkInIncomeData, memberIncomeData, period }) {
                     text: 'Income (₱)'
                 },
                 ticks: {
-                    // Add comma formatting to y-axis labels
                     callback: function(value) {
                         return '₱' + value.toLocaleString();
                     }
@@ -98,5 +121,18 @@ function IncomeChart({ walkInIncomeData, memberIncomeData, period }) {
         </div>
     );
 }
+
+// Add PropTypes validation
+IncomeChart.propTypes = {
+    walkInIncomeData: PropTypes.object,
+    memberIncomeData: PropTypes.object,
+    period: PropTypes.oneOf(['monthly', 'daily']).isRequired
+};
+
+// Add default props to prevent errors
+IncomeChart.defaultProps = {
+    walkInIncomeData: {},
+    memberIncomeData: {}
+};
 
 export default IncomeChart;
