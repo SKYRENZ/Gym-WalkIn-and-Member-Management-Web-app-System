@@ -158,7 +158,48 @@ app.get('/getNewMembers', async (req, res) => {
       });
   }
 });
+app.get('/diagnosticMemberQuery', async (req, res) => {
+  try {
+    // Check basic customer and membership data
+    const customerQuery = `
+      SELECT 
+        COUNT(*) as total_customers,
+        COUNT(CASE WHEN membership_type = 'Member' THEN 1 END) as member_count
+      FROM Customer;
+    `;
 
+    const membershipQuery = `
+      SELECT 
+        COUNT(*) as total_memberships,
+        COUNT(CASE WHEN status = 'Active' THEN 1 END) as active_memberships
+      FROM Membership;
+    `;
+
+    const paymentQuery = `
+      SELECT 
+        COUNT(*) as total_payments,
+        MIN(payment_date) as earliest_payment,
+        MAX(payment_date) as latest_payment
+      FROM Payment;
+    `;
+
+    const customerResult = await pool.query(customerQuery);
+    const membershipResult = await pool.query(membershipQuery);
+    const paymentResult = await pool.query(paymentQuery);
+
+    res.status(200).json({
+      customers: customerResult.rows[0],
+      memberships: membershipResult.rows[0],
+      payments: paymentResult.rows[0]
+    });
+  } catch (error) {
+    console.error('Diagnostic query error:', error);
+    res.status(500).json({ 
+      error: 'Error running diagnostic queries', 
+      details: error.message 
+    });
+  }
+});
 //admin
 //customer Tracking
 app.get('/customerTracking', async (req, res) => {
@@ -330,71 +371,43 @@ app.get('/getWalkInCustomerRecords', async (req, res) => {
     });
   }
 });
+
 app.get('/getMemberCustomerRecords', async (req, res) => {
-    const client = await pool.connect();
-  
-    try {
-      const { year, period = 'monthly' } = req.query;
-      const parsedYear = parseInt(year, 10);
-  
-      console.log('Received year for member records:', parsedYear);
-  
-      const query = ` 
-        SELECT 
-          c.name,
-          COUNT(p.payment_id) AS total_entries,
-          MAX(p.payment_date) AS last_payment_date
-        FROM 
-          Customer c
-        JOIN 
-          Membership m ON c.customer_id = m.customer_id
-        LEFT JOIN 
-          Payment p ON c.customer_id = p.customer_id
-        WHERE 
-          c.membership_type = 'Member' 
-          AND EXTRACT(YEAR FROM p.payment_date) = $1 
-        GROUP BY 
-          c.name
-        ORDER BY 
-          total_entries DESC;
-      `; 
-  
-      console.log('Executing query with year:', parsedYear);
-  
-      const result = await client.query(query, [parsedYear]);
-  
-      console.log('Query result:', result.rows);
-  
-      const processedData = result.rows.map(row => ({
-        names: row.name || 'Unknown',
-        total_entries: parseInt(row.total_entries) || 0,
-        last_payment_date: row.last_payment_date 
-          ? new Date(row.last_payment_date).toLocaleDateString('en-PH') 
-          : 'N/A'
-      }));
-  
-      console.log('Processed data:', processedData);
-  
-      res.status(200).json({
-        success: true,
-        data: processedData,
-        metadata: {
-          year: parsedYear,
-          period: period,
-          total_entries: processedData.reduce((sum, entry) => sum + entry.total_entries, 0)
-        }
+  const client = await pool.connect();
+
+  try {
+    const { year, period = 'monthly' } = req.query;
+    const parsedYear = parseInt(year, 10);
+
+    console.log('Received parameters:', { year, period });
+
+    const result = await ReportService.getMemberCustomerRecords(parsedYear, period);
+
+    res.status(200).json(result);
+  } catch (error) {
+    console.error('Full error in route:', error);
+    
+    // Log specific error details
+    if (error.message.includes('syntax error')) {
+      console.error('Syntax Error Details:', {
+        message: error.message,
+        position: error.position,
+        query: error.query
       });
-    } catch (error) {
-      console.error('Error fetching member customer records:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Error fetching member customer records',
-        details: error.message
-      });
-    } finally {
-      client.release();
     }
-  });
+
+    res.status(500).json({ 
+      success: false, 
+      error: 'Error fetching member customer records', 
+      details: error.message,
+      fullError: error.toString()
+    });
+  } finally {
+    client.release();
+  }
+});
+
+
 app.get('/getCustomerMember_TotalRecords/:name', async (req, res) => {
     const { name } = req.params;
 
@@ -601,102 +614,192 @@ app.put('/deactivateCustomerMembership', async (req, res) => {
   try {
       client = await pool.connect();
 
-      // Begin transaction
+      // Begin transaction 
       await client.query('BEGIN');
 
-      // Find the customer and membership details
-      const customerQuery = `
+      // Find the customer and membership details 
+      const customerQuery = ` 
           SELECT c.customer_id, m.membership_id 
-          FROM Customer c
-          JOIN Membership m ON c.customer_id = m.customer_id
-          WHERE c.name = $1 AND m.status = 'Active'
-      `;
+          FROM Customer c 
+          JOIN Membership m ON c.customer_id = m.customer_id 
+          WHERE c.name = $1 AND m.status = 'Active' 
+      `; 
       const customerResult = await client.query(customerQuery, [customerName]);
 
-      if (customerResult.rows.length === 0) {
-          return res.status(404).json({ error: 'Active membership not found for this customer' });
-      }
+      if (customerResult.rows.length === 0) { 
+          return res.status(404).json({ error: 'Active membership not found for this customer' }); 
+      } 
 
-      const { customer_id, membership_id } = customerResult.rows[0];
+      const { customer_id, membership_id } = customerResult.rows[0]; 
 
-      // Update Customer table to mark as inactive
-      const updateCustomerQuery = `
-          UPDATE Customer 
-          SET is_active = FALSE 
-          WHERE customer_id = $1
-      `;
-      await client.query(updateCustomerQuery, [customer_id]);
-
-      // Update Membership table to mark as inactive
-      const updateMembershipQuery = `
+      // Update Membership to mark as inactive 
+      const updateMembershipQuery = ` 
           UPDATE Membership 
           SET status = 'Inactive' 
-          WHERE membership_id = $1
-      `;
+          WHERE membership_id = $1 
+      `; 
       await client.query(updateMembershipQuery, [membership_id]);
 
-      // Insert into deactivated_members table
-      const insertDeactivationQuery = `
+      // Insert into deactivated_members table 
+      const insertDeactivationQuery = ` 
           INSERT INTO deactivated_members 
-          (customer_id, membership_id, name, deactivation_reason) 
-          VALUES ($1, $2, $3, $4)
-      `;
-      await client.query(insertDeactivationQuery, [
+          (customer_id, membership_id, name, deactivation_reason, status) 
+          VALUES ($1, $2, $3, $4, 'Deactivated') 
+      `; 
+      await client.query(insertDeactivationQuery, [ 
           customer_id, 
           membership_id, 
           customerName, 
-          reason
-      ]);
+          reason 
+      ]); 
 
-      // Commit transaction
-      await client.query('COMMIT');
+      // Commit transaction 
+      await client.query('COMMIT'); 
 
       res.status(200).json({ 
-          message: 'Customer membership deactivated successfully',
+          message: 'Customer membership deactivated successfully', 
           customerName 
-      });
+      }); 
 
   } catch (error) {
-      // Rollback transaction in case of error
-      if (client) {
-          await client.query('ROLLBACK');
-      }
-      console.error('Error deactivating customer membership:', error);
+      // Rollback transaction in case of error 
+      if (client) { 
+          await client.query('ROLLBACK'); 
+      } 
+      console.error('Error deactivating customer membership:', error); 
       res.status(500).json({ 
           error: 'Error deactivating customer membership', 
           details: error.message 
-      });
-  } finally {
-      if (client) {
-          client.release();
-      }
-  }
+      }); 
+  } finally { 
+      if (client) { 
+          client.release(); 
+      } 
+  } 
 });
 
 // Endpoint to fetch deactivated members
 app.get('/getDeactivatedMembers', async (req, res) => {
   try {
-      const query = `
-          SELECT 
-              dm.id,
-              dm.name,
-              dm.deactivation_reason,
-              dm.deactivated_at,
-              dm.status
-          FROM deactivated_members dm
-          ORDER BY dm.deactivated_at DESC
-      `;
-      const result = await pool.query(query);
-      res.status(200).json(result.rows);
+    const query = ` 
+      SELECT 
+        dm.id, 
+        dm.name, 
+        dm.deactivation_reason, 
+        dm.deactivated_at, 
+        dm.status,
+        CASE 
+          WHEN m.end_date < CURRENT_DATE THEN 'Expired'
+          ELSE 'Blacklisted'
+        END AS deactivation_type
+      FROM deactivated_members dm
+      JOIN Membership m ON dm.membership_id = m.membership_id
+      WHERE dm.status = 'Deactivated'
+      ORDER BY dm.deactivated_at DESC 
+    `; 
+    const result = await pool.query(query);
+    res.status(200).json(result.rows);
   } catch (error) {
-      console.error('Error fetching deactivated members:', error);
-      res.status(500).json({ 
-          error: 'Error retrieving deactivated members', 
-          details: error.message 
-      });
+    console.error('Error fetching deactivated members:', error);
+    res.status(500).json({ 
+      error: 'Error retrieving deactivated members', 
+      details: error.message 
+    });
   }
 });
+app.put('/reactivateCustomerMembership', async (req, res) => {
+  const { customerName } = req.body;
 
+  let client;
+  try {
+    client = await pool.connect();
+
+    // Begin transaction 
+    await client.query('BEGIN');
+
+    // Find the deactivated membership 
+    const findMembershipQuery = `
+      SELECT 
+        dm.id, 
+        dm.membership_id, 
+        dm.name, 
+        dm.deactivation_reason,
+        m.start_date,
+        m.end_date,
+        m.membership_type
+      FROM deactivated_members dm
+      JOIN Membership m ON dm.membership_id = m.membership_id
+      WHERE dm.name = $1 AND dm.status = 'Deactivated'
+    `;
+    const membershipResult = await client.query(findMembershipQuery, [customerName]);
+
+    if (membershipResult.rows.length === 0) {
+      throw new Error('No deactivated membership found for this customer');
+    }
+
+    const membership = membershipResult.rows[0];
+
+    // Determine new membership dates
+    const today = new Date();
+    const originalEndDate = new Date(membership.end_date);
+    
+    // Calculate remaining days from original membership
+    const remainingDays = Math.ceil((originalEndDate - new Date(membership.start_date)) / (1000 * 60 * 60 * 24));
+
+    // Set new start and end dates
+    const newStartDate = today;
+    const newEndDate = new Date(today);
+    newEndDate.setDate(today.getDate() + remainingDays);
+
+    // Update membership dates
+    const updateMembershipQuery = `
+      UPDATE Membership
+      SET 
+        start_date = $1, 
+        end_date = $2, 
+        status = 'Active'
+      WHERE membership_id = $3
+    `;
+    await client.query(updateMembershipQuery, [
+      newStartDate, 
+      newEndDate, 
+      membership.membership_id
+    ]);
+
+    // Remove from deactivated members
+    const removeDeactivatedQuery = `
+      DELETE FROM deactivated_members
+      WHERE id = $1
+    `;
+    await client.query(removeDeactivatedQuery, [membership.id]);
+
+    // Commit transaction
+    await client.query('COMMIT');
+
+    res.status(200).json({ 
+      message: 'Membership reactivated successfully',
+      newStartDate,
+      newEndDate,
+      membershipType: membership.membership_type
+    });
+
+  } catch (error) {
+    // Rollback transaction in case of error
+    if (client) {
+      await client.query('ROLLBACK');
+    }
+
+    console.error('Error reactivating membership:', error);
+    res.status(500).json({ 
+      error: 'Failed to reactivate membership', 
+      details: error.message 
+    });
+  } finally {
+    if (client) {
+      client.release();
+    }
+  }
+});
 //income summary
 app.get('/getIncomeSummary', async (req, res) => {
   const { year, period, date } = req.query;

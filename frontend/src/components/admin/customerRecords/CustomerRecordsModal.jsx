@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Modal from 'react-modal';
 import { useCustomerRecords } from '../../../hooks/useCustomerRecords';
 import InformationModal from './InformationModal';
@@ -27,15 +27,14 @@ const CustomerRecordsModal = ({ isOpen, onClose }) => {
     data = [], 
     loading, 
     error,
+    refetch // Rename to avoid naming conflict
   } = useCustomerRecords(currentYear, view === "WalkIn" ? "Walk In" : "Member");
+
+  
   useEffect(() => {
     setLocalData(data);
   }, [data]);
 
-  // Implement handleSearchChange
-  const handleSearchChange = (event) => {
-    setSearchTerm(event.target.value);
-  };
 
   useEffect(() => {
     if (isOpen) {
@@ -63,7 +62,7 @@ const CustomerRecordsModal = ({ isOpen, onClose }) => {
       setSelectedCustomer(customerName === selectedCustomer ? null : customerName);
     }
   };
-  const handleDeactivate = async () => {
+  const handleDeactivate = useCallback(async () => {
     if (!selectedCustomer || !deactivationReason.trim()) {
       alert('Please provide a reason for deactivation');
       return;
@@ -84,8 +83,12 @@ const CustomerRecordsModal = ({ isOpen, onClose }) => {
       const data = await response.json();
 
       if (response.ok) {
-        // Refresh the data
-        refetch(); // Assuming your hook has a refetch method
+        // Refresh the data using refetch method
+        if (typeof refetch === 'function') {
+          refetch(); 
+        } else {
+          console.error('refetch is not a function');
+        }
         
         // Close modals and reset state
         setIsReasonModalOpen(false);
@@ -102,13 +105,23 @@ const CustomerRecordsModal = ({ isOpen, onClose }) => {
       console.error('Error deactivating customer membership:', error);
       alert('An error occurred while deactivating the membership');
     }
-  };
+  }, [selectedCustomer, deactivationReason, refetch]);
 
   const renderTableRows = () => {
     if (loading) return <tr><td colSpan="3">Loading...</td></tr>;
-    if (error) return <tr><td colSpan="3">Error: {error}</td></tr>;
+    
+    if (error) {
+      return (
+        <tr>
+          <td colSpan="3" style={{ color: 'red', textAlign: 'center' }}>
+            {error || 'An error occurred while fetching records'}
+          </td>
+        </tr>
+      );
+    }
+    
     if (!filteredData.length) return <tr><td colSpan="3">No records found</td></tr>;
-
+  
     return localData.filter(record => 
       record && record.names && record.names.toLowerCase().includes(searchTerm.toLowerCase())
     ).map((record, index) => (
@@ -127,7 +140,6 @@ const CustomerRecordsModal = ({ isOpen, onClose }) => {
       </tr>
     ));
   };
-
   return (
     <>
       <Modal

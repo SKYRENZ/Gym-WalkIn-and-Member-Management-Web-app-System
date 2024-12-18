@@ -333,31 +333,61 @@ static async getMemberCustomerRecords(year, period = 'monthly') {
     const currentYear = new Date().getFullYear();
     const parsedYear = parseInt(year, 10);
 
+    // If the year is in the future, return an empty result
+    if (parsedYear > currentYear) {
+      return { 
+        success: true, 
+        data: [],
+        metadata: { 
+          year: parsedYear, 
+          period: period, 
+          total_entries: 0
+        } 
+      };
+    }
+
     if (isNaN(parsedYear) || parsedYear < 2000 || parsedYear > currentYear + 1) {
       throw new Error(`Please provide a valid year between 2000 and ${currentYear + 1}`);
     }
 
     const query = ` 
+      WITH MemberPayments AS (
+        SELECT 
+          c.customer_id,
+          c.name, 
+          COUNT(p.payment_id) AS total_entries, 
+          MAX(p.payment_date) AS last_payment_date 
+        FROM 
+          Customer c 
+        JOIN 
+          Membership m ON c.customer_id = m.customer_id 
+        LEFT JOIN 
+          Payment p ON c.customer_id = p.customer_id 
+          AND EXTRACT(YEAR FROM p.payment_date) = $1
+        WHERE 
+          c.membership_type = 'Member' 
+          AND m.status = 'Active'  
+        GROUP BY 
+          c.customer_id,
+          c.name
+      )
       SELECT 
-        c.name,
-        COUNT(p.payment_id) AS total_entries,
-        MAX(p.payment_date) AS last_payment_date
+        name, 
+        total_entries, 
+        last_payment_date 
       FROM 
-        Customer c
-      JOIN 
-        Membership m ON c.customer_id = m.customer_id
-      LEFT JOIN 
-        Payment p ON c.customer_id = p.customer_id
-      WHERE 
-        c.membership_type = 'Member' 
-        AND EXTRACT(YEAR FROM p.payment_date) = $1 
-      GROUP BY 
-        c.name
+        MemberPayments
       ORDER BY 
         total_entries DESC;
     `; 
 
+    console.log('Executing query with year:', parsedYear);
+    console.log('Full query:', query);
+
     const result = await pool.query(query, [parsedYear]);
+
+    console.log('Query result rows:', result.rows);
+    console.log('Query result row count:', result.rowCount);
 
     const processedData = result.rows.map(row => ({
       names: row.name || 'Unknown',
@@ -377,11 +407,26 @@ static async getMemberCustomerRecords(year, period = 'monthly') {
       } 
     };
   } catch (err) {
-    console.error('Error fetching member customer records:', err);
+    console.error('Detailed error in getMemberCustomerRecords:', {
+      message: err.message,
+      stack: err.stack,
+      name: err.name,
+      code: err.code,
+      detail: err.detail,
+      hint: err.hint
+    });
+    
+    // Log the specific error details
+    if (err.message.includes('syntax error')) {
+      console.error('SQL Syntax Error Details:', {
+        query: err.query,
+        parameters: err.parameters
+      });
+    }
+
     throw err;
   }
 }
-
 // In reportService.js or server.js
 static async getTransactionLogs() {
   try {
