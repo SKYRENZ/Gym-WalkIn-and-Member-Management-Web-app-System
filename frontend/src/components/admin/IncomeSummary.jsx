@@ -66,21 +66,21 @@ function IncomeSummary() {
                             <option value="daily">Daily</option>
                         </select>
                     </div>
-                    {selectedPeriod === 'daily' && (
-                        <div style={{ marginTop: '10px' }}>
-                            Current Date: {currentDayLabel}
-                        </div>
-                    )}
                 </div>
+                {selectedPeriod === 'daily' && (
+                    <div className="current-date">
+                        Current Date: {currentDayLabel}
+                    </div>
+                )}
             </div>
 
             <div className="income-summary-content">
                 <div className="chart-container">
-                <IncomeChart 
-    walkInIncomeData={incomeData.walkInIncomeByPeriod || {}}
-    memberIncomeData={incomeData.memberIncomeByPeriod || {}}
-    period={selectedPeriod}
-/>
+                    <IncomeChart 
+                        walkInIncomeData={incomeData.walkInIncomeByPeriod || {}}
+                        memberIncomeData={incomeData.memberIncomeByPeriod || {}}
+                        period={selectedPeriod}
+                    />
                 </div>
             </div>
 
