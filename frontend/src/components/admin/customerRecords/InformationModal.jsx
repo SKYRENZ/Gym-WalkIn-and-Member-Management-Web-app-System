@@ -10,19 +10,20 @@ Modal.setAppElement('#root');
 const InformationModal = ({ 
   isOpen, 
   onClose, 
-  customerName 
+  customerName,
+  onUpdateSuccess // Add this prop to notify parent component of successful update
 }) => {
   // State to manage customer information
   const [customerInfo, setCustomerInfo] = useState({
     name: '',
-    gender: '',
-    birthday: '',
+    email: '',
     phone: '',
-    email: ''
+    birthday: '' // Assuming this is the membership end date
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [originalInfo, setOriginalInfo] = useState({}); // Store original info to revert changes
 
   // Fetch customer information when modal opens
   useEffect(() => {
@@ -34,13 +35,15 @@ const InformationModal = ({
           const response = await api.get(`/getCustomerMember_info/${customerName}`);
           
           // Update state with fetched information
-          setCustomerInfo({
+          const fetchedInfo = {
             name: response.data.name || customerName,
-            gender: response.data.gender || '',
-            birthday: response.data.birthday || '',
+            email: response.data.email || '',
             phone: response.data.phone || '',
-            email: response.data.email || ''
-          });
+            birthday: response.data.end_date || '' // Using end_date as birthday/membership end date
+          };
+
+          setCustomerInfo(fetchedInfo);
+          setOriginalInfo(fetchedInfo); // Store original info
         } catch (err) {
           console.error('Error fetching customer information:', err);
           setError('Failed to fetch customer information');
@@ -57,6 +60,7 @@ const InformationModal = ({
   useEffect(() => {
     if (!isOpen) {
       setIsEditing(false);
+      setError(null);
     }
   }, [isOpen]);
 
@@ -74,13 +78,21 @@ const InformationModal = ({
     setIsEditing(true);
   };
 
-  // Handle cancel editing
+  // Handle cancel editing - revert to original information
   const handleCancelEdit = () => {
+    setCustomerInfo(originalInfo);
     setIsEditing(false);
+    setError(null);
   };
 
   // Handle save changes
   const handleSaveChanges = async () => {
+    // Validate inputs
+    if (!customerInfo.name || !customerInfo.email || !customerInfo.phone) {
+      setError('Name, email, and phone are required');
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -93,8 +105,18 @@ const InformationModal = ({
       });
 
       if (response.data) {
+        // Immediately update the original info with the new data
+        setOriginalInfo(customerInfo);
         setIsEditing(false);
-        // Optionally refresh or update parent component
+        
+        // Notify parent component of successful update
+        if (onUpdateSuccess) {
+          onUpdateSuccess({
+            oldName: customerName,
+            newName: customerInfo.name,
+            ...customerInfo
+          });
+        }
       }
     } catch (err) {
       console.error('Error updating customer information:', err);
@@ -120,7 +142,7 @@ const InformationModal = ({
       </div>
 
       {isLoading && <div className="loading">Loading...</div>}
-      {error && <div className="error">{error}</div>}
+      {error && <div className="error-message">{error}</div>}
 
       <div className="informationForm">
         <label htmlFor="name">Full Name:</label>
@@ -153,39 +175,50 @@ const InformationModal = ({
           disabled={!isEditing}
         />
 
+        <label htmlFor="birthday">Membership End Date:</label>
+        <input 
+          type="date" 
+          id="birthday" 
+          value={customerInfo.birthday ? 
+            new Date(customerInfo.birthday).toISOString().split('T')[0] : 
+            ''
+          }
+          onChange={handleInputChange}
+          disabled={!isEditing}
+        />
       </div>
 
       {/* Edit Button */}
       {!isEditing && (
-          <div className="edit-button-container">
-            <button 
-              className="editInfoButton" 
-              onClick={handleEditClick}
-            >
-              Edit
-            </button>
-          </div>
-        )}
+        <div className="edit-button-container">
+          <button 
+            className="editInfoButton" 
+            onClick={handleEditClick}
+          >
+            Edit
+          </button>
+        </div>
+      )}
 
-        {/* Edit/Save Actions */}
-        {isEditing && (
-          <div className="edit-actions">
-            <button 
-              className="cancel-edit-btn" 
-              onClick={handleCancelEdit}
-              disabled={isLoading}
-            >
-              Cancel
-            </button>
-            <button 
-              className="save-edit-btn" 
-              onClick={handleSaveChanges}
-              disabled={isLoading}
-            >
-              {isLoading ? 'Saving...' : 'Save Changes'}
-            </button>
-          </div>
-        )}
+      {/* Edit/Save Actions */}
+      {isEditing && (
+        <div className="edit-actions">
+          <button 
+            className="cancel-edit-btn" 
+            onClick={handleCancelEdit}
+            disabled={isLoading}
+          >
+            Cancel
+          </button>
+          <button 
+            className="save-edit-btn" 
+            onClick={handleSaveChanges}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Saving...' : 'Save Changes'}
+          </button>
+        </div>
+      )}
     </Modal>
   );
 };
@@ -194,12 +227,14 @@ const InformationModal = ({
 InformationModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
-  customerName: PropTypes.string
+  customerName: PropTypes.string,
+  onUpdateSuccess: PropTypes.func
 };
 
 // Optional default props
 InformationModal.defaultProps = {
-  customerName: ''
+  customerName: '',
+  onUpdateSuccess: () => {}
 };
 
 export default InformationModal;
