@@ -1,23 +1,52 @@
-.card-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-}
+/* Import Tilt Warp and Poppins fonts from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Tilt+Warp&display=swap');
 
-.card {
-  background-color: #212121;
+.membership-card {
+  background-color: #1E1E1E;
   color: white;
-  width: 350px;
+  width: 450px;
+  height: 250px;
   border-radius: 15px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   font-family: Arial, sans-serif;
+  margin: 0 auto; /* Center the card */
+  background-image: url('/src/assets/Card-bg.png');
+  background-size: cover;
 }
 
 .card-header {
-  background-color: #3c3c3c;
+  display: flex;
+  align-items: center;
+  background-color: #1E1E1E;
   padding: 15px;
   text-align: center;
+  border-top-left-radius: 15px;
+  border-top-right-radius: 15px;
+  padding-left: 20px;
+  width: 250px;
+}
+
+.header-left {
+  flex: 0 0 auto;
+  margin-right: 10px; /* Adjust this value to make the image closer or farther */
+}
+
+.header-right {
+  flex: 1;
+  text-align: left;
+}
+
+.header-right h1{
+  flex: 1;
+  color: #935D13;
+  font-family: 'Tilt Warp', sans-serif;
+  font-size: 15px;
+}
+
+.header-right span{
+  flex: 1;
+  color: #8D8D8D;
+  font-family: 'Tilt Warp', sans-serif;
+  font-size: 10px;
 }
 
 .card-header h1 {
@@ -32,23 +61,41 @@
 
 .card-body {
   display: flex;
-  padding: 20px;
+  padding: 0px 20px 20px 20px;
   justify-content: space-between;
+  height: 170px;
 }
 
 .left-side {
-  flex: 1;
+  flex: 2;
   padding-right: 10px;
 }
 
-.left-side h2 {
-  font-size: 16px;
-  margin-bottom: 5px;
+.left-side .member-title {
+  font-size: 18px;
+  font-family: Poppins, sans-serif;
+  text-align: left;
+  font-weight: 300;
+}
+
+.left-side .member-name {
+  font-size: 25px;
+  font-family: Poppins, sans-serif;
+  text-align: left;
+  font-weight: 600;
+  margin-bottom: 40px;
 }
 
 .left-side p {
-  font-size: 14px;
+  font-size: 13px;
   margin: 3px 0;
+  display: flex;
+  font-family: Poppins, sans-serif;
+  font-weight: 200;
+}
+
+.left-side p img {
+  padding-right: 5px;
 }
 
 .right-side {
@@ -59,20 +106,31 @@
 }
 
 .qr-container {
-  text-align: center;
+  height: 170px;
+  display: flex;
+  flex-direction: column;
+  justify-content: end;
+  margin-bottom: 30px;
 }
 
-.qr-code {
-  width: 100px;
-  height: 100px;
+.qr-container img {
+  width: 110px;
+  height: 110px;
   margin-bottom: 10px;
 }
 
-.member-label {
-  background-color: #ff7b00;
+.qr-container .qr-code {
+  width: 100px; /* Adjusted size */
+  height: 100px; /* Adjusted size */
+  margin-bottom: 5px;
+  background-color: #935D13;
+  border-radius: 0px;
+  padding: 5px;
+}
+
+.qr-container .member-label {
   color: white;
-  padding: 5px 10px;
-  border-radius: 5px;
-  font-size: 14px;
+  font-size: 15px;
   text-transform: uppercase;
+  font-family: 'Tilt Warp', sans-serif;
 }
