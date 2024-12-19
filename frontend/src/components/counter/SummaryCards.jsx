@@ -11,7 +11,6 @@ function SummaryCards({ checkinCount }) {
             <CheckedInCard checkinCount={checkinCount} className="checked-in-card" />
             <WalkedInCard className="walked-in-card" />
             <NewMembersCard className="new-members-card" />
-            <VoucherCodesCard className="voucher-codes-card" />
         </div>
     );
 }
