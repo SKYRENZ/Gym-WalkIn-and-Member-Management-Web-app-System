@@ -1,18 +1,10 @@
-// src/utils/renewalLogic.js
-
 export const validateRenewalDetails = (details, step) => {
     switch(step) {
-        case 1: // Customer Details
-            if (!details.name) {
-                return { 
-                    valid: false, 
-                    message: 'Name is required.' 
-                };
-            }
+        case 1: // Member Selection
             if (!details.membershipId) {
                 return { 
                     valid: false, 
-                    message: 'Membership ID is required.' 
+                    message: 'Please select a member for renewal' 
                 };
             }
             return { valid: true };
@@ -24,9 +16,12 @@ export const validateRenewalDetails = (details, step) => {
                     message: 'Payment Method is required.'
                 };
             }
+            return { valid: true };
 
+        case 3: // Payment Details
             // Validate reference number for digital payment methods
-            if ((details.paymentMethod === 'Gcash' || details.paymentMethod === 'Paymaya') && !details.referenceNumber) {
+            if ((details.paymentMethod === 'Gcash' || details.paymentMethod === 'Paymaya') 
+                && !details.referenceNumber) {
                 return {
                     valid: false,
                     message: `Reference Number is required for ${details.paymentMethod}`
@@ -34,10 +29,11 @@ export const validateRenewalDetails = (details, step) => {
             }
 
             // Validate cash received amount
-            if (details.paymentMethod === 'Cash' && (!details.receivedAmount || parseFloat(details.receivedAmount) <= 0)) {
+            if (details.paymentMethod === 'Cash' && 
+                (!details.receivedAmount || parseFloat(details.receivedAmount) < 700)) {
                 return {
                     valid: false,
-                    message: 'Please enter a valid amount received'
+                    message: 'Please enter a valid amount (minimum ₱700)'
                 };
             }
 
@@ -50,18 +46,27 @@ export const validateRenewalDetails = (details, step) => {
 
 export const submitRenewalTransaction = async (details) => {
     try {
+        console.log('Submitting Renewal Transaction with Details:', {
+            membershipId: details.membershipId,
+            name: details.name,
+            paymentMethod: details.paymentMethod,
+            referenceNumber: details.referenceNumber || null,
+            receivedAmount: details.receivedAmount || null
+        });
+
         const response = await fetch(`${import.meta.env.VITE_API_URL}/renewMembership`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                name: details.name,
                 membershipId: details.membershipId,
+                name: details.name,
+                phone: details.phoneNumber,
+                email: details.email,
                 paymentMethod: details.paymentMethod,
                 referenceNumber: details.referenceNumber || null,
                 receivedAmount: details.receivedAmount || null,
-                // Add any additional fields you might need
                 additionalDetails: {
                     date: new Date().toISOString(),
                     source: 'Frontend Membership Renewal'
@@ -69,30 +74,41 @@ export const submitRenewalTransaction = async (details) => {
             }),
         });
 
-        const responseData = await response.json();
-        
+        // Log the full response for debugging
+        console.log('Full API Response:', {
+            status: response.status,
+            statusText: response.statusText
+        });
+
+        // Check if the response is ok
         if (!response.ok) {
-            console.error('Server Error Response:', responseData);
-            throw new Error(responseData.error || 'Transaction submission failed');
+            // Try to parse error message
+            const errorData = await response.json().catch(() => ({}));
+            console.error('Server Error Response:', errorData);
+            
+            throw new Error(
+                errorData.error || 
+                `HTTP error! status: ${response.status}`
+            );
         }
 
-        // Log the details for debugging or audit purposes
-        console.log('Membership Renewal Transaction Details:', {
-            name: details.name,
-            membershipId: details.membershipId,
-            paymentMethod: details.paymentMethod
-        });
+        const result = await response.json();
+        
+        // Log successful transaction
+        console.log('Renewal Transaction Successful:', result);
 
         return { 
             success: true, 
-            data: responseData 
+            data: result 
         };
     } catch (error) {
+        // More comprehensive error logging
         console.error('Full Membership Renewal Transaction Error:', {
             message: error.message,
             details: {
                 name: details.name,
-                membershipId: details.membershipId
+                membershipId: details.membershipId,
+                paymentMethod: details.paymentMethod
             }
         });
 

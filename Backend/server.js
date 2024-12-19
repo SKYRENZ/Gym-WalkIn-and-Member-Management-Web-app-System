@@ -29,7 +29,64 @@ cron.schedule('0 0 * * *', async () => {
     await updateMembershipStatus();
     console.log('Membership statuses updated.');
 });
+app.get('/active-members', async (req, res) => {
+  const { year } = req.query;
 
+  try {
+      // Optional: If you have a function to update membership statuses, call it here
+      await updateMembershipStatus(); 
+
+      // Base query to fetch active members with customer details
+      const baseMembershipsQuery = `
+          SELECT 
+              m.membership_id,
+              m.customer_id,
+              m.start_date,
+              m.end_date,
+              m.status,
+              m.qr_code_path,
+              c.name,
+              c.email,
+              c.contact_info,
+              c.membership_type
+          FROM 
+              membership m
+          JOIN 
+              customer c ON m.customer_id = c.customer_id
+          WHERE 
+              m.status = 'Active'
+      `;
+
+      // Add year filter if provided
+      const membershipsQuery = year
+          ? `${baseMembershipsQuery} AND EXTRACT(YEAR FROM m.start_date) = $1;`
+          : `${baseMembershipsQuery};`;
+
+      // Execute query
+      const result = year
+          ? await pool.query(membershipsQuery, [year])
+          : await pool.query(membershipsQuery);
+
+      // Transform the result if needed
+      const activeMembers = result.rows.map(member => ({
+          membershipId: member.membership_id,
+          customerId: member.customer_id,
+          startDate: member.start_date,
+          endDate: member.end_date,
+          status: member.status,
+          qrCodePath: member.qr_code_path,
+          name: member.name,
+          email: member.email,
+          contactInfo: member.contact_info,
+          membershipType: member.membership_type
+      }));
+
+      res.status(200).json(activeMembers);
+  } catch (error) {
+      console.error('Error fetching active members:', error);
+      res.status(500).json({ error: 'An error occurred while fetching active members' });
+  }
+});
 
 // Endpoint to get available years
 app.get('/getAvailableYears', async (req, res) => {
@@ -997,7 +1054,7 @@ app.post('/addMembershipTransaction', async (req, res) => {
       // Insert membership with status
       const membershipQuery = `
           INSERT INTO Membership (customer_id, start_date, end_date, status)
-          VALUES ($1, CURRENT_DATE, CURRENT_DATE + INTERVAL '1 year', 'Active')
+          VALUES ($1, CURRENT_DATE, CURRENT_DATE + INTERVAL '1 month', 'Active')
           RETURNING membership_id;
       `;
       const membershipResult = await client.query(membershipQuery, [customerId]);
@@ -1079,7 +1136,7 @@ app.post('/addMembershipTransaction', async (req, res) => {
   }
 });
 app.post('/renewMembership', async (req, res) => {
-  const { name, membershipId, paymentMethod, referenceNumber } = req.body;
+  const { name, membershipId, paymentMethod, referenceNumber, receivedAmount } = req.body;
   const amount = PRICES.MEMBERSHIP;
   const transactionType = 'Membership Renewal';
 
@@ -1089,7 +1146,7 @@ app.post('/renewMembership', async (req, res) => {
   }
 
   const customerQuery = `
-    SELECT customer_id, name, contact_info 
+    SELECT customer_id, name 
     FROM Customer 
     WHERE customer_id IN (
       SELECT customer_id 
@@ -1099,24 +1156,27 @@ app.post('/renewMembership', async (req, res) => {
   `;
 
   const membershipUpdateQuery = `
-    UPDATE Membership
-    SET end_date = end_date + INTERVAL '1 year'
-    WHERE membership_id = $1
-    RETURNING customer_id, start_date, end_date;
-  `;
+  UPDATE Membership
+  SET 
+    end_date = DATE(end_date) + INTERVAL '1 month',
+    status = 'Active'
+  WHERE membership_id = $1
+  RETURNING customer_id, start_date, end_date;
+`;
 
-  const paymentQuery = `
+  const paymentInsertQuery = `
     INSERT INTO Payment (
       amount, 
       method, 
       status, 
       payment_date, 
       customer_id, 
-      gcash_refNum, 
-      maya_refNum,
+      membership_id,
+      gcash_refnum,
+      maya_refnum,
       transaction_type
     )
-    VALUES ($1, $2, $3, CURRENT_TIMESTAMP, $4, $5, $6, $7)
+    VALUES ($1, $2, $3, CURRENT_TIMESTAMP, $4, $5, $6, $7, $8)
     RETURNING payment_id;
   `;
 
@@ -1124,6 +1184,8 @@ app.post('/renewMembership', async (req, res) => {
 
   try {
     client = await pool.connect();
+    
+    // Start transaction
     await client.query('BEGIN');
 
     // Fetch customer details
@@ -1133,12 +1195,15 @@ app.post('/renewMembership', async (req, res) => {
     }
     const { customer_id: customerId, name: customerName } = customerResult.rows[0];
 
+    // Log customer and membership details before update
+    console.log('Customer Details:', { customerId, customerName });
+
     // Update membership end date
     const membershipResult = await client.query(membershipUpdateQuery, [membershipId]);
+    console.log('Membership Update Result:', membershipResult.rows[0]);
 
+    // Prepare payment details
     const paymentStatus = 'Completed';
-
-    // Determine reference number based on payment method
     let gcashRefNum = null;
     let mayaRefNum = null;
 
@@ -1148,36 +1213,51 @@ app.post('/renewMembership', async (req, res) => {
       mayaRefNum = referenceNumber;
     }
 
-    // Insert payment
-    const paymentResult = await client.query(paymentQuery, [
+    // Insert payment record
+    const paymentResult = await client.query(paymentInsertQuery, [
       amount,
       paymentMethod,
       paymentStatus,
       customerId,
+      membershipId,
       gcashRefNum,
       mayaRefNum,
       transactionType
     ]);
 
+    console.log('Payment Insert Result:', paymentResult.rows[0]);
+
+    // Commit transaction
     await client.query('COMMIT');
 
     res.status(201).json({
       customerId: customerId,
+      membershipId: membershipId,
       paymentId: paymentResult.rows[0].payment_id,
+      newEndDate: membershipResult.rows[0].end_date,
       message: 'Membership renewal successful'
     });
+
   } catch (err) {
+    // Rollback the transaction in case of error
     if (client) await client.query('ROLLBACK');
 
-    console.error('Error renewing membership:', err);
+    console.error('Detailed Renewal Error:', {
+      message: err.message,
+      stack: err.stack,
+      membershipId: membershipId
+    });
+
     res.status(500).json({
       error: 'Error renewing membership',
       details: err.message
     });
   } finally {
+    // Always release the client
     if (client) client.release();
   }
 });
+
 app.post('/generateQRCodesForExistingMembers', async (req, res) => {
     try {
         await generateQRCodesForExistingMembers(); // Call the function to generate QR codes

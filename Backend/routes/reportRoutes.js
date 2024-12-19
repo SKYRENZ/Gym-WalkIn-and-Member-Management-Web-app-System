@@ -62,5 +62,21 @@ router.get('/incomeSummary', async (req, res) => {
     });
   }
 });
+router.get('/active-members', async (req, res) => {
+  try {
+      // Fetch customers with role 'Member' and status 'Active'
+      const activeMembers = await Customer.findAll({
+          where: {
+              role: 'Member', // Assuming 'role' is the field for user role
+              status: 'Active' // Assuming 'status' is the field for user status
+          }
+      });
 
+      // Return the list of active members
+      res.json(activeMembers);
+  } catch (error) {
+      console.error('Error fetching active members:', error);
+      res.status(500).json({ error: 'Failed to fetch active members' });
+  }
+});
 module.exports = router;
